@@ -1,0 +1,86 @@
+{{!-- torpedo-result.hbs  -  Chat card for torpedo detonation results --}}
+<div class="imsc-fire-result">
+
+    {{!-- ═══ Header ═══ --}}
+    <div class="imsc-fire-header">
+        {{#if weaponImg}}
+        <img src="{{weaponImg}}" class="imsc-fire-icon" alt="{{weaponName}}">
+        {{/if}}
+        <div class="imsc-fire-title">
+            <strong>{{weaponName}}</strong>
+            <span class="imsc-fire-mode">{{fireModeLabel}}</span>
+        </div>
+    </div>
+
+    {{!-- ═══ Target Row ═══ --}}
+    <div class="imsc-fire-target-row">
+        <i class="fa-solid fa-crosshairs"></i>
+        <span>{{targetName}}</span>
+        <span class="imsc-fire-quadrant">({{hitQuadrantLabel}})</span>
+    </div>
+
+    {{!-- ═══ Auto-Detonation ═══ --}}
+    <div class="imsc-fire-auto">
+        <i class="fa-solid fa-burst"></i> {{localize "IMSC.TorpedoDamage.Detonation"}}
+    </div>
+
+    {{!-- ═══ Shield Resolution ═══ --}}
+    {{#if hasShieldResults}}
+    <div class="imsc-fire-shields">
+        <i class="fa-solid fa-shield-halved"></i>
+        {{#if shieldResults.bypassed}}
+            <span class="imsc-shield-bypass">{{localize "IMSC.Fire.ShieldBypassed"}}</span>
+        {{else}}
+            <span>{{shieldResults.absorbed}} {{localize "IMSC.Fire.Absorbed"}} ({{shieldResults.shieldCostTotal}} {{localize "IMSC.Fire.ShieldDrain"}})</span>
+            <span class="imsc-shield-through">→ {{shieldResults.hitsThroughShield}} {{localize "IMSC.Fire.Through"}}</span>
+        {{/if}}
+    </div>
+    {{/if}}
+
+    {{!-- ═══ Damage Resolution ═══ --}}
+    {{#if hasDamageResults}}
+    <div class="imsc-fire-damage">
+        <div class="imsc-fire-damage-header">
+            <i class="fa-solid fa-explosion"></i>
+            <strong>{{damageResults.totalDamage}}</strong> {{localize "IMSC.Fire.HullDamage"}}
+        </div>
+        <div class="imsc-fire-damage-detail">
+            ({{damageResults.rawDamagePerHit}} − {{damageResults.effectiveArmour}} {{localize "IMSC.Fire.Armour"}})
+            {{#if damageResults.ap}}
+                <span class="imsc-fire-ap">[AP {{damageResults.ap}}]</span>
+            {{/if}}
+        </div>
+        {{#if damageResults.rendTotal}}
+        <div class="imsc-fire-rend">
+            <i class="fa-solid fa-hammer"></i>
+            {{localize "IMSC.Fire.Rend"}}: −{{damageResults.rendTotal}} {{localize "IMSC.Fire.SectorArmour"}}
+        </div>
+        {{/if}}
+    </div>
+    {{/if}}
+
+    {{!-- ═══ Critical Hit ═══ --}}
+    {{#if critResult.hasCrit}}
+    <div class="imsc-fire-crit">
+        <div class="imsc-fire-crit-header">
+            <i class="fa-solid fa-skull"></i>
+            <strong>{{localize "IMSC.Crit.Hit"}}</strong>
+            <span class="imsc-crit-tier-badge imsc-crit-tier--{{critResult.finalTier}}">{{critResult.tierLabel}}</span>
+        </div>
+        <div class="imsc-fire-crit-detail">
+            <span class="imsc-crit-location-label">{{critResult.locLabel}}</span>
+            <span class="imsc-crit-sep">  -  </span>
+            <span class="imsc-crit-condition-label">{{critResult.condLabel}}</span>
+        </div>
+        {{#if critResult.detail}}
+        <div class="imsc-fire-crit-note">{{critResult.detail}}</div>
+        {{/if}}
+        {{#if critResult.jammedItemName}}
+        <div class="imsc-fire-crit-note">
+            <i class="fa-solid fa-gun-slash"></i> {{critResult.jammedItemName}} {{localize "IMSC.Crit.JammedSuffix"}}
+        </div>
+        {{/if}}
+    </div>
+    {{/if}}
+
+</div>

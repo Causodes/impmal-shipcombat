@@ -1,0 +1,46 @@
+{{!-- recover-craft-popup.hbs  -  select a nearby friendly strike craft to recover --}}
+<div class="imsc-tp-wrapper">
+
+    {{!-- Header --}}
+    <div class="imsc-tp-header">
+        <div class="imsc-rc-header-icon">
+            <i class="fa-solid fa-plane-arrival"></i>
+        </div>
+        <div class="imsc-tp-header-text">
+            <span class="imsc-tp-weapon-name">{{localize "IMSC.Ordnance.SelectCraftTitle"}}</span>
+            <span class="imsc-tp-mode-name">{{localize "IMSC.Ordnance.SelectCraftPrompt"}}</span>
+        </div>
+    </div>
+
+    {{!-- Craft list --}}
+    {{#if noTargets}}
+    <div class="imsc-tp-empty">
+        <i class="fa-solid fa-ban"></i>
+        {{localize "IMSC.Ordnance.NoCraftInRange"}}
+    </div>
+    {{else}}
+    <div class="imsc-tp-targets">
+        {{#each craft}}
+        <div class="imsc-tp-target" data-token-id="{{this.tokenId}}">
+            <img src="{{this.img}}" class="imsc-tp-target-icon">
+            <div class="imsc-tp-target-info">
+                <span class="imsc-tp-target-name">{{this.name}}</span>
+                <div class="imsc-tp-target-details">
+                    <span class="imsc-tp-detail">
+                        <i class="fa-solid fa-ruler"></i>
+                        {{this.distance}} {{localize "IMSC.Label.VoidUnits"}}
+                    </span>
+                </div>
+            </div>
+            <button class="imsc-tp-fire-btn imsc-rc-recall-btn"
+                    data-action="confirmRecall"
+                    data-token-id="{{this.tokenId}}"
+                    data-tooltip="{{localize 'IMSC.Ordnance.Recall'}}">
+                <i class="fa-solid fa-plane-arrival"></i>
+            </button>
+        </div>
+        {{/each}}
+    </div>
+    {{/if}}
+
+</div>

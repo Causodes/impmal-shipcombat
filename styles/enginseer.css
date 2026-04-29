@@ -1,0 +1,652 @@
+/* ── Enginseer: Heat Bar ─────────────────────────────────────────────────── */
+
+/* Role status bar  -  docked at top, semi-transparent to let the sheet gradient show through */
+.imsc-role-status-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(20, 44, 47, 0.92);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--color-border-light, rgba(255,255,255,0.12));
+}
+
+/* Override the warhammer-lib list-header gradient inside docked bars */
+.imsc-role-status-bar .list-header {
+  background: transparent;
+}
+
+.imsc-role-status-bar .list-content {
+  padding: 0.35rem 0.5rem 0.5rem;
+}
+
+.imsc-role-status-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+/* ── Enginseer: Dual resource bars ─────────────────────────────────────── */
+.imsc-resource-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.imsc-resource-bar-label {
+  flex: 0 0 7rem;
+  width: 7rem;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.imsc-resource-bar-value {
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+  font-weight: bold;
+  white-space: nowrap;
+  min-width: 3rem;
+  text-align: right;
+}
+
+.imsc-resource-bar-track {
+  flex: 1;
+  height: 0.6rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-border-light);
+  overflow: hidden;
+  min-width: 4rem;
+  position: relative;
+}
+
+/* Heat bar: gradient fill */
+.imsc-resource-bar-track--heat {
+  background: linear-gradient(90deg, #27ae60 0%, #90c93c 20%, #f39c12 55%, #c0392b 100%);
+}
+
+/* Cover overlay hides the unfilled portion */
+.imsc-resource-bar-fill-cover {
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  background: var(--color-dark-5, #262626);
+  border-radius: 0 4px 4px 0;
+  transition: width 0.2s ease;
+}
+
+/* Plasma bar: solid sky blue fill on dark track */
+.imsc-resource-bar-track--plasma {
+  background: var(--color-dark-5, #262626);
+}
+
+.imsc-resource-bar-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: #7ec8e3;
+  border-radius: 4px 0 0 4px;
+  transition: width 0.2s ease;
+}
+
+.imsc-resource-bar-value--plasma {
+  color: #7ec8e3;
+}
+
+
+/* ── Enginseer: Overclock Button ─────────────────────────────────────────── */
+
+.imsc-overclock-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 3px;
+  cursor: pointer;
+  background: var(--color-dark-5, #262626);
+  border: 1px solid #e67e22;
+  color: #e67e22;
+  white-space: nowrap;
+}
+
+.imsc-overclock-btn:hover:not([disabled]) {
+  background: #e67e22;
+  color: #111;
+}
+
+.imsc-overclock-btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: var(--color-border-light);
+  color: inherit;
+}
+
+/* ── Enginseer: Unified core allocation table ────────────────────────────── */
+
+.imsc-core-alloc-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--color-border-light, rgba(255,255,255,0.12));
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.imsc-core-alloc-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.imsc-core-alloc-row:last-child {
+  border-bottom: none;
+}
+
+.imsc-core-alloc-row--shield {
+  background: rgba(155, 89, 182, 0.08);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.imsc-core-alloc-row--aux {
+  background: rgba(52, 152, 219, 0.08);
+  border-bottom: 3px solid rgba(255,255,255,0.1) !important;
+  margin-bottom: 1px;
+}
+
+.imsc-core-alloc-name {
+  flex: 0 0 9rem;
+  width: 9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.imsc-core-alloc-detail {
+  flex: 1;
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.imsc-core-alloc-ctrl {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 5rem;
+}
+
+.imsc-core-alloc-count {
+  min-width: 1.5rem;
+  text-align: center;
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+.imsc-core-flux-label {
+  font-size: 0.65rem;
+  white-space: nowrap;
+  padding-right: 0.3rem;
+  border-right: 1px solid rgba(255,255,255,0.15);
+  margin-right: 0.1rem;
+}
+
+.imsc-shield-commit-info {
+  padding: 0.15rem 0.5rem 0.3rem;
+  font-size: 0.72rem;
+  text-align: center;
+  background: rgba(155, 89, 182, 0.08);
+  border-bottom: 3px solid rgba(255,255,255,0.1);
+  margin-bottom: 1px;
+}
+
+/* ── Enginseer: Core distribution rows (legacy) ─────────────────────────── */
+
+.imsc-core-role-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.15rem 0;
+}
+
+.imsc-core-role-name {
+  flex: 0 0 8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.imsc-core-role-user {
+  flex: 1;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.imsc-core-role-status {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.imsc-core-dist-row {
+  display: grid;
+  grid-template-columns: minmax(9rem, 2fr) minmax(6rem, 1.5fr) auto;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.imsc-core-dist-user {
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.imsc-core-dist-status {
+  text-align: center;
+}
+
+.imsc-oc-used-icon {
+  color: var(--color-warm-2, #f39c12);
+  font-size: 0.8rem;
+}
+
+.imsc-core-exhausted-label {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+}
+
+/* Full-reset danger button */
+.imsc-action-danger {
+  background: rgba(100, 20, 20, 0.75);
+  color: #ff7070;
+  border-color: #e04040;
+}
+.imsc-action-danger:hover:not(:disabled) {
+  background: var(--color-warm-2, #e04040);
+  color: #fff;
+  border-color: #ff5050;
+}
+.imsc-action-danger:disabled {
+  background: rgba(60, 20, 20, 0.35);
+  color: rgba(255, 80, 80, 0.30);
+  border-color: rgba(200, 50, 50, 0.30);
+  cursor: not-allowed;
+}
+
+/* Emergency Vent  -  already fired this round */
+.imsc-action-vent-fired {
+  background: rgba(160, 30, 30, 0.85) !important;
+  border-color: #e04040 !important;
+  color: #fff !important;
+  text-shadow: 0 0 6px rgba(255, 80, 80, 0.9) !important;
+  opacity: 1 !important;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Mark Action Done button */
+.imsc-complete-turn-row {
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem 0.5rem;
+}
+.imsc-mark-done-btn {
+  width: 100%;
+  text-align: center;
+  font-weight: bold;
+}
+.imsc-mark-done-btn.done {
+  opacity: 0.75;
+  border-style: dashed;
+}
+
+/* Section overlay system for Enginseer action selection */
+@keyframes imsc-flicker {
+  0%   { opacity: 0.28; }
+  5%   { opacity: 0.70; }
+  10%  { opacity: 0.24; }
+  15%  { opacity: 0.91; }
+  20%  { opacity: 0.18; }
+  25%  { opacity: 0.84; }
+  30%  { opacity: 0.65; }
+  40%  { opacity: 0.27; }
+  50%  { opacity: 0.96; }
+  60%  { opacity: 0.20; }
+  70%  { opacity: 0.53; }
+  80%  { opacity: 0.71; }
+  90%  { opacity: 0.70; }
+  100% { opacity: 0.24; }
+}
+
+@keyframes imsc-scanlines {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 100%; }
+}
+
+.imsc-role-section {
+  position: relative;
+}
+
+/* Dim section content whenever the selection overlay is present */
+.imsc-role-section:has(.imsc-section-overlay) > :not(.imsc-section-overlay) {
+  opacity: 0.35;
+}
+
+.imsc-section-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  background: rgba(4, 30, 33, 0.42);
+}
+
+/* Allow pointer events only on the button itself */
+.imsc-section-overlay-btn {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  min-width: 55%;
+  text-align: center;
+  white-space: normal;
+  height: auto;
+  line-height: 1.3;
+  cursor: pointer;
+  border-radius: 4px;
+  background: rgba(4, 28, 32, 0.97);
+  border: 1px solid var(--impmal-lightblue, #065c63);
+  box-shadow: 0 0 12px rgba(6, 92, 99, 0.8), 0 0 4px rgba(6, 92, 99, 0.9), inset 0 0 10px rgba(6, 92, 99, 0.2);
+  color: #c8eaee;
+  text-shadow: 0 0 6px rgba(100, 220, 230, 0.8), 0 1px 0 rgba(0,0,0,0.8);
+  letter-spacing: 0.04em;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+/* Scan-line + flicker overlay on hover  -  matches impmal hololith aesthetic */
+.imsc-section-overlay-btn:hover:not([disabled]) {
+  background: rgba(var(--impmal-lightblue-rgb, 94, 184, 196), 0.18);
+  border-color: var(--impmal-lightblue, #5eb8c4);
+  text-shadow: 0 0 6px var(--impmal-lightblue, #5eb8c4), 0 0 12px var(--impmal-lightblue, #5eb8c4);
+}
+
+.imsc-section-overlay-btn:hover:not([disabled])::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.18) 50%),
+    linear-gradient(90deg,
+      rgba(255, 0, 0, 0.04),
+      rgba(0, 255, 0, 0.02),
+      rgba(0, 0, 255, 0.04));
+  background-size: 100% 2px, 3px 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.imsc-section-overlay-btn:hover:not([disabled])::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  inset: 0;
+  background: rgba(18, 16, 16, 0.08);
+  opacity: 0;
+  z-index: 2;
+  pointer-events: none;
+  animation: imsc-flicker 0.15s infinite;
+}
+
+.imsc-section-overlay--taken {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0)    0px,
+      rgba(0, 0, 0, 0)    2px,
+      rgba(0, 0, 0, 0.38) 2px,
+      rgba(0, 0, 0, 0.38) 3px
+    ),
+    linear-gradient(
+      rgba(130, 12, 12, 0.54),
+      rgba(80,  5,  5,  0.48)
+    );
+  border: 1px solid rgba(180, 18, 18, 0.45);
+  box-shadow: inset 0 0 16px rgba(140, 0, 0, 0.28);
+}
+
+.imsc-section-overlay--selected {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0)    0px,
+      rgba(0, 0, 0, 0)    2px,
+      rgba(0, 0, 0, 0.28) 2px,
+      rgba(0, 0, 0, 0.28) 3px
+    ),
+    linear-gradient(
+      rgba(12, 130, 40, 0.48),
+      rgba(5,  80,  22,  0.42)
+    );
+  border: 1px solid rgba(18, 180, 55, 0.45);
+  box-shadow: inset 0 0 16px rgba(0, 140, 40, 0.28);
+}
+
+.imsc-section-overlay--selected .imsc-overlay-lock-indicator {
+  color: rgba(170, 240, 187, 0.90);
+  text-shadow: 0 0 8px rgba(50, 200, 80, 0.55);
+}
+
+.imsc-section-overlay--selected .imsc-overlay-lock-indicator i {
+  color: rgba(100, 230, 130, 0.85);
+  text-shadow: 0 0 10px rgba(40, 200, 60, 0.65);
+}
+
+.imsc-section-overlay--taken .imsc-section-overlay-btn {
+  opacity: 0.30;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Lock indicator used in the Pilot overcharge overlay (no button, just a label) */
+.imsc-overlay-lock-indicator,
+.imsc-vent-lock-notice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(220, 170, 170, 0.80);
+  text-align: center;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 8px rgba(200, 50, 50, 0.55);
+  pointer-events: none;
+  user-select: none;
+}
+
+.imsc-overlay-lock-indicator i,
+.imsc-vent-lock-notice i {
+  font-size: 1.1rem;
+  color: rgba(220, 90, 90, 0.75);
+  text-shadow: 0 0 10px rgba(200, 40, 40, 0.65);
+}
+
+/* Internal fire severity badge */
+.imsc-fire-severity {
+  color: #e04040;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+/* ── Enginseer: Uniform button widths ────────────────────────────────────── */
+
+.imsc-eng-btn {
+  width: 100%;
+  text-align: center;
+  white-space: normal;
+  height: auto;
+  min-height: 2rem;
+  line-height: 1.3;
+}
+
+/* ── Enginseer: Core action row (Overclock + Dispatch side-by-side) ──────── */
+
+/* Bypass the warhammer row-content height:2rem / flex:0 0 100px constraints */
+.imsc-btn-list-row {
+  padding: 0.25rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+/* ── Enginseer: Shell Commitment subsection ── */
+.imsc-shield-commit-section {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 0.2rem 0 0.35rem;
+}
+
+.imsc-shield-commit-info {
+  padding: 0.1rem 0.75rem 0;
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.imsc-shield-commit-count {
+  min-width: 1.5rem;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* ── Enginseer: Overlay hover (section highlight/dim) ─────────────────────── */
+/* Overlay hover: green highlight on hovered selection, red on the other two */
+.imsc-role-section.imsc-overlay-hover-confirm > .imsc-section-overlay {
+  background: rgba(20, 100, 20, 0.40) !important;
+  border-color: rgba(80, 180, 80, 0.50);
+  box-shadow: inset 0 0 16px rgba(40, 160, 40, 0.25);
+}
+.imsc-role-section.imsc-overlay-hover-confirm > .imsc-section-overlay .imsc-section-overlay-btn {
+  border-color: rgba(80, 180, 80, 0.65);
+  box-shadow: 0 0 12px rgba(40, 160, 40, 0.6), 0 0 4px rgba(40, 160, 40, 0.8);
+  color: #b5e8b5;
+  text-shadow: 0 0 6px rgba(80, 220, 80, 0.8);
+}
+
+.imsc-role-section.imsc-overlay-hover-deny > .imsc-section-overlay {
+  background: rgba(100, 15, 15, 0.50) !important;
+  border-color: rgba(180, 40, 40, 0.50);
+  box-shadow: inset 0 0 16px rgba(160, 20, 20, 0.3);
+}
+.imsc-role-section.imsc-overlay-hover-deny > .imsc-section-overlay .imsc-section-overlay-btn {
+  border-color: rgba(180, 60, 60, 0.55);
+  color: rgba(220, 150, 150, 0.7);
+  opacity: 0.5;
+}
+
+
+/* ── Enginseer: Compact action row (Heat/Fire single-line) ──────────────── */
+
+.imsc-eng-action-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+}
+
+.imsc-eng-action-desc {
+  flex: 1;
+  font-size: 0.7rem;
+  opacity: 0.75;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.imsc-eng-action-ctrl {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Enginseer: Confirm row (matches helmsman) ───────────────────────────── */
+.imsc-eng-confirm-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.imsc-eng-confirm {
+  flex: 0 0 auto;
+  padding: 0.4rem 1rem;
+  font-weight: bold;
+}
+
+.imsc-eng-note {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.imsc-core-action-row {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.imsc-core-action-row .imsc-eng-btn {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+
+/* ── Hull Repair Bar (Enginseer) ── */
+.imsc-hull-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+.imsc-hull-value { font-weight: 600; white-space: nowrap; }
+.imsc-hull-bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  min-width: 60px;
+}
+.imsc-hull-bar-fill {
+  height: 100%;
+  background: #44ff88;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+

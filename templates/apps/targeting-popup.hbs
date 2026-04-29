@@ -1,0 +1,112 @@
+{{!-- targeting-popup.hbs  -  lists valid targets within a weapon's cone of fire --}}
+<div class="imsc-tp-wrapper">
+
+    {{!-- Fire mode summary --}}
+    <div class="imsc-tp-header">
+        <img src="{{weapon.img}}" class="imsc-tp-weapon-icon">
+        <div class="imsc-tp-header-text">
+            <span class="imsc-tp-weapon-name">{{weaponName}}</span>
+            <span class="imsc-tp-mode-name">{{fireModeLabel}}</span>
+        </div>
+        <div class="imsc-tp-header-stats">
+            {{#if fireModeDetails.salvoSize}}
+            <span class="imsc-tp-stat">
+                <i class="fa-solid fa-crosshairs"></i>
+                {{fireModeDetails.salvoSize}} {{localize "IMSC.Targeting.Salvo"}}
+            </span>
+            {{/if}}
+            {{#if fireModeDetails.cost}}
+            <span class="imsc-tp-stat imsc-tp-stat--cost">
+                <i class="fa-solid fa-cubes-stacked"></i>
+                {{fireModeDetails.cost}} {{fireModeDetails.resourceLabel}}
+            </span>
+            {{/if}}
+            {{#if fireModeDetails.dmgBonus}}
+            <span class="imsc-tp-stat imsc-tp-stat--bonus">
+                <i class="fa-solid fa-plus"></i>
+                {{fireModeDetails.dmgBonus}} {{localize "IMSC.Label.Damage"}}
+            </span>
+            {{/if}}
+        </div>
+    </div>
+
+    {{!-- Overcharge toggle (plasma cannons with the Overcharge trait only) --}}
+    {{#if hasOvercharge}}
+    <div class="imsc-tp-overcharge-row">
+        <button type="button" class="imsc-tp-overcharge-btn {{#if isOvercharged}}imsc-tp-overcharge--on{{/if}}"
+                data-action="toggleOvercharge">
+            <i class="fa-solid fa-bolt-lightning"></i>
+            {{#if isOvercharged}}
+                {{localize "IMSC.Targeting.OverchargeOn"}}
+                {{#if overchargedTraits.length}}
+                <span class="imsc-tp-oc-note">
+                    {{#each overchargedTraits}}{{this.label}} ({{this.oc}}){{#unless @last}}, {{/unless}}{{/each}}
+                </span>
+                {{/if}}
+            {{else}}
+                {{localize "IMSC.Targeting.OverchargeOff"}}
+                {{#if overchargedTraits.length}}
+                <span class="imsc-tp-oc-note">
+                    {{#each overchargedTraits}}{{this.label}} {{this.base}}→{{this.oc}}{{#unless @last}}, {{/unless}}{{/each}}
+                </span>
+                {{/if}}
+            {{/if}}
+        </button>
+    </div>
+    {{/if}}
+
+    {{!-- Target list --}}
+    {{#if noTargets}}
+    <div class="imsc-tp-empty">
+        <i class="fa-solid fa-ban"></i>
+        {{localize "IMSC.Targeting.NoTargets"}}
+    </div>
+    {{else}}
+    <div class="imsc-tp-targets">
+        {{#each targets}}
+        <div class="imsc-tp-target" data-token-id="{{this.tokenId}}">
+            <img src="{{this.img}}" class="imsc-tp-target-icon{{#if this.isL1}} imsc-tp-target-icon--l1{{/if}}">
+            <div class="imsc-tp-target-info">
+                <span class="imsc-tp-target-name">{{this.name}}</span>
+                {{#if this.isL1}}
+                <div class="imsc-tp-l1-meta">
+                    {{#if this.classification}}<span class="imsc-tp-l1-class"><i class="fa-solid fa-ship"></i> {{this.classification}}</span>{{/if}}
+                    {{#if this.bearing}}<span class="imsc-tp-l1-bearing"><i class="fa-solid fa-compass"></i> {{this.bearing}}°</span>{{/if}}
+                </div>
+                {{/if}}
+                <div class="imsc-tp-target-details">
+                    {{#if this.showDistance}}
+                    <span class="imsc-tp-detail">
+                        <i class="fa-solid fa-ruler"></i>
+                        {{this.distance}} {{localize "IMSC.Label.VoidUnits"}}
+                    </span>
+                    {{/if}}
+                    <span class="imsc-tp-detail imsc-tp-zone imsc-tp-zone--{{this.zone}}">
+                        {{this.zoneLabel}}
+                    </span>
+                    <span class="imsc-tp-detail">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        {{this.hitQuadrantLabel}}
+                    </span>
+                </div>
+            </div>
+            <div class="imsc-tp-target-stats">
+                <div class="imsc-tp-acc {{#if (imscEq this.zone 1)}}imsc-tp-acc--boosted{{/if}} {{#if this.rangingFireBonus}}imsc-tp-acc--ranged{{/if}}"
+                     data-tooltip="{{this.accuracyTooltip}}">
+                    {{this.totalAccuracy}}%
+                    {{#if this.rangingFireBonus}}<i class="fa-solid fa-crosshairs-simple imsc-ranging-active"></i>{{/if}}
+                </div>
+                {{#if this.showArmour}}
+                <div class="imsc-tp-defenses">
+                    <span class="imsc-tp-armour-val"><i class="fa-solid fa-chess-rook"></i> {{this.targetArmour}}</span>
+                </div>
+                {{/if}}
+            </div>
+            <button class="imsc-tp-fire-btn" data-action="confirmFire" data-token-id="{{this.tokenId}}">
+                <i class="fa-solid fa-crosshairs"></i>
+            </button>
+        </div>
+        {{/each}}
+    </div>
+    {{/if}}
+</div>

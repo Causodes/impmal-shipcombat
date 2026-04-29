@@ -1,0 +1,29 @@
+<div class="imsc-header imsc-torpedo-header-block">
+
+  <header class="sheet-header">
+    <img class="profile" src="{{actor.img}}" data-action="editImage" data-edit="img">
+    <div class="header-details">
+      <div class="details-row name">
+        <input type="text" name="name" value="{{actor.name}}" placeholder="Torpedo"
+               {{#unless owner}}disabled{{/unless}}>
+      </div>
+      <div class="imsc-torpedo-bars">
+        <div class="imsc-torpedo-bar">
+          <label>Warheads Lost</label>
+          <div class="imsc-torpedo-bar-track">
+            <div class="imsc-torpedo-bar-fill hull" style="width: {{hullPct}}%"></div>
+            <span class="imsc-torpedo-bar-text">{{sys.hull.value}} / {{sys.hull.max}}</span>
+          </div>
+        </div>
+        <div class="imsc-torpedo-bar">
+          <label>Fuel</label>
+          <div class="imsc-torpedo-bar-track">
+            <div class="imsc-torpedo-bar-fill fuel" style="width: {{fuelPct}}%"></div>
+            <span class="imsc-torpedo-bar-text">{{sys.fuel.value}} / {{sys.fuel.max}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+</div>

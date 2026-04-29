@@ -1,0 +1,368 @@
+/* ── Helm Controls ───────────────────────────────────────────────────────── */
+
+.imsc-helm-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem;
+}
+
+.imsc-helm-stats {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.imsc-helm-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 5rem;
+}
+
+.imsc-helm-stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+.imsc-helm-stat-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.imsc-helm-control-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.imsc-helm-section-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+/* Bearing slider */
+.imsc-helm-bearing {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.imsc-bearing-label {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  white-space: nowrap;
+  min-width: 4rem;
+  text-align: center;
+}
+
+.imsc-bearing-slider {
+  flex: 1;
+  height: 1.25rem;
+  accent-color: var(--color-warm-2, #f39c12);
+  cursor: pointer;
+}
+
+.imsc-bearing-readout {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+/* Power bar: layered div background + transparent range input on top */
+.imsc-power-bar {
+  position: relative;
+  height: 1.75rem;
+  border-radius: 4px;
+  overflow: hidden;
+  /* Green = fully available by default */
+  background: #27ae60;
+  border: 1px solid var(--color-border-light);
+  /* ::before = committed zone (red), ::after = selected-extra zone (amber) */
+}
+.imsc-power-bar::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; height: 100%;
+  width: var(--committed, 0%);
+  background: #c0392b;
+  pointer-events: none;
+}
+.imsc-power-bar::after {
+  content: "";
+  position: absolute;
+  left: var(--committed, 0%); top: 0; height: 100%;
+  width: var(--extra, 0%);
+  background: #e67e22;
+  pointer-events: none;
+}
+
+/* Range input sits on top of the div zones, track is fully transparent */
+.imsc-power-range {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 1.75rem;
+  margin: 0;
+  padding: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  z-index: 1;
+}
+.imsc-power-range::-webkit-slider-runnable-track {
+  height: 1.75rem;
+  background: transparent;
+}
+.imsc-power-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 5px;
+  height: 1.75rem;
+  background: rgba(255,255,255,0.9);
+  border-radius: 2px;
+  box-shadow: 0 0 4px rgba(0,0,0,0.7);
+  cursor: ew-resize;
+  margin-top: 0;
+}
+.imsc-power-range::-moz-range-track {
+  height: 1.75rem;
+  background: transparent;
+}
+.imsc-power-range::-moz-range-thumb {
+  width: 5px;
+  height: 1.75rem;
+  background: rgba(255,255,255,0.9);
+  border: none;
+  border-radius: 2px;
+  box-shadow: 0 0 4px rgba(0,0,0,0.7);
+  cursor: ew-resize;
+}
+
+.imsc-power-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  opacity: 0.7;
+  margin-top: 0.1rem;
+}
+.imsc-power-readout {
+  font-weight: bold;
+  opacity: 1;
+  font-size: 0.8rem;
+}
+
+/* GM reset link next to Power label */
+.imsc-helm-reset-link {
+  margin-left: 0.4rem;
+  opacity: 0.5;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+.imsc-helm-reset-link:hover { opacity: 1; }
+.imsc-helm-reset-link.imsc-link-disabled {
+  opacity: 0.2;
+  pointer-events: none;
+  cursor: default;
+}
+
+/* AP→Thrust link pushed to the far right of the Power label row */
+.imsc-helm-section-label {
+  display: flex;
+  align-items: center;
+}
+.imsc-helm-ap-thrust-lbl {
+  margin-left: auto;
+  opacity: 0.7;
+  cursor: pointer;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+.imsc-helm-ap-thrust-lbl:hover { opacity: 1; }
+.imsc-helm-ap-thrust-lbl.imsc-link-disabled {
+  opacity: 0.2;
+  pointer-events: none;
+  cursor: default;
+}
+
+/* Confirm button */
+.imsc-helm-confirm-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.imsc-helm-confirm {
+  flex: 0 0 auto;
+  padding: 0.4rem 1rem;
+  font-weight: bold;
+}
+
+.imsc-helm-note {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  font-style: italic;
+}
+
+/* ── Strafe + Retrograde inline panels ──────────────────────────────────── */
+
+.imsc-strafe-panel,
+.imsc-retro-panel {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border-light, rgba(255,255,255,0.15));
+}
+
+/* Force equal-width labels so the slider is always perfectly centred */
+.imsc-strafe-label,
+.imsc-retro-label {
+  flex: 0 0 5.5rem !important;
+  text-align: center !important;
+  white-space: nowrap;
+}
+
+/* ── Overcharge action divider ───────────────────────────────────────────── */
+
+.imsc-divider {
+  border: none;
+  border-top: 1px solid var(--color-border-light, rgba(255,255,255,0.18));
+  margin: 0.4rem 0.5rem 0;
+}
+
+/* ── Overdrive confirm panel (matches strafe/retrograde panels) ──────────── */
+
+.imsc-overdrive-panel {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border-light, rgba(255,255,255,0.15));
+}
+
+
+.imsc-eng-btn[disabled],
+.imsc-eng-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Overcharge ACTIVE badge ─────────────────────────────────────────────── */
+
+.imsc-badge {
+  font-size: 0.65rem;
+  font-weight: bold;
+  padding: 0.1em 0.45em;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+.imsc-badge--active {
+  color: #4caf50;
+  margin-left: auto;
+  margin-right: 0.5rem;
+}
+
+/* row-content already uses flex; badge sits between list-name and list-controls */
+.imsc-overdrive-active .row-content {
+  background: rgba(76, 175, 80, 0.06);
+  border-radius: 3px;
+}
+
+/* ── Piloting SL Allocation Row ──────────────────────────────────────────── */
+
+.imsc-alloc-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.imsc-alloc-btn {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font-size: 0.95rem;
+  font-weight: bold;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid rgba(0, 255, 136, 0.35);
+  border-radius: 3px;
+  background: rgba(4, 20, 13, 0.9);
+  color: #00ff88;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.imsc-alloc-btn:hover:not([disabled]) {
+  background: rgba(0, 255, 136, 0.18);
+  border-color: rgba(0, 255, 136, 0.7);
+}
+
+.imsc-alloc-btn[disabled] {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.imsc-helm-stat-input {
+  width: 3.5rem;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border: 1px solid var(--color-border-light);
+  border-radius: 3px;
+  background: var(--color-dark-5, #262626);
+  color: inherit;
+}
+
+.imsc-helm-stat-input[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Roll Piloting button */
+.imsc-roll-piloting-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 3px;
+  cursor: pointer;
+  background: var(--color-dark-5, #262626);
+  border: 1px solid var(--color-border-light);
+  color: inherit;
+  white-space: nowrap;
+}
+.imsc-roll-piloting-btn:hover:not([disabled]) {
+  background: var(--color-dark-6, #333);
+}
+.imsc-roll-piloting-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* SL badge shown after the piloting test has been rolled */
+.imsc-sl-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  background: var(--color-dark-5, #262626);
+  border: 1px solid var(--color-border-light);
+}
+
+

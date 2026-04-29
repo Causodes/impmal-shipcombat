@@ -1,0 +1,20 @@
+<div class="imsc-bda-popup-body">
+
+    <div class="imsc-bda-result-header">
+        <div class="imsc-bda-sl-value">SL {{resultSL}}</div>
+        <div class="imsc-bda-retain-desc">{{retainDesc}}</div>
+    </div>
+
+    <p class="imsc-bda-correction-prompt">{{localize "IMSC.BDA.CorrectionPrompt"}}</p>
+
+    <div class="imsc-bda-corrections">
+        {{#each corrections}}
+        <button class="imsc-bda-correction-btn" data-action="selectCorrection"
+                data-correction-id="{{id}}">
+            <span class="imsc-bda-correction-name">{{labelLocalized}}</span>
+            <span class="imsc-bda-correction-hint">{{descLocalized}}</span>
+        </button>
+        {{/each}}
+    </div>
+
+</div>

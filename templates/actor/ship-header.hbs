@@ -1,0 +1,87 @@
+<div class="imsc-header imsc-ship-header">
+
+  <header class="sheet-header">
+    <img class="profile" data-action="editImage" src="{{actor.img}}" data-edit="img">
+    <div class="header-details">
+      <div class="details-row name">
+        <input type="text" name="name" value="{{actor.name}}" placeholder="Ship Name"
+               {{#unless isGM}}disabled{{/unless}}>
+      </div>
+      <div class="details-row">
+        <div class="detail-group">
+          <div class="input-group">
+            <select name="system.classification" {{#unless isGM}}disabled{{/unless}}>
+              {{#each shipClassifications}}
+              <option value="{{this.value}}" {{#if (eq ../sys.classification this.value)}}selected{{/if}}>{{this.label}}</option>
+              {{/each}}
+            </select>
+          </div>
+          <label>{{localize "IMSC.NpcShip.Classification"}}</label>
+        </div>
+        <div class="detail-group">
+          <div class="input-group">
+            <input type="text" name="system.model" value="{{sys.model}}"
+                   placeholder="{{localize 'IMSC.NpcShip.Model'}}" {{#unless isGM}}disabled{{/unless}}>
+          </div>
+          <label>{{localize "IMSC.NpcShip.Model"}}</label>
+        </div>
+        <div class="detail-group">
+          <div class="input-group">
+            <input type="text" name="system.shipFaction" value="{{sys.shipFaction}}"
+                   placeholder="{{localize 'IMSC.NpcShip.Faction'}}" {{#unless isGM}}disabled{{/unless}}>
+          </div>
+          <label>{{localize "IMSC.NpcShip.Faction"}}</label>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="imsc-compact-stats">
+
+    {{!-- Defence stat table (armour / shields per sector, single row) --}}
+    <table class="imsc-stat-table">
+      <tr>
+        <td></td>
+        {{#each shipSectors}}
+        <td data-tooltip="{{label}}" data-tooltip-direction="UP">{{abbr}}</td>
+        {{/each}}
+      </tr>
+      <tr>
+        <td class="imsc-stat-row-label" data-tooltip="{{localize 'IMSC.Label.ArmourVoidshields'}}" data-tooltip-direction="LEFT">{{localize "IMSC.Label.ArmourVoidshields"}}</td>
+        {{#each shipSectors}}
+        <td><span class="imsc-readonly-val imsc-compound-val{{#if armourRendVal}} imsc-armour--rend{{/if}}">{{armour}}<span class="imsc-as-sep">|</span>{{shield}}</span></td>
+        {{/each}}
+      </tr>
+    </table>
+
+    {{!-- Attribute boxes: Hull Damage + Internal Fire --}}
+    <div class="imsc-ship-attr-row">
+      <div class="imsc-ship-attr-box">
+        <div class="imsc-ship-attr-label">{{localize "IMSC.Label.HullDamage"}}</div>
+        <div class="imsc-ship-attr-fields">
+          {{#if isOwner}}
+            <input type="number" name="system.hull.value" value="{{sys.hull.value}}" min="0">
+            <span class="imsc-hull-sep">/</span>
+            <input type="number" name="system.hull.max" value="{{sys.hull.max}}" min="0">
+          {{else}}
+            <span class="imsc-readonly-val">{{sys.hull.value}}</span>
+            <span class="imsc-hull-sep">/</span>
+            <span class="imsc-readonly-val">{{sys.hull.max}}</span>
+          {{/if}}
+        </div>
+      </div>
+      <div class="imsc-ship-attr-box {{#if (imscGt sys.internalFire 0)}}imsc-fire-active{{/if}}">
+        <div class="imsc-ship-attr-label">{{localize "IMSC.Enginseer.InternalFire"}}</div>
+        <div class="imsc-ship-attr-fields">
+          {{#if isOwner}}
+            <input type="number" name="system.internalFire" value="{{sys.internalFire}}" min="0">
+          {{else}}
+            <span class="imsc-readonly-val">{{sys.internalFire}}</span>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>

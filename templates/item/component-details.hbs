@@ -1,0 +1,431 @@
+<section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
+
+    {{!-- Slot selector (always visible) --}}
+    <div class="form-group">
+        <label>{{localize "IMSC.Component.Slot"}}</label>
+        <div class="form-fields">
+            <select name="system.slot">
+                {{#each slotChoices}}
+                <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+                {{/each}}
+            </select>
+        </div>
+    </div>
+
+    {{!-- ═══════════ Weapon Battery ═══════════ --}}
+    {{#if isWeapon}}
+    <fieldset>
+        <legend>{{localize "IMSC.Component.WeaponStats"}}</legend>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.WeaponPosition"}}</label>
+            <div class="form-fields">
+                <select name="system.weaponPosition">
+                    {{#each weaponPositionChoices}}
+                    <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.ResourceType"}}</label>
+            <div class="form-fields">
+                <select name="system.resourceType">
+                    {{#each resourceTypeChoices}}
+                    <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.Damage"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.damage" value="{{system.damage}}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.SalvoSize"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.salvoSize" value="{{system.salvoSize}}" min="1">
+            </div>
+        </div>
+
+        {{#if (eq system.resourceType "power")}}
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.ChargeStep"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.chargeStep" value="{{system.chargeStep}}" min="1">
+            </div>
+        </div>
+        {{/if}}
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.Range"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.range" value="{{system.range}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.DegreeOfFire"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.degreeOfFire" value="{{system.degreeOfFire}}" min="0" max="360">
+            </div>
+        </div>
+
+        {{!-- Traits  -  same structure as impmal item-traits.hbs partial --}}
+        <div class="form-group item-traits stacked">
+            <label><a data-action="editWeaponTraits">{{localize "IMSC.Component.Traits"}} <i class="fa-solid fa-gear"></i></a></label>
+            <div class="form-fields">
+                <div class="readonly">{{{traitsDisplayHtml}}}</div>
+            </div>
+        </div>
+    </fieldset>
+    {{/if}}
+
+    {{!-- ═══════════ Void Shields ═══════════ --}}
+    {{#if isShields}}
+    <fieldset>
+        <legend>{{localize "IMSC.Component.ShieldValues"}}</legend>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.MaxVoidFlux"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.maxVoidFlux" value="{{system.maxVoidFlux}}" min="0">
+            </div>
+        </div>
+
+        <div class="imsc-zone-threshold-block">
+            <p class="imsc-zone-threshold-title">{{localize "IMSC.Component.ZoneThreshold"}}</p>
+            <div class="imsc-zone-threshold-grid">
+                {{#each shieldZones}}
+                <div class="imsc-zone-threshold-cell">
+                    <span class="imsc-zone-threshold-lbl">{{label}}</span>
+                    <input type="number" name="system.zoneThresholds.{{key}}" value="{{value}}" min="0">
+                </div>
+                {{/each}}
+            </div>
+        </div>
+    </fieldset>
+    {{/if}}
+
+    {{!-- ═══════════ Armour ═══════════ --}}
+    {{#if isArmour}}
+    <fieldset>
+        <legend>{{localize "IMSC.Component.ArmourValues"}}</legend>
+
+        <div class="imsc-zone-threshold-block">
+            <p class="imsc-zone-threshold-title">{{localize "IMSC.Component.ArmourValues"}}</p>
+            <div class="imsc-zone-threshold-grid">
+                {{#each armourZones}}
+                <div class="imsc-zone-threshold-cell">
+                    <span class="imsc-zone-threshold-lbl">{{label}}</span>
+                    <input type="number" name="system.armourValues.{{key}}" value="{{value}}" min="0">
+                </div>
+                {{/each}}
+            </div>
+        </div>
+    </fieldset>
+    {{/if}}
+
+    {{!-- ═══════════ Engine ═══════════ --}}
+    {{#if isEngine}}
+    <fieldset>
+        <legend>{{localize "IMSC.Component.EngineStats"}}</legend>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.Speed"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.speed" value="{{system.speed}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.Maneuverability"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.maneuverability" value="{{system.maneuverability}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.PowerPerAP"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.powerPerAP" value="{{system.powerPerAP}}" min="0">
+            </div>
+        </div>
+    </fieldset>
+    {{/if}}
+
+    {{!-- ═══════════ Auspex ═══════════ --}}
+    {{#if isAuspex}}
+    <fieldset>
+        <legend>{{localize "IMSC.Component.AuspexStats"}}</legend>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.Rating"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.rating" value="{{system.rating}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.BandSize"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.bandSize" value="{{system.bandSize}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.AutoScanRange"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.autoScanRange" value="{{system.autoScanRange}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.MaxRange"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.maxRange" value="{{system.maxRange}}" min="0">
+            </div>
+        </div>
+    </fieldset>
+    {{/if}}
+
+    {{!-- ═══════════ Reactor ═══════════ --}}
+    {{#if isReactor}}
+    <fieldset>
+        <legend>{{localize "IMSC.Component.ReactorStats"}}</legend>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.CoreOutput"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.rating" value="{{system.rating}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.ShieldStrengthPerCore"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.shieldStrengthPerCore" value="{{system.shieldStrengthPerCore}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.HeatCapacity"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.heatCapacity" value="{{system.heatCapacity}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.BankCapacity"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.bankCapacity" value="{{system.bankCapacity}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.AuxPowerPerCore"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.reserveMultiplier" value="{{system.reserveMultiplier}}" min="0">
+            </div>
+        </div>
+    </fieldset>
+    {{/if}}
+
+    {{!-- ═══════════ Torpedo ═══════════ --}}
+    {{#if isTorpedo}}
+    <fieldset>
+        <legend>{{localize "IMSC.Component.TorpedoStats"}}</legend>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.Fuel"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.torpedoFuel" value="{{system.torpedoFuel}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.Speed"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.torpedoSpeed" value="{{system.torpedoSpeed}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.Maneuverability"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.torpedoManeuverability" value="{{system.torpedoManeuverability}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.Salvo"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.torpedoSalvo" value="{{system.torpedoSalvo}}" min="1">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.PayloadDamage"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.torpedoPayloadDamage" value="{{system.torpedoPayloadDamage}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.PayloadRadius"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.torpedoPayloadRadius" value="{{system.torpedoPayloadRadius}}" min="0">
+            </div>
+        </div>
+
+        {{!-- Torpedo Traits --}}
+        <div class="form-group item-traits stacked">
+            <label><a data-action="editWeaponTraits">{{localize "IMSC.Component.Traits"}} <i class="fa-solid fa-gear"></i></a></label>
+            <div class="form-fields">
+                <div class="readonly">{{{traitsDisplayHtml}}}</div>
+            </div>
+        </div>
+    </fieldset>
+    {{/if}}
+
+    {{!-- ═══════════ Strike Craft ═══════════ --}}
+    {{#if isStrikeCraft}}
+    <fieldset>
+        <legend>{{localize "IMSC.Component.StrikeCraftStats"}}</legend>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.CraftType"}}</label>
+            <div class="form-fields">
+                <select name="system.craftType">
+                    {{#each craftTypeChoices}}
+                    <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.FlightSize"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.craftFlightSize" value="{{system.craftFlightSize}}" min="1">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.Fuel"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.craftFuel" value="{{system.craftFuel}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.Speed"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.craftSpeed" value="{{system.craftSpeed}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.Maneuverability"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.craftManeuverability" value="{{system.craftManeuverability}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.PayloadDamage"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.craftPayloadDamage" value="{{system.craftPayloadDamage}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.PayloadRadius"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.craftPayloadRadius" value="{{system.craftPayloadRadius}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.PayloadCount"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.craftPayloadCount" value="{{system.craftPayloadCount}}" min="1">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.AuspexRating"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.craftAuspexRating" value="{{system.craftAuspexRating}}" min="0">
+            </div>
+        </div>
+
+        {{!-- Strike Craft Traits --}}
+        <div class="form-group item-traits stacked">
+            <label><a data-action="editWeaponTraits">{{localize "IMSC.Component.Traits"}} <i class="fa-solid fa-gear"></i></a></label>
+            <div class="form-fields">
+                <div class="readonly">{{{traitsDisplayHtml}}}</div>
+            </div>
+        </div>
+    </fieldset>
+    {{/if}}
+
+    {{!-- ═══════════ Ordnance Bay ═══════════ --}}
+    {{#if isWeaponsBay}}
+    <fieldset>
+        <legend>{{localize "IMSC.Component.WeaponsBayStats"}}</legend>
+
+        {{!-- General --}}
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.Manpower"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.bayManpower" value="{{system.bayManpower}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.AmmoCapacity"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.bayAmmoCapacity" value="{{system.bayAmmoCapacity}}" min="0">
+            </div>
+        </div>
+
+        {{!-- Torpedoes --}}
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.TorpedoSalvoSize"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.bayTorpedoSalvoSize" value="{{system.bayTorpedoSalvoSize}}" min="1">
+            </div>
+        </div>
+
+        {{!-- Strike Craft --}}
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.StrikeCraftCapacity"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.bayStrikeCraftCapacity" value="{{system.bayStrikeCraftCapacity}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.MaxFlights"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.bayMaxFlights" value="{{system.bayMaxFlights}}" min="0">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.StrikeCraftFlightSize"}}</label>
+            <div class="form-fields">
+                <input type="number" name="system.bayStrikeCraftFlightSize" value="{{system.bayStrikeCraftFlightSize}}" min="1">
+            </div>
+        </div>
+
+    </fieldset>
+    {{/if}}
+
+</section>

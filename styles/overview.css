@@ -1,0 +1,402 @@
+/* ── Overview Tab: fill available height and scroll ────────────────────── */
+/* Mirrors the mechanism used by other role tabs (captain, ordnance, etc.)  */
+/* Target by data-tab so it doesn't depend on the parent class chain.        */
+section.tab[data-tab="overview"] {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+}
+
+/* ── Overview Summary Row ────────────────────────────────────────────────── */
+.imsc-overview-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.imsc-overview-stat {
+  flex: 1 1 10rem;
+  min-width: 10rem;
+  background: var(--color-dark-1, #333);
+  border: 1px solid var(--color-border-light);
+  border-radius: 4px;
+  padding: 0.35rem 0.6rem;
+}
+
+.imsc-overview-stat-label {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+
+.imsc-overview-stat-value {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+/* ── Compact Crew Roster ─────────────────────────────────────────────────── */
+.imsc-crew-roster-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.imsc-crew-role-label {
+  flex: 0 0 9rem;
+  font-weight: bold;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.imsc-crew-actor {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.imsc-crew-portrait {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid var(--color-border-light);
+}
+
+/* ── Crew Table ───────────────────────────────────────────────────────── */
+/* NOTE: crew rows deliberately do NOT use the warhammer `row-content` class
+   to avoid warhammer-lib's flex layout overriding this grid. */
+.imsc-crew-header,
+.imsc-crew-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr) 4.5rem minmax(0, 1.5fr);
+  gap: 0.35rem;
+  align-items: center;
+  padding: 0 0.25rem;
+}
+
+.imsc-crew-header {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.imsc-crew-header .imsc-crew-col-name {
+  font-size: var(--font-size-18, 1rem);
+  font-weight: bold;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.imsc-full-reset-link {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  opacity: 0.3;
+  color: inherit;
+  line-height: 1;
+}
+.imsc-full-reset-link:hover {
+  opacity: 0.8;
+  color: var(--color-level-warning, #e67e22);
+}
+
+.imsc-crew-col-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  overflow: hidden;
+  padding-right: 0.3rem;
+}
+
+.imsc-crew-col-name > span {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.imsc-crew-col-role,
+.imsc-crew-col-action {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.imsc-crew-col-skill {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  overflow: hidden;
+}
+
+.imsc-crew-col-action {
+  text-align: center;
+}
+
+.imsc-crew-portrait {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid var(--color-border-light);
+  flex-shrink: 0;
+}
+
+.imsc-crew-empty {
+  opacity: 0.6;
+}
+
+.imsc-yes {
+  color: #7fcf8a;
+}
+
+.imsc-no {
+  color: #d98686;
+}
+
+/* ── Crew claim button in overview ────────────────────────────────────── */
+.imsc-claim-btn {
+  font-size: 0.65rem;
+  padding: 1px 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.imsc-release-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0.6;
+  color: #d98686;
+}
+.imsc-release-btn:hover {
+  opacity: 1;
+}
+
+/* ── Internal Fire active state ────────────────────────────────────────── */
+.imsc-fire-active {
+  color: #e74c3c;
+}
+
+/* ── Ship Conditions strip ──────────────────────────────────────────────── */
+.imsc-overview-conditions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.imsc-overview-cond-pill {
+  flex: 1 1 9rem;
+  min-width: 9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-border-light, #444);
+  background: var(--color-dark-1, #333);
+  opacity: 0.65;
+}
+
+.imsc-overview-cond-pill--low {
+  border-color: #e6b800;
+  opacity: 1;
+}
+
+.imsc-overview-cond-pill--medium {
+  border-color: #e67e22;
+  opacity: 1;
+}
+
+.imsc-overview-cond-pill--high {
+  border-color: #c0392b;
+  opacity: 1;
+}
+
+.imsc-overview-cond-loc {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.75;
+}
+
+.imsc-overview-cond-name {
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.imsc-overview-cond-pill--low    .imsc-overview-cond-name { color: #e6b800; }
+.imsc-overview-cond-pill--medium .imsc-overview-cond-name { color: #e67e22; }
+.imsc-overview-cond-pill--high   .imsc-overview-cond-name { color: #c0392b; }
+
+
+/* ── Installed Components Summary ────────────────────────────────────────── */
+.imsc-ov-components {
+  margin-top: 0.4rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: 4px;
+}
+
+.imsc-ov-comp-header {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+  padding: 0.2rem 0.5rem;
+  background: rgba(0,0,0,0.2);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.imsc-ov-comp-section {
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.imsc-ov-comp-section:first-child {
+  border-top: none;
+}
+
+/* ── Weapon Battery 2×2 position grid ────────────────────────────────────── */
+.imsc-ov-weapon-section-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.5;
+  padding: 0.2rem 0.5rem 0;
+}
+
+.imsc-ov-weapon-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem 0.35rem;
+}
+
+.imsc-ov-weapon-cell {
+  background: rgba(0,0,0,0.15);
+  border-radius: 3px;
+  padding: 0.2rem 0.35rem;
+  min-height: 2rem;
+}
+
+.imsc-ov-weapon-pos {
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.45;
+  margin-bottom: 0.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.imsc-ov-weapon-slots {
+  margin-left: auto;
+  opacity: 0.7;
+  font-size: 0.65rem;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.imsc-ov-empty {
+  font-size: 0.75rem;
+  opacity: 0.3;
+}
+
+/* ── Equipment slot rows (2-col grid for equipment section) ──────────────── */
+.imsc-ov-comp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.imsc-ov-slot-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.18rem 0.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.imsc-ov-slot-row:nth-child(odd) {
+  border-right: 1px solid rgba(255,255,255,0.05);
+}
+
+.imsc-ov-slot-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.5;
+  flex: 0 0 5.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.imsc-ov-slot-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.imsc-ov-ordnance-count {
+  display: flex;
+  align-items: baseline;
+  gap: 0.15rem;
+  font-size: 0.85rem;
+}
+
+.imsc-ov-count-armed {
+  font-weight: bold;
+  color: #00ff88;
+}
+
+.imsc-ov-count-sep {
+  opacity: 0.4;
+  font-size: 0.75rem;
+}
+
+.imsc-ov-count-cap {
+  opacity: 0.55;
+  font-size: 0.75rem;
+}
+
+.imsc-ov-comp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  padding: 0.05rem 0.3rem;
+  background: rgba(255,255,255,0.07);
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.imsc-ov-comp-chip:hover {
+  background: rgba(255,255,255,0.14);
+  text-decoration: none;
+}
+
+.imsc-ov-comp-chip img {
+  width: 1rem;
+  height: 1rem;
+  object-fit: cover;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.imsc-ov-comp-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

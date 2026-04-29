@@ -1,0 +1,109 @@
+<div class="imsc-header imsc-ship-header">
+
+  {{!-- Portrait + Name + Identity details --}}
+  <header class="sheet-header">
+    <img class="profile" data-action="editImage" src="{{actor.img}}" data-edit="img">
+    <div class="header-details">
+      <div class="details-row name">
+        <input type="text" name="name" value="{{actor.name}}" placeholder="{{localize 'IMSC.NpcShip.ShipName'}}">
+      </div>
+      <div class="details-row">
+        <div class="detail-group">
+          <div class="input-group">
+            <select name="system.classification">
+              {{#each shipClassifications}}
+              <option value="{{this.value}}" {{#if (eq ../sys.classification this.value)}}selected{{/if}}>{{this.label}}</option>
+              {{/each}}
+            </select>
+          </div>
+          <label>{{localize "IMSC.NpcShip.Classification"}}</label>
+        </div>
+        <div class="detail-group">
+          <div class="input-group">
+            <input type="text" name="system.model" value="{{sys.model}}" placeholder="{{localize 'IMSC.NpcShip.Model'}}">
+          </div>
+          <label>{{localize "IMSC.NpcShip.Model"}}</label>
+        </div>
+        <div class="detail-group">
+          <div class="input-group">
+            <input type="text" name="system.shipFaction" value="{{sys.shipFaction}}" placeholder="{{localize 'IMSC.NpcShip.Faction'}}">
+          </div>
+          <label>{{localize "IMSC.NpcShip.Faction"}}</label>
+        </div>
+        <div class="detail-group">
+          <div class="input-group">
+            <select name="system.shipRole">
+              {{selectOptions (config "npcRoles") selected=sys.shipRole}}
+            </select>
+          </div>
+          <label>{{localize "IMSC.NpcShip.Role"}}</label>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  {{!-- Stat table: PIL TEC GUN SPD MAN VFX --}}
+  <table class="imsc-stat-table">
+    <tr>
+      <td data-tooltip="{{localize 'IMSC.NpcShip.Piloting'}}" data-tooltip-direction="UP">PIL</td>
+      <td data-tooltip="{{localize 'IMSC.NpcShip.Tech'}}" data-tooltip-direction="UP">TEC</td>
+      <td data-tooltip="{{localize 'IMSC.NpcShip.Gunnery'}}" data-tooltip-direction="UP">GUN</td>
+      <td data-tooltip="{{localize 'IMSC.NpcShip.BaseSpeed'}}" data-tooltip-direction="UP">SPD</td>
+      <td data-tooltip="{{localize 'IMSC.NpcShip.BaseManeuverability'}}" data-tooltip-direction="UP">MAN</td>
+      <td data-tooltip="{{localize 'IMSC.Component.AutoScanRange'}}" data-tooltip-direction="UP">ASR</td>
+      <td data-tooltip="{{localize 'IMSC.Component.BandSize'}}" data-tooltip-direction="UP">BND</td>
+      <td data-tooltip="{{localize 'IMSC.Component.Rating'}}" data-tooltip-direction="UP">RTG</td>
+    </tr>
+    <tr>
+      <td><input type="number" name="system.attributes.piloting" value="{{sys.attributes.piloting}}"></td>
+      <td><input type="number" name="system.attributes.tech" value="{{sys.attributes.tech}}"></td>
+      <td><input type="number" name="system.attributes.gunnery" value="{{sys.attributes.gunnery}}"></td>
+      <td><input type="number" name="system.movement.baseSpeed" value="{{sys.movement.baseSpeed}}" min="0"></td>
+      <td><input type="number" name="system.movement.baseManeuverability" value="{{sys.movement.baseManeuverability}}" min="0"></td>
+      <td><input type="number" name="system.autoScanRange" value="{{sys.autoScanRange}}" min="0"></td>
+      <td><input type="number" name="system.auspexBandSize" value="{{sys.auspexBandSize}}" min="0"></td>
+      <td><input type="number" name="system.auspexRating" value="{{sys.auspexRating}}" min="0"></td>
+    </tr>
+  </table>
+
+  {{!-- Per-sector armour: current | max ──────────────────────────────────── --}}
+  <table class="imsc-npc-armour-sector-table">
+    <tr>
+      <td></td>
+      {{#each sectors}}
+      <td data-tooltip="{{label}}" data-tooltip-direction="UP">{{abbr}}</td>
+      {{/each}}
+    </tr>
+    <tr>
+      <td class="imsc-npc-arm-row-label" data-tooltip="{{localize 'IMSC.Label.ArmourCurrentMax'}}" data-tooltip-direction="LEFT">{{localize "IMSC.Label.ArmourCurrentMax"}}</td>
+      {{#each sectors}}
+      <td>
+        <span class="imsc-npc-armour-compound">
+          <input type="number" name="system.armour.{{id}}" value="{{armour}}" min="0" class="imsc-npc-arm-input">
+          <span class="imsc-as-sep">|</span>
+          <input type="number" name="system.armourBase.{{id}}" value="{{armourBase}}" min="0" class="imsc-npc-arm-input imsc-npc-arm-max">
+        </span>
+      </td>
+      {{/each}}
+    </tr>
+  </table>
+
+  {{!-- Attribute boxes: Hull Damage + Internal Fire --}}
+  <div class="imsc-ship-attr-row">
+    <div class="imsc-ship-attr-box">
+      <div class="imsc-ship-attr-label">{{localize "IMSC.Label.HullDamage"}}</div>
+      <div class="imsc-ship-attr-fields">
+        <input type="number" name="system.hull.value" value="{{sys.hull.value}}" min="0">
+        <span class="imsc-hull-sep">/</span>
+        <input type="number" name="system.hull.max" value="{{sys.hull.max}}" min="0">
+      </div>
+    </div>
+    <div class="imsc-ship-attr-box">
+      <div class="imsc-ship-attr-label">{{localize "IMSC.Enginseer.InternalFire"}}</div>
+      <div class="imsc-ship-attr-fields">
+        <input type="number" name="system.internalFire" value="{{sys.internalFire}}" min="0">
+      </div>
+    </div>
+  </div>
+
+</div>

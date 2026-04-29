@@ -1,0 +1,313 @@
+<section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
+
+    {{#with (lookup roles "pilot")}}
+    {{#unless isMyRole}}
+        {{#unless @root.isGM}}
+        <div class="sheet-list">
+            <div class="list-content">
+                <div class="list-row">
+                    <div class="row-content">
+                        <div class="list-name">{{localize "IMSC.Prompt.ClaimRole"}}</div>
+                        <div class="list-controls">
+                            <button data-action="claimRole" data-role-id="pilot">
+                                <i class="fa-solid fa-compass"></i> {{localize "IMSC.Role.Pilot"}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{/unless}}
+    {{/unless}}
+    {{/with}}
+
+    {{!-- ═══════ Caption Boost Banner ═══════ --}}
+    {{#if helm.captainBoosts.length}}
+    <div class="imsc-captain-boost-bar">
+        <span class="imsc-captain-boost-bar-label"><i class="fa-solid fa-flag"></i> {{localize "IMSC.Captain.ActiveOrdersShort"}}:</span>
+        {{#each helm.captainBoosts}}
+        <span class="imsc-captain-boost-chip">{{label}}</span>
+        {{/each}}
+    </div>
+    {{/if}}
+
+    {{!-- ═══════ Always-visible: Auxiliary Power (sticky) ═══════ --}}
+    <div class="sheet-list imsc-role-status-bar">
+        <div class="list-header row-content">
+            <div class="list-name">{{localize "IMSC.Helm.AuxPowerTitle"}}</div>
+            {{#with (lookup roles "pilot")}}
+            {{> "modules/impmal-shipcombat/templates/actor/partials/payload-status-badge.hbs"
+                payloadId=payloadId payloadLabel=payloadLabel payloadDesc=payloadDesc}}
+            {{> "modules/impmal-shipcombat/templates/actor/partials/core-status-banner.hbs"
+                coreCount=coreCount coreActionsPlayedLabels=@root.helm.coreActionsPlayedLabels hasCoreStaged=hasCoreStaged}}
+            {{/with}}
+        </div>
+        <div class="list-content">
+            <div class="imsc-role-status-panel">
+                <div class="imsc-resource-bar-row">
+                    <span class="imsc-resource-bar-label">{{localize "IMSC.Enginseer.CoreBank"}}</span>
+                    <div class="imsc-resource-bar-track imsc-resource-bar-track--plasma">
+                        <div class="imsc-resource-bar-fill" style="width: {{helm.auxPowerPct}}%"></div>
+                    </div>
+                    <span class="imsc-resource-bar-value imsc-resource-bar-value--plasma">{{helm.auxiliaryPower}}/{{helm.auxPowerCapacity}}</span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    {{!-- ═══════ Standard Action: Helm Control ═══════ --}}
+    <div class="sheet-list">
+        <div class="list-header row-content">
+            <div class="list-name">{{localize "IMSC.Helm.Title"}}</div>
+        </div>
+        <div class="list-content imsc-helm-panel">
+
+            {{!-- Piloting SL Allocation Row --}}
+            <div class="imsc-helm-stats">
+                <div class="imsc-helm-stat" data-tooltip="{{localize "IMSC.Helm.PilotingSLTooltip"}}">
+                    <span class="imsc-helm-stat-label">{{localize "IMSC.Helm.PilotingSL"}}</span>
+                    {{#if helm.hasRolledPiloting}}
+                        <span class="imsc-helm-stat-value imsc-sl-badge">{{helm.remainingSL}}</span>
+                    {{else}}
+                        <button class="imsc-roll-piloting-btn" data-action="rollPiloting"
+                                {{#if helm.allocLocked}}disabled{{/if}}>
+                            <i class="fa-solid fa-dice"></i> {{localize "IMSC.Helm.RollPiloting"}}
+                        </button>
+                    {{/if}}
+                </div>
+                <div class="imsc-helm-stat" data-tooltip="{{helm.speedTooltip}}">
+                    <span class="imsc-helm-stat-label">{{localize "IMSC.Helm.Speed"}}</span>
+                    <div class="imsc-alloc-row">
+                        <button class="imsc-alloc-btn" data-action="allocBonus" data-stat="speed" data-delta="-1"
+                                {{#if helm.allocLocked}}disabled{{/if}}>
+                            &minus;
+                        </button>
+                        <span class="imsc-helm-stat-value">{{helm.effectiveSpeed}}</span>
+                        <button class="imsc-alloc-btn" data-action="allocBonus" data-stat="speed" data-delta="1"
+                                {{#if helm.allocLocked}}disabled{{/if}}>
+                            +
+                        </button>
+                    </div>
+                </div>
+                <div class="imsc-helm-stat" data-tooltip="{{helm.manoTooltip}}">
+                    <span class="imsc-helm-stat-label">{{localize "IMSC.Helm.Maneuverability"}}</span>
+                    <div class="imsc-alloc-row">
+                        <button class="imsc-alloc-btn" data-action="allocBonus" data-stat="mano" data-delta="-1"
+                                {{#if helm.allocLocked}}disabled{{/if}}>
+                            &minus;
+                        </button>
+                        <span class="imsc-helm-stat-value">{{helm.effectiveMano}}</span>
+                        <button class="imsc-alloc-btn" data-action="allocBonus" data-stat="mano" data-delta="1"
+                                {{#if helm.allocLocked}}disabled{{/if}}>
+                            +
+                        </button>
+                    </div>
+                </div>
+                <div class="imsc-helm-stat" data-tooltip="{{helm.minMoveTooltip}}">
+                    <span class="imsc-helm-stat-label">{{localize "IMSC.Helm.MinMove"}}</span>
+                    <span class="imsc-helm-stat-value">{{helm.minMove}}</span>
+                </div>
+            </div>
+
+            {{!-- Bearing Control --}}
+            <div class="imsc-helm-control-block">
+                <label class="imsc-helm-section-label">{{localize "IMSC.Helm.Bearing"}}</label>
+                <div class="imsc-helm-bearing">
+                    <span class="imsc-bearing-label">{{localize "IMSC.Helm.Port"}} {{helm.maxBearing}}°</span>
+                    <input type="range" class="imsc-bearing-slider" data-helm-bearing
+                           min="-{{helm.maxBearing}}" max="{{helm.maxBearing}}" step="5" value="{{helm.bearing}}">
+                    <span class="imsc-bearing-label">{{localize "IMSC.Helm.Starboard"}} {{helm.maxBearing}}°</span>
+                </div>
+                <div class="imsc-bearing-readout">
+                    <span data-bearing-display>{{helm.bearing}}°</span>
+                </div>
+            </div>
+
+            {{!-- Power Bar --}}
+            <div class="imsc-helm-control-block">
+                <label class="imsc-helm-section-label">
+                    {{localize "IMSC.Helm.Power"}}
+                    <a data-action="apToThrust"
+                       class="imsc-helm-ap-thrust-lbl{{#unless helm.auxiliaryPower}} imsc-link-disabled{{/unless}}"
+                       data-tooltip="{{localize "IMSC.Helm.ApThrustTooltip"}}">
+                        <i class="fa-solid fa-bolt"></i> {{localize "IMSC.Helm.ApToThrust"}}
+                    </a>
+                </label>
+                <div class="imsc-power-bar" data-helm-power-bar>
+                    <input type="range" class="imsc-power-range" data-helm-fuel
+                           min="0" max="{{helm.powerMax}}" step="1">
+                </div>
+                <div class="imsc-power-labels">
+                    <span>0%</span>
+                    <span class="imsc-power-readout" data-fuel-display></span>
+                    <span>{{helm.powerMax}}%</span>
+                </div>
+            </div>
+
+            {{!-- Confirm --}}
+            <div class="imsc-helm-confirm-row">
+                <button type="button" class="imsc-helm-confirm" data-action="confirmHelm">
+                    <i class="fa-solid fa-check"></i> {{localize "IMSC.Helm.Confirm"}}
+                </button>
+                <span class="imsc-helm-note">{{localize "IMSC.Helm.ConfirmNote"}}</span>
+            </div>
+
+        </div>
+    </div>
+
+    {{!-- ═══════ Overcharged Actions ═══════ --}}
+    {{#with (lookup roles "pilot")}}
+
+    {{!-- ── 1. Maximum Overdrive ── --}}
+    <div class="sheet-list imsc-role-section">
+
+        {{!-- Overlay logic --}}
+        {{#unless @root.hasPowerCore}}
+        <div class="imsc-section-overlay imsc-section-overlay--taken">
+            <div class="imsc-overlay-lock-indicator">
+                <i class="fa-solid fa-lock fa-lg"></i>
+                <span>{{localize "IMSC.Tooltip.NoPowerCore"}}</span>
+            </div>
+        </div>
+        {{/unless}}
+
+        <div class="list-header row-content">
+            <div class="list-name">
+                {{localize "IMSC.Action.PilotOverdrive"}}
+                <span class="imsc-muted">  -  {{localize "IMSC.Label.Overcharged"}}</span>
+            </div>
+        </div>
+        <div class="list-content">
+            <div class="list-row {{#unless hasCoreAssigned}}inactive{{/unless}}">
+                <div class="row-content">
+                    <div class="list-name">
+                        <strong>{{localize "IMSC.Action.PilotOverdrive"}}</strong>
+                    </div>
+                    <div class="list-controls"></div>
+                </div>
+                <div class="description">{{localize "IMSC.Action.PilotOverdriveDesc"}}</div>
+                <div class="imsc-helm-panel imsc-overdrive-panel">
+                    <div class="imsc-helm-confirm-row">
+                        {{#if hasCoreAssigned}}
+                            {{#unless @root.helm.overdriveUsed}}
+                                <button type="button" class="imsc-helm-confirm" data-action="pilotOverdrive">
+                                    <i class="fa-solid fa-check"></i> {{localize "IMSC.Helm.ConfirmCoreAction"}}
+                                </button>
+                            {{/unless}}
+                        {{/if}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{!-- ── 2. Strafe ── --}}
+    <div class="sheet-list imsc-role-section">
+
+        {{#unless @root.hasPowerCore}}
+        <div class="imsc-section-overlay imsc-section-overlay--taken">
+            <div class="imsc-overlay-lock-indicator">
+                <i class="fa-solid fa-lock fa-lg"></i>
+                <span>{{localize "IMSC.Tooltip.NoPowerCore"}}</span>
+            </div>
+        </div>
+        {{/unless}}
+
+        <div class="list-header row-content">
+            <div class="list-name">
+                {{localize "IMSC.Action.PilotStrafe"}}
+                <span class="imsc-muted">  -  {{localize "IMSC.Label.Overcharged"}}</span>
+            </div>
+        </div>
+        <div class="list-content">
+            <div class="list-row {{#unless hasCoreAssigned}}inactive{{/unless}}">
+                <div class="row-content">
+                    <div class="list-name">
+                        <strong>{{localize "IMSC.Action.PilotStrafe"}}</strong>
+                    </div>
+                </div>
+                <div class="description">{{localize "IMSC.Action.PilotStrafeDesc"}}</div>
+
+                <div class="imsc-helm-panel imsc-strafe-panel">
+                    <div class="imsc-helm-control-block">
+                        <div class="imsc-helm-bearing">
+                            <span class="imsc-bearing-label imsc-strafe-label">← {{localize "IMSC.Helm.StrafePort"}} {{@root.helm.strafeMax}}</span>
+                            <input type="range" class="imsc-bearing-slider" data-strafe-slider
+                                   min="-{{@root.helm.strafeMax}}" max="{{@root.helm.strafeMax}}" step="1" value="0">
+                            <span class="imsc-bearing-label imsc-strafe-label">{{localize "IMSC.Helm.StrafeStarboard"}} {{@root.helm.strafeMax}} →</span>
+                        </div>
+                        <div class="imsc-bearing-readout"><span data-strafe-display>{{localize "IMSC.Helm.StrafeCenter"}}</span></div>
+                    </div>
+                    <div class="imsc-helm-confirm-row">
+                        {{#if hasCoreAssigned}}
+                            {{#unless @root.helm.strafeUsed}}
+                                <button type="button" class="imsc-helm-confirm" data-action="pilotStrafe" data-strafe-confirm>
+                                    <i class="fa-solid fa-check"></i> {{localize "IMSC.Helm.Confirm"}}
+                                </button>
+                                <span class="imsc-helm-note">{{localize "IMSC.Helm.ConfirmNote"}}</span>
+                            {{/unless}}
+                        {{/if}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{!-- ── 3. Retrograde Thrust ── --}}
+    <div class="sheet-list imsc-role-section">
+
+        {{#unless @root.hasPowerCore}}
+        <div class="imsc-section-overlay imsc-section-overlay--taken">
+            <div class="imsc-overlay-lock-indicator">
+                <i class="fa-solid fa-lock fa-lg"></i>
+                <span>{{localize "IMSC.Tooltip.NoPowerCore"}}</span>
+            </div>
+        </div>
+        {{/unless}}
+
+        <div class="list-header row-content">
+            <div class="list-name">
+                {{localize "IMSC.Action.PilotRetrograde"}}
+                <span class="imsc-muted">  -  {{localize "IMSC.Label.Overcharged"}}</span>
+            </div>
+        </div>
+        <div class="list-content">
+            <div class="list-row {{#unless hasCoreAssigned}}inactive{{/unless}}">
+                <div class="row-content">
+                    <div class="list-name">
+                        <strong>{{localize "IMSC.Action.PilotRetrograde"}}</strong>
+                    </div>
+                </div>
+                <div class="description">{{localize "IMSC.Action.PilotRetrogradeDesc"}}</div>
+
+                <div class="imsc-helm-panel imsc-retro-panel">
+                    <div class="imsc-helm-control-block">
+                        <div class="imsc-helm-bearing">
+                            <span class="imsc-bearing-label imsc-retro-label">1 {{localize "IMSC.Label.VoidUnits"}}</span>
+                            <input type="range" class="imsc-bearing-slider" data-retro-slider
+                                   min="1" max="{{@root.helm.retroMax}}" step="1" value="1">
+                            <span class="imsc-bearing-label imsc-retro-label">{{@root.helm.retroMax}} {{localize "IMSC.Label.VoidUnits"}}</span>
+                        </div>
+                        <div class="imsc-bearing-readout"><span data-retro-display></span></div>
+                    </div>
+                    <div class="imsc-helm-confirm-row">
+                        {{#if hasCoreAssigned}}
+                            {{#unless @root.helm.retroUsed}}
+                                <button type="button" class="imsc-helm-confirm" data-action="pilotRetrograde">
+                                    <i class="fa-solid fa-check"></i> {{localize "IMSC.Helm.Confirm"}}
+                                </button>
+                                <span class="imsc-helm-note">{{localize "IMSC.Helm.ConfirmNote"}}</span>
+                            {{/unless}}
+                        {{/if}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{/with}}
+
+    {{> 'modules/impmal-shipcombat/templates/actor/partials/complete-turn.hbs' tabRoleId="pilot" turnDone=(lookup @root.sys.turnDone "pilot")}}
+
+</section>

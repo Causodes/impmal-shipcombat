@@ -1,0 +1,189 @@
+<section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
+
+    {{!-- Ordnance Slot Configuration --}}
+    {{#if ordnanceSections.length}}
+    <div class="sheet-list">
+        <div class="list-header row-content">
+            <div class="list-name">{{localize "IMSC.Label.OrdnanceSlots"}}</div>
+            <div>{{localize "IMSC.Label.Slots"}}</div>
+        </div>
+        <div class="list-content">
+            {{#each ordnanceSections}}
+            <div class="list-row">
+                <div class="row-content">
+                    <div class="list-name">{{labelLocalized}}</div>
+                    <div>
+                        {{#if @root.isOwner}}
+                            <input type="number" min="0" value="{{slotCount}}" data-slot-count="system.ordnanceSlots.{{id}}">
+                        {{else}}
+                            <span>{{slotCount}}</span>
+                        {{/if}}
+                    </div>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+    {{/if}}
+
+    {{!-- Weapon Batteries --}}
+    <div class="imsc-section-grid">
+        {{#each weaponSectionsAll}}
+        <div class="sheet-list vehicle-actors">
+            <div class="list-header imsc-weapon-battery-header">
+                <div class="list-name">
+                    {{labelLocalized}}
+                    <span class="imsc-slot-fraction">
+                        {{items.length}}&thinsp;/&thinsp;{{#if @root.isOwner}}<input type="number" min="0" value="{{slotCount}}" data-slot-count="system.weaponSlots.{{id}}" class="imsc-slot-input">{{else}}{{slotCount}}{{/if}}
+                    </span>
+                </div>
+                <div class="list-controls">
+                    {{#if @root.isOwner}}<a class="list-control" data-action="createItem" data-component-slot="weapon" data-component-position="{{id}}"><i class="fa-solid fa-plus"></i></a>{{/if}}
+                </div>
+            </div>
+            <div class="list-content">
+                {{#each items}}
+                <div class="list-row" data-uuid="{{this.uuid}}" data-id="{{this.id}}">
+                    <div class="row-content">
+                        <div class="list-name rollable">
+                            <img src="{{this.img}}">
+                            <a class="label" data-action="openItem">{{this.name}}</a>
+                        </div>
+                        <div class="list-controls">
+                            {{#if @root.isOwner}}<a class="list-control" data-action="deleteEmbedded"><i class="fa-solid fa-xmark"></i></a>{{/if}}
+                        </div>
+                    </div>
+                    <div class="dropdown-content collapsed"></div>
+                </div>
+                {{/each}}
+                {{#if emptySlots}}
+                <div class="droppable" data-component-slot="weapon" data-component-position="{{id}}" data-tooltip='{{localize "IMSC.Hint.DropComponent"}}'><i class="fa-solid fa-plus"></i></div>
+                {{/if}}
+            </div>
+        </div>
+        {{/each}}
+    </div>
+
+    {{!-- Equipment Sections --}}
+    <div class="imsc-section-grid">
+        {{#each equipmentSections}}
+        <div class="sheet-list vehicle-actors">
+            <div class="list-header row-content">
+                <div class="list-name">{{labelLocalized}}</div>
+                <div class="list-controls imsc-section-controls">
+                    {{#if @root.isOwner}}<a class="list-control" data-action="createItem" data-component-slot="{{id}}"><i class="fa-solid fa-plus"></i></a>{{/if}}
+                </div>
+            </div>
+            <div class="list-content">
+                {{#each items}}
+                <div class="list-row" data-uuid="{{this.uuid}}" data-id="{{this.id}}">
+                    <div class="row-content">
+                        <div class="list-name">
+                            <img src="{{this.img}}">
+                            <a class="label" data-action="openItem">{{this.name}}</a>
+                        </div>
+                        {{#if this.system.rating}}<div class="small">{{this.system.rating}}</div>{{/if}}
+                        <div class="list-controls">
+                            {{#if @root.isOwner}}<a class="list-control" data-action="deleteEmbedded"><i class="fa-solid fa-xmark"></i></a>{{/if}}
+                        </div>
+                    </div>
+                    <div class="dropdown-content collapsed"></div>
+                </div>
+                {{/each}}
+                {{#if emptySlots}}
+                <div class="droppable" data-component-slot="{{id}}" data-tooltip='{{localize "IMSC.Hint.DropComponent"}}'><i class="fa-solid fa-plus"></i></div>
+                {{/if}}
+            </div>
+        </div>
+        {{/each}}
+    </div>
+
+    {{!-- Ordnance Sections --}}
+    <div class="imsc-section-grid">
+        {{#each ordnanceSections}}
+        <div class="sheet-list vehicle-actors">
+            <div class="list-header row-content">
+                <div class="list-name">{{labelLocalized}}</div>
+                <div class="list-controls imsc-section-controls">
+                    {{#if @root.isOwner}}<a class="list-control" data-action="createItem" data-component-slot="{{id}}"><i class="fa-solid fa-plus"></i></a>{{/if}}
+                </div>
+            </div>
+            <div class="list-content">
+                {{#each items}}
+                <div class="list-row" data-uuid="{{this.uuid}}" data-id="{{this.id}}">
+                    <div class="row-content">
+                        <div class="list-name">
+                            <img src="{{this.img}}">
+                            <a class="label" data-action="openItem">{{this.name}}</a>
+                        </div>
+                        <div class="list-controls">
+                            {{#if @root.isOwner}}<a class="list-control" data-action="deleteEmbedded"><i class="fa-solid fa-xmark"></i></a>{{/if}}
+                        </div>
+                    </div>
+                    <div class="dropdown-content collapsed"></div>
+                </div>
+                {{/each}}
+                {{#if emptySlots}}
+                <div class="droppable" data-component-slot="{{id}}" data-tooltip='{{localize "IMSC.Hint.DropComponent"}}'><i class="fa-solid fa-plus"></i></div>
+                {{/if}}
+            </div>
+        </div>
+        {{/each}}
+    </div>
+    {{!-- Ordnance Actor Templates (Torpedo / Strike Craft actors) --}}
+    <div class="imsc-section-grid">
+        {{!-- Torpedo Actors --}}
+        <div class="sheet-list vehicle-actors droppable" data-ordnance-drop="torpedo">
+            <div class="list-header row-content">
+                <div class="list-name">{{localize "IMSC.Label.TorpedoActors"}}</div>
+                <div class="list-controls"></div>
+            </div>
+            <div class="list-content">
+                {{#each ordnanceActors.torpedo}}
+                <div class="list-row" data-ordnance-id="{{id}}" data-ordnance-slot="torpedo">
+                    <div class="row-content">
+                        <div class="list-name">
+                            {{#if img}}<img src="{{img}}">{{/if}}
+                            <a class="label" data-action="openOrdnanceActor">{{name}}</a>
+                        </div>
+                        <div class="list-controls">
+                            {{#if @root.isOwner}}<a class="list-control" data-action="removeOrdnanceActor"><i class="fa-solid fa-xmark"></i></a>{{/if}}
+                        </div>
+                    </div>
+                </div>
+                {{/each}}
+                {{#if @root.isOwner}}
+                <div class="droppable" data-ordnance-drop="torpedo" data-tooltip="{{localize 'IMSC.Hint.DropOrdnanceActor'}}"><i class="fa-solid fa-plus"></i></div>
+                {{/if}}
+            </div>
+        </div>
+
+        {{!-- Strike Craft Actors --}}
+        <div class="sheet-list vehicle-actors droppable" data-ordnance-drop="strikeCraft">
+            <div class="list-header row-content">
+                <div class="list-name">{{localize "IMSC.Label.StrikeCraftActors"}}</div>
+                <div class="list-controls"></div>
+            </div>
+            <div class="list-content">
+                {{#each ordnanceActors.strikeCraft}}
+                <div class="list-row" data-ordnance-id="{{id}}" data-ordnance-slot="strikeCraft">
+                    <div class="row-content">
+                        <div class="list-name">
+                            {{#if img}}<img src="{{img}}">{{/if}}
+                            <a class="label" data-action="openOrdnanceActor">{{name}}</a>
+                        </div>
+                        <div class="list-controls">
+                            {{#if @root.isOwner}}<a class="list-control" data-action="removeOrdnanceActor"><i class="fa-solid fa-xmark"></i></a>{{/if}}
+                        </div>
+                    </div>
+                </div>
+                {{/each}}
+                {{#if @root.isOwner}}
+                <div class="droppable" data-ordnance-drop="strikeCraft" data-tooltip="{{localize 'IMSC.Hint.DropOrdnanceActor'}}"><i class="fa-solid fa-plus"></i></div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+
+
+</section>

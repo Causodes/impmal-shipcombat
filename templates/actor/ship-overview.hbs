@@ -1,0 +1,153 @@
+<section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
+
+    {{!-- Bridge Crew (table layout) --}}
+    <div class="sheet-list">
+        <div class="list-header imsc-crew-header">
+            <div class="imsc-crew-col-name">{{localize "IMSC.Label.BridgeCrew"}}</div>
+            <div class="imsc-crew-col-role">{{localize "IMSC.Label.Role"}}</div>
+            <div class="imsc-crew-col-action">{{localize "IMSC.Label.ActionReady"}}</div>
+            <div class="imsc-crew-col-skill">
+                {{localize "IMSC.Label.MainSkill"}}
+                {{#if isGM}}
+                <a data-action="fullReset" class="imsc-full-reset-link" data-tooltip="{{localize 'IMSC.Tooltip.FullReset'}}"><i class="fa-solid fa-rotate"></i></a>
+                {{/if}}
+            </div>
+        </div>
+        <div class="list-content">
+            {{#each roles}}
+            <div class="list-row">
+                {{#if assignedActor}}
+                <div class="imsc-crew-row" data-role-id="{{id}}" data-role-drop="{{id}}">
+                    <div class="imsc-crew-col-name">
+                        {{#if assignedActor.img}}<img src="{{assignedActor.img}}" class="imsc-crew-portrait">{{/if}}
+                        <span>{{assignedActor.name}}</span>
+                        {{#if isMyRole}}
+                        <button data-action="releaseRole" data-role-id="{{id}}" class="imsc-claim-btn imsc-release-btn" data-tooltip="{{localize 'IMSC.Action.Release'}}">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                        {{else if @root.isGM}}
+                        <a data-action="unassignRole" data-role-id="{{id}}" class="imsc-claim-btn imsc-release-btn" data-tooltip="{{localize 'IMSC.Action.Release'}}"><i class="fa-solid fa-xmark"></i></a>
+                        {{/if}}
+                    </div>
+                    <div class="imsc-crew-col-role">{{labelLocalized}}</div>
+                    <div class="imsc-crew-col-action {{#if actionAvailable}}imsc-yes{{else}}imsc-no{{/if}}">
+                        {{#if actionAvailable}}{{localize "IMSC.Value.Yes"}}{{else}}{{localize "IMSC.Value.No"}}{{/if}}
+                    </div>
+                    <div class="imsc-crew-col-skill">
+                        {{mainSkill.label}}{{#if mainSkill.hasValue}} {{mainSkill.value}}{{/if}}
+                    </div>
+                </div>
+                {{else if assignedUser}}
+                <div class="imsc-crew-row" data-role-id="{{id}}" data-role-drop="{{id}}">
+                    <div class="imsc-crew-col-name">
+                        <i class="fa-solid fa-user"></i>
+                        <span>{{assignedUser.name}}</span>
+                        {{#if isMyRole}}
+                        <button data-action="releaseRole" data-role-id="{{id}}" class="imsc-claim-btn imsc-release-btn" data-tooltip="{{localize 'IMSC.Action.Release'}}">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                        {{else if @root.isGM}}
+                        <a data-action="unassignRole" data-role-id="{{id}}" class="imsc-claim-btn imsc-release-btn" data-tooltip="{{localize 'IMSC.Action.Release'}}"><i class="fa-solid fa-xmark"></i></a>
+                        {{/if}}
+                    </div>
+                    <div class="imsc-crew-col-role">{{labelLocalized}}</div>
+                    <div class="imsc-crew-col-action {{#if actionAvailable}}imsc-yes{{else}}imsc-no{{/if}}">
+                        {{#if actionAvailable}}{{localize "IMSC.Value.Yes"}}{{else}}{{localize "IMSC.Value.No"}}{{/if}}
+                    </div>
+                    <div class="imsc-crew-col-skill imsc-muted">&mdash;</div>
+                </div>
+                {{else}}
+                <div class="imsc-crew-row imsc-crew-empty" data-role-id="{{id}}" data-role-drop="{{id}}">
+                    <div class="imsc-crew-col-name">
+                        <span class="imsc-muted">{{localize "IMSC.Label.Unassigned"}}</span>
+                    </div>
+                    <div class="imsc-crew-col-role imsc-muted">{{labelLocalized}}</div>
+                    <div class="imsc-crew-col-action">
+                        {{#unless @root.isGM}}
+                        <button data-action="claimRole" data-role-id="{{id}}" class="imsc-claim-btn">
+                            <i class="{{icon}}"></i> {{localize "IMSC.Action.Claim"}}
+                        </button>
+                        {{else}}&mdash;{{/unless}}
+                    </div>
+                    <div class="imsc-crew-col-skill imsc-muted">&mdash;</div>
+                </div>
+                {{/if}}
+            </div>
+            {{/each}}
+        </div>
+    </div>
+
+    {{!-- Installed Components --}}
+    {{#if shipSlotSummary.hasAny}}
+    <div class="sheet-list imsc-ov-components">
+        <div class="list-header row-content">
+            <div class="list-name">{{localize "IMSC.Label.InstalledComponents"}}</div>
+        </div>
+        <div class="list-content imsc-ov-comp-body">
+
+        {{!-- Weapon Batteries (2x2 position grid) --}}
+        {{#if shipSlotSummary.weaponGrid}}
+        <div class="imsc-ov-comp-section">
+            <div class="imsc-ov-weapon-section-label">{{localize "IMSC.Slot.Weapon"}}</div>
+            <div class="imsc-ov-weapon-grid">
+                {{#each shipSlotSummary.weaponGrid}}
+                <div class="imsc-ov-weapon-cell">
+                    <div class="imsc-ov-weapon-pos">{{label}}{{#if slotCount}}<span class="imsc-ov-weapon-slots">{{items.length}}/{{slotCount}}</span>{{/if}}</div>
+                    {{#if items.length}}
+                    {{#each items}}
+                    <a class="imsc-ov-comp-chip" data-action="openItem" data-id="{{id}}" data-uuid="{{uuid}}" data-tooltip="{{name}}">
+                        <img src="{{img}}"><span>{{name}}</span>
+                    </a>
+                    {{/each}}
+                    {{else}}
+                    <span class="imsc-ov-empty">&mdash;</span>
+                    {{/if}}
+                </div>
+                {{/each}}
+            </div>
+        </div>
+        {{/if}}
+
+        {{!-- Torpedo & Strike Craft actor chips --}}
+        {{#if shipSlotSummary.ordnance.length}}
+        <div class="imsc-ov-comp-section">
+            {{#each shipSlotSummary.ordnance}}
+            <div class="imsc-ov-slot-row imsc-ov-ordnance-row">
+                <span class="imsc-ov-slot-label">{{label}}</span>
+                <span class="imsc-ov-slot-items">
+                    {{#each items}}
+                    <a class="imsc-ov-comp-chip" data-action="viewOrdnanceActor" data-actor-id="{{id}}" data-tooltip="{{name}}">
+                        {{#if img}}<img src="{{img}}">{{/if}}<span>{{name}}</span>
+                    </a>
+                    {{/each}}
+                </span>
+            </div>
+            {{/each}}
+        </div>
+        {{/if}}
+
+        {{!-- Equipment (shields, armour, engine, etc.) --}}
+        {{#if shipSlotSummary.equipment.length}}
+        <div class="imsc-ov-comp-section">
+            <div class="imsc-ov-comp-grid">
+                {{#each shipSlotSummary.equipment}}
+                <div class="imsc-ov-slot-row">
+                    <span class="imsc-ov-slot-label">{{label}}</span>
+                    <span class="imsc-ov-slot-items">
+                        {{#each items}}
+                        <a class="imsc-ov-comp-chip" data-action="openItem" data-id="{{id}}" data-uuid="{{uuid}}" data-tooltip="{{name}}">
+                            <img src="{{img}}"><span>{{name}}</span>
+                        </a>
+                        {{/each}}
+                    </span>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+        {{/if}}
+
+        </div>
+    </div>
+    {{/if}}
+
+</section>

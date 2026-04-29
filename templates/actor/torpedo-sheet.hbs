@@ -1,0 +1,147 @@
+<div class="imsc-torpedo-sheet">
+    {{!-- Portrait + Name --}}
+    <header class="imsc-torpedo-header">
+        <img class="imsc-torpedo-portrait" src="{{actor.img}}" data-edit="img" />
+        <input class="imsc-torpedo-name" name="name" type="text" value="{{actor.name}}" />
+    </header>
+
+    {{!-- Hull HP bar --}}
+    <div class="imsc-torpedo-bar">
+        <label>Hull</label>
+        <div class="imsc-torpedo-bar-track">
+            <div class="imsc-torpedo-bar-fill hull" style="width: {{hullPct}}%"></div>
+            <span class="imsc-torpedo-bar-text">
+                <input type="number" name="system.hull.value" value="{{sys.hull.value}}" class="imsc-torpedo-inline" />
+                /
+                <input type="number" name="system.hull.max" value="{{sys.hull.max}}" class="imsc-torpedo-inline" />
+            </span>
+        </div>
+    </div>
+
+    {{!-- Fuel bar --}}
+    <div class="imsc-torpedo-bar">
+        <label>Fuel</label>
+        <div class="imsc-torpedo-bar-track">
+            <div class="imsc-torpedo-bar-fill fuel" style="width: {{fuelPct}}%"></div>
+            <span class="imsc-torpedo-bar-text">
+                <input type="number" name="system.fuel.value" value="{{sys.fuel.value}}" class="imsc-torpedo-inline" />
+                /
+                <input type="number" name="system.fuel.max" value="{{sys.fuel.max}}" class="imsc-torpedo-inline" />
+            </span>
+        </div>
+    </div>
+
+    {{!-- Stat grid --}}
+    <div class="imsc-torpedo-stats">
+        <div class="imsc-torpedo-stat">
+            <label>SPD</label>
+            <input type="number" name="system.movement.speed" value="{{sys.movement.speed}}" />
+        </div>
+        <div class="imsc-torpedo-stat">
+            <label>MAN</label>
+            <input type="number" name="system.movement.maneuverability" value="{{sys.movement.maneuverability}}" />
+        </div>
+        <div class="imsc-torpedo-stat">
+            <label>DMG</label>
+            <input type="number" name="system.payloadDamage" value="{{sys.payloadDamage}}" />
+        </div>
+        <div class="imsc-torpedo-stat">
+            <label>RADIUS</label>
+            <input type="number" name="system.payloadRadius" value="{{sys.payloadRadius}}" />
+        </div>
+        <div class="imsc-torpedo-stat">
+            <label>DET</label>
+            <input type="number" name="system.detectionRadius" value="{{sys.detectionRadius}}" />
+        </div>
+    </div>
+
+    {{!-- Movement Controls --}}
+    <div class="imsc-torpedo-movement imsc-role-section">
+        {{#if sys.turnComplete}}
+        <div class="imsc-section-overlay">
+            <div class="imsc-section-overlay-btn imsc-torpedo-lockout">
+                <i class="fa-solid fa-satellite-dish"></i>
+                {{localize "IMSC.Torpedo.LaunchLockout"}}
+            </div>
+        </div>
+        {{/if}}
+        <h4>Movement</h4>
+        <div class="imsc-torpedo-movement-info">
+            <span>Min Move: {{helm.minMove}}</span>
+            <span>Max Bearing: ±{{helm.maxBearing}}°</span>
+        </div>
+
+        <div class="imsc-torpedo-slider-row">
+            <label>Bearing</label>
+            <input type="range" data-helm-bearing
+                   min="-{{helm.maxBearing}}" max="{{helm.maxBearing}}"
+                   value="{{helm.bearing}}" step="1" />
+            <span data-bearing-display>{{helm.bearing}}°</span>
+        </div>
+
+        <div class="imsc-torpedo-slider-row">
+            <label>Power</label>
+            <input type="range" data-helm-fuel
+                   min="0" max="{{helm.powerMax}}"
+                   value="{{helm.fuelBurned}}" step="1" />
+            <span data-fuel-display>{{helm.fuelBurned}}%</span>
+        </div>
+
+        <div class="imsc-torpedo-movement-buttons">
+            <button type="button" data-action="confirmHelm">
+                <i class="fas fa-check"></i> Confirm
+            </button>
+            <button type="button" data-action="resetHelm">
+                <i class="fas fa-undo"></i> Reset
+            </button>
+        </div>
+    </div>
+
+    {{!-- Detonate --}}
+    <div class="imsc-torpedo-detonate">
+        <button type="button" data-action="detonate" class="imsc-detonate-btn" {{#if sys.turnComplete}}disabled{{/if}}>
+            <i class="fas fa-explosion"></i> Detonate
+        </button>
+    </div>
+
+    {{!-- Traits --}}
+    <div class="imsc-torpedo-traits">
+        <h4>Warhead Traits</h4>
+        <div class="imsc-torpedo-trait-grid">
+            <div class="imsc-torpedo-trait">
+                <label>Rend</label>
+                <input type="number" name="system.traits.rend" value="{{sys.traits.rend}}" />
+            </div>
+            <div class="imsc-torpedo-trait">
+                <label>AP</label>
+                <input type="number" name="system.traits.armourPenetration" value="{{sys.traits.armourPenetration}}" />
+            </div>
+            <div class="imsc-torpedo-trait">
+                <label>Shd Burn</label>
+                <input type="number" name="system.traits.shieldBurn" value="{{sys.traits.shieldBurn}}" />
+            </div>
+            <div class="imsc-torpedo-trait">
+                <label>Shd Bypass</label>
+                <input type="checkbox" name="system.traits.shieldBypass" {{checked sys.traits.shieldBypass}} />
+            </div>
+        </div>
+    </div>
+
+    {{!-- Active trait summary --}}
+    {{#if activeTraits.length}}
+    <div class="imsc-torpedo-trait-summary">
+        {{#each activeTraits}}<span class="imsc-torpedo-tag">{{this}}</span>{{/each}}
+    </div>
+    {{/if}}
+
+    {{!-- Turn Complete --}}
+    <div class="imsc-torpedo-turn">
+        <button type="button" data-action="markTurnComplete">
+            {{#if sys.turnComplete}}
+                <i class="fas fa-check-circle"></i> Turn Complete
+            {{else}}
+                <i class="far fa-circle"></i> Mark Turn Done
+            {{/if}}
+        </button>
+    </div>
+</div>

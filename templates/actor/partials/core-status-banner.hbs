@@ -1,0 +1,21 @@
+{{!-- Inline header badge  -  params: coreCount, hasCoreStaged --}}
+{{#if (imscGt coreCount 0)}}
+<div class="imsc-core-badge imsc-core-badge--assigned">
+    <i class="fa-solid fa-bolt imsc-core-pulse"></i>
+    {{#if (imscGt coreCount 1)}}
+    <span>{{localize "IMSC.CoreBanner.Ready"}} ×{{coreCount}}</span>
+    {{else}}
+    <span>{{localize "IMSC.CoreBanner.Ready"}}</span>
+    {{/if}}
+</div>
+{{else if hasCoreStaged}}
+<div class="imsc-core-badge imsc-core-badge--staged">
+    <i class="fa-solid fa-clock"></i>
+    <span>{{localize "IMSC.CoreBanner.Staged"}}</span>
+</div>
+{{else}}
+<div class="imsc-core-badge imsc-core-badge--none">
+    <i class="fa-solid fa-circle-xmark"></i>
+    <span>{{localize "IMSC.CoreBanner.None"}}</span>
+</div>
+{{/if}}

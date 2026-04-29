@@ -1,0 +1,615 @@
+/* ── Compact stats row (defence table + vitals side by side) ──────────── */
+.imsc-compact-stats {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.1rem 0.3rem 0.15rem;
+  flex-wrap: wrap;
+}
+
+/* ── Compressed header: shrink portrait + name row ───────────────────── */
+.imsc-header .sheet-header img {
+  flex: 0 0 48px !important;
+  width: 48px !important;
+  height: 48px !important;
+}
+.imsc-header .sheet-header {
+  gap: 0.3rem;
+}
+.imsc-header .header-details .details-row.name input {
+  font-size: 0.95rem;
+  padding: 0.1rem 0.2rem;
+  height: auto;
+}
+
+/* ── Defence Table (unified Armour + Shields) ────────────────────────────── */
+.imsc-defence-table {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.imsc-defence-thead,
+.imsc-defence-row {
+  display: grid;
+  grid-template-columns: 4rem 2.5rem 2.5rem;
+  gap: 0 0.15rem;
+  align-items: center;
+  padding: 0.01rem 0;
+}
+
+.imsc-defence-thead {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+  padding-bottom: 0.05rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 0.02rem;
+}
+
+.imsc-defence-val-col {
+  text-align: center;
+  font-size: 0.78rem;
+}
+
+.imsc-defence-loc-col {
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+
+.imsc-defence-row input[type="number"] {
+  width: 100%;
+  text-align: center;
+}
+
+.imsc-header .details-row.flexrow {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.imsc-crew-grid,
+.imsc-section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.imsc-section-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.imsc-slot-input,
+input[data-slot-count] {
+  width: 2ch !important;
+  min-width: 2ch !important;
+  max-width: 2ch !important;
+  height: 1.2em !important;
+  line-height: 1.2 !important;
+  text-align: center;
+  flex-shrink: 0;
+  padding: 1px 3px !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 3px !important;
+  background: rgba(0,0,0,0.35) !important;
+  box-shadow: none !important;
+  font-size: inherit;
+  font-family: inherit;
+  color: inherit;
+  box-sizing: content-box !important;
+  -moz-appearance: textfield;
+}
+.imsc-slot-input::-webkit-inner-spin-button,
+.imsc-slot-input::-webkit-outer-spin-button,
+input[data-slot-count]::-webkit-inner-spin-button,
+input[data-slot-count]::-webkit-outer-spin-button {
+  display: none;
+}
+.imsc-slot-input:hover,
+input[data-slot-count]:hover {
+  background: rgba(0,0,0,0.5) !important;
+  outline: none !important;
+}
+.imsc-slot-input:focus,
+input[data-slot-count]:focus {
+  background: rgba(0,0,0,0.6) !important;
+  outline: 1px solid var(--color-border-light) !important;
+  outline-offset: 0;
+}
+
+.imsc-slot-fraction {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-family: inherit;
+  opacity: 0.85;
+}
+
+.list-header .imsc-section-controls {
+  flex: 0 0 auto !important;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.imsc-weapon-battery-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.imsc-weapon-battery-header .list-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  overflow: visible;
+}
+
+.imsc-core-pips {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.imsc-core-pip {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border-light);
+  background: var(--color-dark-6, #1a1a1a);
+}
+
+.imsc-core-pip--available {
+  background: #5b5b5b;
+  border-color: transparent;
+}
+
+.imsc-core-pip--staged {
+  background: #e67e22;
+  border-color: transparent;
+}
+
+.imsc-core-pip--assigned {
+  background: #e04040;
+  border-color: transparent;
+}
+
+.imsc-core-pip--shield {
+  background: #00ff88;
+  border-color: transparent;
+}
+
+.imsc-core-pip--shield-staged {
+  background: #00ff88;
+  border-color: transparent;
+}
+
+/* ── Rend-damaged armour indicator ───────────────────────────────────────── */
+.imsc-armour--rend { color: #e05252; }
+
+.imsc-core-pip--shield-committed {
+  background: #e04040;
+  border-color: transparent;
+}
+
+.imsc-core-pip--aux-staged {
+  background: #7ec8e3;
+  border-color: transparent;
+}
+
+.imsc-core-pip--aux-committed {
+  background: #e04040;
+  border-color: transparent;
+}
+
+.imsc-core-btn--staged {
+  color: #e67e22;
+}
+
+.imsc-core-btn--assigned {
+  color: #27ae60;
+  cursor: default;
+}
+
+.imsc-resource-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.imsc-resource-val {
+  font-size: 1.1rem;
+  font-weight: bold;
+  min-width: 2ch;
+  text-align: center;
+}
+
+.imsc-adj {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  font-size: 0.9rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imsc-log-time {
+  opacity: 0.6;
+  margin-right: 4px;
+  font-size: 0.75rem;
+}
+
+.imsc-muted {
+  opacity: 0.55;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+
+/* ── Readonly stat value in header ──────────────────────────────────────── */
+.imsc-readonly-val {
+  display: block;
+  text-align: center;
+  font-size: 0.95rem;
+  padding: 2px 0;
+}
+
+.imsc-inline-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.imsc-inline-value input {
+  width: 4.2rem;
+  text-align: center;
+}
+
+/* ── Hull Integrity Bar ──────────────────────────────────────────────────── */
+/* ── Compact vitals (hull + fire) ───────────────────────────────────────── */
+.imsc-compact-vitals {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.15rem;
+  align-self: center;
+}
+
+.imsc-vital-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.imsc-vital-label {
+  font-size: 0.65rem;
+  opacity: 0.7;
+  flex: 0 0 5.5rem;
+  text-align: right;
+}
+
+.imsc-hull-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.imsc-hull-bar input[type="number"] {
+  width: 2.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.imsc-hull-sep {
+  opacity: 0.5;
+}
+
+.imsc-hull-max {
+  opacity: 0.65;
+}
+
+
+/* ── Ship Header: Shield Pool attribute box ─────────────────────────────── */
+.imsc-shieldpool-box .imsc-shieldpool-display {
+  display: flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.imsc-shieldpool-val.imsc-shieldpool-active,
+.imsc-shieldpool-active {
+  color: #00ff88;
+  text-shadow: 0 0 6px rgba(0,255,136,0.55);
+}
+
+.imsc-eng-btn-desc {
+  margin: 0;
+  padding: 0 0.25rem 0.2rem;
+  font-size: 0.72rem;
+  color: var(--color-text-dark-secondary, #888);
+  white-space: normal;
+  line-height: 1.3;
+}
+
+
+/* ── Header: Internal Fire display ───────────────────────────────────────── */
+
+.imsc-fire-display {
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: bold;
+}
+
+.imsc-fire-input {
+  width: 2.5rem;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: bold;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 0 0.25rem;
+}
+
+.imsc-fire-input:hover,
+.imsc-fire-input:focus {
+  border-color: var(--color-border-light);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.imsc-fire-active-input {
+  color: #e04040;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SHIP HEADER  -  full portrait + identity details + stat table + attr boxes
+   Applies to both NPC and player ship sheets via .imsc-ship-header class
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Restore full-size portrait (overrides the 48px compression) */
+.imsc-ship-header .sheet-header img.profile {
+  flex: 0 0 64px !important;
+  width: 64px !important;
+  height: 64px !important;
+  object-fit: contain;
+}
+.imsc-ship-header .sheet-header .header-details {
+  flex: 1;
+  align-self: flex-start;
+}
+
+/* Details row  -  classification / model / faction / role */
+.imsc-ship-header .header-details .details-row:not(.name) .detail-group {
+  min-width: 0;
+  flex: 1;
+}
+.imsc-ship-header .header-details .details-row:not(.name) .input-group select,
+.imsc-ship-header .header-details .details-row:not(.name) .input-group input {
+  width: 100%;
+}
+
+/* ── Stat table: PIL TEC GUN SPD MAN VFX ──────────────────────────────────── */
+.imsc-stat-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  margin: 0;
+  background: none;
+  border: 0;
+}
+.imsc-stat-table tr {
+  background: none;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+.imsc-stat-table tr:last-of-type {
+  border-bottom: 0;
+}
+.imsc-stat-table td {
+  border-right: 1px solid rgba(255,255,255,0.12);
+  padding: 0;
+  height: 1.6rem;
+}
+.imsc-stat-table td:last-of-type {
+  border-right: 0;
+}
+.imsc-stat-table tr:first-of-type td {
+  font-size: 0.65rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  height: 1.2rem;
+  vertical-align: middle;
+  cursor: default;
+}
+.imsc-stat-table input[type="number"] {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: none;
+  text-align: center;
+  padding: 0;
+  box-shadow: none;
+}
+.imsc-stat-table input[type="number"]:focus {
+  box-shadow: none;
+  background: rgba(255,255,255,0.05);
+}
+.imsc-stat-table .imsc-stat-row-label {
+  font-size: 0.65rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+  cursor: default;
+  padding: 0 0.3rem;
+  white-space: nowrap;
+}
+.imsc-stat-table .imsc-readonly-val {
+  display: block;
+  text-align: center;
+  font-size: 0.85rem;
+  line-height: 1.6rem;
+}
+
+/* ── Attr boxes (Hull Damage / Internal Fire) ─────────────────────────────── */
+.imsc-ship-attr-row {
+  display: flex;
+  gap: 0;
+  width: 100%;
+}
+.imsc-ship-attr-box {
+  flex: 1;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-right: none;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: 1.2rem 1.3rem;
+}
+.imsc-ship-attr-box:last-of-type {
+  border-right: 1px solid rgba(255,255,255,0.15);
+}
+.imsc-ship-attr-label {
+  grid-column: 1 / span 12;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: rgba(255,255,255,0.04);
+  white-space: nowrap;
+  padding: 0 0.2rem;
+}
+.imsc-ship-attr-fields {
+  grid-column: 1 / span 12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+}
+.imsc-ship-attr-fields input[type="number"] {
+  flex: 1;
+  height: 1.3rem;
+  text-align: center;
+  border: 0;
+  background: none;
+  min-width: 0;
+}
+.imsc-ship-attr-fields .imsc-hull-sep {
+  opacity: 0.5;
+  flex: 0 0 auto;
+}
+
+/* Internal Fire active (value > 0)  -  red text */
+.imsc-fire-active .imsc-ship-attr-fields input[type="number"],
+.imsc-fire-active .imsc-ship-attr-fields .imsc-readonly-val {
+  color: #ff4444;
+}
+.imsc-fire-active .imsc-ship-attr-label {
+  color: #ff4444;
+}
+
+/* ── Compound ARM/SHD value separator ─────────────────────────────────────── */
+.imsc-compound-val {
+  white-space: nowrap;
+}
+.imsc-as-sep {
+  opacity: 0.4;
+  margin: 0 1px;
+}
+
+/* ── Patron drop zone ─────────────────────────────────────────────────────── */
+.imsc-patron-drop {
+  display: flex;
+  align-items: center;
+  min-height: 1.4rem;
+  border: 1px dashed rgba(255,255,255,0.15);
+  border-radius: 3px;
+  padding: 0 4px;
+  gap: 4px;
+}
+.imsc-patron-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  cursor: pointer;
+}
+.imsc-patron-link:hover span {
+  text-decoration: underline;
+}
+.imsc-patron-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  object-fit: cover;
+  flex: 0 0 16px;
+}
+.imsc-patron-link span {
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.imsc-patron-placeholder {
+  font-size: 0.7rem;
+  opacity: 0.4;
+  font-style: italic;
+}
+.imsc-patron-remove {
+  margin-left: auto;
+  cursor: pointer;
+  opacity: 0.5;
+  font-size: 0.65rem;
+}
+.imsc-patron-remove:hover {
+  opacity: 1;
+  color: #ff6666;
+}
+
+/* ── Flux-to-charge button (inside shield header) ─────────────────────────── */
+.imsc-npc-flux-charge-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 3px;
+  padding: 0.1rem 0.4rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: #e8b96a;
+  line-height: 1;
+}
+.imsc-npc-flux-charge-btn:hover {
+  background: rgba(232,185,106,0.12);
+}
+
+
+/* ── Player ship: Impmal teal (#065c63) borders for stat/attr tables ── */
+.imsc-ship .imsc-stat-table tr { border-bottom-color: #065c63; }
+.imsc-ship .imsc-stat-table td { border-right-color: #065c63; }
+.imsc-ship .imsc-ship-attr-box { border-color: #065c63; }
+.imsc-ship .imsc-ship-attr-label { background: #065c63; border-bottom-color: rgba(0,255,136,0.15); color: rgba(255,255,255,0.9); }

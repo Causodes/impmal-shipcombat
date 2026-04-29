@@ -1,0 +1,128 @@
+<section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
+<div class="imsc-npc-body">
+
+    {{!-- ═══════ Action Buttons ═══════ --}}
+    <div class="imsc-npc-actions-grid">
+        <button class="imsc-npc-action-pill" data-action="npcReduceHeat"
+                {{#if sys.engActionUsed}}disabled{{/if}}>
+            <i class="fa-solid fa-temperature-arrow-down"></i> {{localize "IMSC.NpcShip.ReduceHeat"}}
+        </button>
+        <button class="imsc-npc-action-pill" data-action="npcSuppressFire"
+                {{#if sys.engActionUsed}}disabled{{/if}}>
+            <i class="fa-solid fa-fire-extinguisher"></i> {{localize "IMSC.NpcShip.SuppressFire"}}
+        </button>
+        <button class="imsc-npc-action-pill" data-action="npcRefillShields">
+            <i class="fa-solid fa-shield-halved"></i> {{localize "IMSC.NpcShip.RefillShields"}}
+        </button>
+        <button class="imsc-npc-action-pill imsc-npc-danger-btn" data-action="npcFullReset">
+            <i class="fa-solid fa-trash-can"></i> {{localize "IMSC.NpcShip.FullReset"}}
+        </button>
+    </div>
+
+    {{!-- ═══════ Shield Sectors ═══════ --}}
+    <div class="sheet-list">
+        <div class="list-header row-content">
+            <div class="list-name">{{localize "IMSC.Sensors.VoidshieldAllocation"}}</div>
+        </div>
+        <div class="list-content imsc-shield-alloc-row">
+
+            {{!-- Sector max list (left) --}}
+            <div class="imsc-shield-sector-list">
+              <div class="imsc-ssl-head">{{localize "IMSC.Sensors.ZoneMax"}}</div>
+              {{#each sectors}}
+              <div class="imsc-ssl-row">
+                <span class="imsc-ssl-label">{{label}}</span>
+                <input type="number" name="system.shieldMax.{{id}}" value="{{shieldMax}}" min="0" class="imsc-ssl-max imsc-npc-shield-max-input">
+              </div>
+              {{/each}}
+            </div>
+
+            {{!-- SVG Arc Compass with overlaid shield values --}}
+            <div class="imsc-arc-compass-wrap">
+                <svg class="imsc-arc-compass-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M 50.14 42.64 A 76 76 0 0 1 149.86 42.64 L 138.05 56.23 A 58 58 0 0 0 61.95 56.23 Z"
+                          fill="{{#if shields.bow.over}}#44aaff{{else}}#00ff88{{/if}}" fill-opacity="{{shields.bow.pct}}"
+                          stroke="{{#if shields.bow.over}}#44aaff{{else}}#00ff88{{/if}}" stroke-opacity="0.75" stroke-width="1"/>
+                    <path d="M 157.36 50.14 A 76 76 0 0 1 157.36 149.86 L 143.77 138.05 A 58 58 0 0 0 143.77 61.95 Z"
+                          fill="{{#if shields.starboard.over}}#44aaff{{else}}#00ff88{{/if}}" fill-opacity="{{shields.starboard.pct}}"
+                          stroke="{{#if shields.starboard.over}}#44aaff{{else}}#00ff88{{/if}}" stroke-opacity="0.75" stroke-width="1"/>
+                    <path d="M 149.86 157.36 A 76 76 0 0 1 50.14 157.36 L 61.95 143.77 A 58 58 0 0 0 138.05 143.77 Z"
+                          fill="{{#if shields.stern.over}}#44aaff{{else}}#00ff88{{/if}}" fill-opacity="{{shields.stern.pct}}"
+                          stroke="{{#if shields.stern.over}}#44aaff{{else}}#00ff88{{/if}}" stroke-opacity="0.75" stroke-width="1"/>
+                    <path d="M 42.64 149.86 A 76 76 0 0 1 42.64 50.14 L 56.23 61.95 A 58 58 0 0 0 56.23 138.05 Z"
+                          fill="{{#if shields.port.over}}#44aaff{{else}}#00ff88{{/if}}" fill-opacity="{{shields.port.pct}}"
+                          stroke="{{#if shields.port.over}}#44aaff{{else}}#00ff88{{/if}}" stroke-opacity="0.75" stroke-width="1"/>
+                    <circle cx="100" cy="100" r="36"
+                            fill="#0a0f0a" fill-opacity="0.88"
+                            stroke="#00ff88" stroke-opacity="0.22" stroke-width="1"/>
+                    <polygon points="100,6 93,22 107,22"
+                             fill="{{#if shields.bow.over}}#44aaff{{else}}#00ff88{{/if}}" fill-opacity="0.90"/>
+                </svg>
+
+                <span class="imsc-arc-val imsc-arc-val--bow{{#if shields.bow.over}} imsc-arc-val--over{{/if}}"         data-sector="bow"       data-field="shields">{{shields.bow.val}}</span>
+                <span class="imsc-arc-val imsc-arc-val--starboard{{#if shields.starboard.over}} imsc-arc-val--over{{/if}}" data-sector="starboard" data-field="shields">{{shields.starboard.val}}</span>
+                <span class="imsc-arc-val imsc-arc-val--stern{{#if shields.stern.over}} imsc-arc-val--over{{/if}}"       data-sector="stern"     data-field="shields">{{shields.stern.val}}</span>
+                <span class="imsc-arc-val imsc-arc-val--port{{#if shields.port.over}} imsc-arc-val--over{{/if}}"         data-sector="port"      data-field="shields">{{shields.port.val}}</span>
+
+                <div class="imsc-arc-center">
+                    <div class="imsc-arc-pool-val {{#if (imscLt sys.voidshieldFluxRemaining 0)}}imsc-npc-flux-negative{{/if}}">{{sys.voidshieldFluxRemaining}}</div>
+                    <span class="imsc-arc-dir">{{localize "IMSC.NpcShip.FluxRemaining"}}</span>
+                </div>
+            </div>
+
+            {{!-- Controls panel (right) --}}
+            <div class="imsc-arc-hint-panel">
+              <div class="imsc-ssl-head">{{localize "IMSC.Sensors.Controls"}}</div>
+              <div class="imsc-arc-hint-row"><span class="imsc-arc-hint-key">Scroll</span><span class="imsc-arc-hint-val">Adjust</span></div>
+              <div class="imsc-arc-hint-row"><span class="imsc-arc-hint-key">Left-Click</span><span class="imsc-arc-hint-val">+1</span></div>
+              <div class="imsc-arc-hint-row"><span class="imsc-arc-hint-key">Right-Click</span><span class="imsc-arc-hint-val">−1</span></div>
+              <hr class="imsc-hint-divider">
+              <div class="imsc-ssl-head">{{localize "IMSC.NpcShip.VoidshieldFlux"}}</div>
+              <div class="imsc-arc-hint-row">
+                <span class="imsc-arc-hint-key">{{localize "IMSC.NpcShip.FluxMax"}}</span>
+                <input type="number" name="system.voidshieldFlux" value="{{sys.voidshieldFlux}}" min="0" class="imsc-npc-flux-config-input">
+              </div>
+            </div>
+
+        </div>
+    </div>
+
+    {{!-- ═══════ Crit Conditions ═══════ --}}
+    <div class="sheet-list">
+        <div class="list-header row-content">
+            <div class="list-name">{{localize "IMSC.Captain.Conditions"}}</div>
+        </div>
+        <div class="list-content">
+            {{#if hasAnyCondition}}
+            {{#each conditionsList}}
+            {{#if hasCondition}}
+            <div class="list-row imsc-crit-row {{tierClass}}" data-tooltip='{{conditionEffect}}'>
+                <div class="row-content">
+                    <div class="list-name">
+                        <span class="imsc-crit-location">{{locLabel}}</span>
+                        <span class="imsc-crit-sep">  -  </span>
+                        <span class="imsc-crit-name">{{conditionName}}</span>
+                        {{#if jammedItemName}}
+                        <span class="imsc-crit-meta"><i class="fa-solid fa-gun-slash"></i> {{jammedItemName}}</span>
+                        {{/if}}
+                    </div>
+                    <div class="imsc-crit-tier-badge {{tierClass}}">{{tier}}</div>
+                </div>
+            </div>
+            {{/if}}
+            {{/each}}
+            {{else}}
+            <div class="list-row">
+                <div class="row-content">
+                    <div class="list-name imsc-empty-label">
+                        <i class="fa-solid fa-circle-check"></i>
+                        {{localize "IMSC.Captain.NoConditions"}}
+                    </div>
+                </div>
+            </div>
+            {{/if}}
+        </div>
+    </div>
+
+</div>
+</section>

@@ -1,0 +1,735 @@
+/* ── Gunner: Resource bar colours ──────────────────────────────────────── */
+.imsc-bar-ammo {
+  background: #e67e22;
+}
+.imsc-bar-charge {
+  background: #7ec8e3;
+}
+.imsc-bar-heat {
+  background: linear-gradient(90deg, #f39c12 0%, #c0392b 100%);
+}
+.imsc-resource-label {
+  flex: 0 0 5rem;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+.imsc-core-consume-btn {
+  flex: 0 0 auto;
+  background: none;
+  border: 1px solid var(--color-border-light);
+  border-radius: 4px;
+  color: #f39c12;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+}
+.imsc-core-consume-btn:hover {
+  background: rgba(243,156,18,0.15);
+}
+
+
+/* ── Weapon Arc Pin Toggle ───────────────────────────────────────────────── */
+
+.imsc-pin-arc {
+  opacity: 0.35;
+  transition: opacity 0.15s, color 0.15s;
+  cursor: pointer;
+}
+.imsc-pin-arc:hover {
+  opacity: 0.7;
+}
+.imsc-pin-arc.imsc-pin-active {
+  opacity: 1;
+  color: var(--color-text-hyperlink, #6ea9ff);
+}
+
+/* ── Weapon Battery Cards ──────────────────────────────────────────────── */
+.imsc-battery-card {
+  border: 1px solid var(--color-border-light, rgba(255,255,255,0.12));
+  border-radius: 6px;
+  margin: 0.35rem 0;
+  overflow: hidden;
+}
+
+.imsc-battery-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.5rem;
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid var(--color-border-light, rgba(255,255,255,0.08));
+}
+
+.imsc-battery-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  flex: 0 0 1.4rem;
+  border: none;
+}
+
+.imsc-battery-name {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.imsc-battery-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.35rem 0.5rem;
+}
+
+.imsc-battery-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.imsc-battery-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.imsc-battery-stat-label {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.55;
+}
+
+.imsc-battery-stat-value {
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.imsc-battery-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.imsc-battery-fire-btn {
+  border: 1px solid var(--color-border-light);
+  border-radius: 4px;
+  background: rgba(255,255,255,0.05);
+  color: inherit;
+  cursor: pointer;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  transition: background 0.15s;
+}
+.imsc-battery-fire-btn:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+/* Type accent borders */
+.imsc-battery--macro  { border-left: 3px solid #e8a33a; }
+.imsc-battery--plasma { border-left: 3px solid #ff6644; }
+.imsc-battery--lance  { border-left: 3px solid #7ec8e3; }
+.imsc-battery--pd     { border-left: 3px solid #7ec8e3; }
+
+/* ── Weapon Trait Tags ─────────────────────────────────────────────────── */
+.imsc-battery-traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.3rem;
+  padding: 0.15rem 0.5rem 0.25rem;
+}
+.imsc-trait-tag {
+  display: inline-block;
+  font-size: 0.6rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  letter-spacing: 0.02em;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.imsc-trait--shieldBypass     { color: #7ec8e3; border-color: rgba(126,200,227,0.3); }
+.imsc-trait--unlimitedRof     { color: #f1c40f; border-color: rgba(241,196,15,0.3); }
+.imsc-trait--shieldBurn       { color: #e74c3c; border-color: rgba(231,76,60,0.3); }
+.imsc-trait--voidWeakened     { color: #9b59b6; border-color: rgba(155,89,182,0.3); }
+.imsc-trait--rend             { color: #e67e22; border-color: rgba(230,126,34,0.3); }
+.imsc-trait--armourPenetration { color: #1abc9c; border-color: rgba(26,188,156,0.3); }
+
+/* ── Misconfigured Warning ─────────────────────────────────────────────── */
+.imsc-battery-warning {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.7rem;
+  color: #f39c12;
+  background: rgba(243,156,18,0.1);
+  border-top: 1px solid rgba(243,156,18,0.2);
+}
+.imsc-battery-warning i { margin-right: 0.3rem; }
+
+/* ── Macro Cannon Tier Picker ──────────────────────────────────────────── */
+.imsc-macro-tier-picker {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.2rem 0;
+  flex-wrap: wrap;
+}
+.imsc-macro-tier-pip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-width: 3.5rem;
+  padding: 0.2rem 0.3rem;
+  border-radius: 3px;
+  border: 1px solid rgba(232,163,58,0.18);
+  background: rgba(232,163,58,0.07);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s, border-color 0.15s, background 0.15s;
+  text-align: center;
+}
+.imsc-macro-tier-pip:hover:not(.imsc-tier-dimmed) {
+  opacity: 0.85;
+  border-color: rgba(232,163,58,0.4);
+  background: rgba(232,163,58,0.14);
+}
+.imsc-macro-tier-pip.imsc-macro-pip-selected {
+  opacity: 1;
+  border-color: rgba(232,163,58,0.7);
+  background: rgba(232,163,58,0.22);
+  box-shadow: 0 0 0 1px rgba(232,163,58,0.3) inset;
+}
+.imsc-macro-tier-pip.imsc-tier-dimmed {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+.imsc-macro-tier-pip.imsc-tier-exclusive .imsc-macro-pip-label {
+  font-style: italic;
+  color: #f1c40f;
+}
+.imsc-macro-pip-label {
+  font-size: 0.58rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.imsc-macro-pip-detail {
+  display: flex;
+  gap: 0.2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.imsc-macro-pip-ammo {
+  font-size: 0.52rem;
+  color: #e8a33a;
+  opacity: 0.8;
+}
+.imsc-macro-pip-salvo {
+  font-size: 0.52rem;
+  opacity: 0.6;
+}
+.imsc-macro-stat-ammo { color: #e67e22; }
+.imsc-fire--macro {
+  background: rgba(232,163,58,0.15);
+  color: #e8a33a;
+  border-color: rgba(232,163,58,0.3);
+}
+.imsc-fire--macro:hover:not(:disabled) { background: rgba(232,163,58,0.32); }
+
+/* Keep table styles for NPC gunner sheet which still uses the table */
+/* ── Macro Cannon Fire Tier Table (NPC) ────────────────────────────────── */
+.imsc-macro-tiers {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.68rem;
+  table-layout: fixed;
+}
+.imsc-macro-tiers thead th {
+  padding: 0.1rem 0.25rem;
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.55;
+  text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.imsc-th-ammo, .imsc-th-mod, .imsc-th-salvo, .imsc-th-fire { text-align: center; }
+.imsc-th-ammo  { width: 2.8rem; }
+.imsc-th-mod   { width: 2.8rem; }
+.imsc-th-salvo { width: 2.8rem; }
+.imsc-th-fire  { width: 2.2rem; }
+.imsc-macro-tier td {
+  padding: 0.1rem 0.25rem;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.imsc-tier-name   { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.imsc-tier-ammo   { text-align: center; color: #e67e22; }
+.imsc-tier-mod    { text-align: center; }
+.imsc-tier-salvo  { text-align: center; }
+.imsc-tier-hits   { text-align: center; font-weight: bold; }
+.imsc-fp-bonus  { font-size: 0.6rem; opacity: 0.65; font-weight: normal; }
+.imsc-tier-fire { text-align: center; }
+.imsc-tier-dimmed { opacity: 0.3; }
+.imsc-tier-exclusive .imsc-tier-name {
+  font-style: italic;
+  color: #f1c40f;
+}
+.imsc-tier-fire-btn {
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 4px;
+  background: rgba(232,163,58,0.15);
+  color: #e8a33a;
+  cursor: pointer;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.7rem;
+  transition: background 0.15s;
+}
+.imsc-tier-fire-btn:hover { background: rgba(232,163,58,0.35); }
+.imsc-tier-fire-btn[disabled] {
+  opacity: 0.28;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Plasma Cannon ─────────────────────────────────────────────────────── */
+.imsc-plasma-dmg { color: #ff6644; }
+.imsc-fp-note {
+  font-size: 0.6rem;
+  opacity: 0.55;
+  font-weight: normal;
+  margin-left: 0.2rem;
+}
+.imsc-val-heat { color: #ff6644; }
+.imsc-plasma-shots {
+  padding: 0 0.1rem;
+}
+.imsc-plasma-remaining {
+  font-size: 0.7rem;
+  color: #ff8866;
+  opacity: 0.75;
+}
+.imsc-fire--plasma {
+  background: rgba(255,102,68,0.15);
+  color: #ff6644;
+  border-color: rgba(255,102,68,0.3);
+}
+.imsc-fire--plasma:hover { background: rgba(255,102,68,0.35); }
+
+/* ── Lance Battery ─────────────────────────────────────────────────────── */
+.imsc-lance-charge-meter {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.1rem 0;
+}
+.imsc-lance-charge-label {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  opacity: 0.55;
+  letter-spacing: 0.03em;
+}
+.imsc-lance-pips {
+  display: flex;
+  gap: 0.3rem;
+  flex: 1;
+}
+.imsc-lance-tier-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.15rem 0.3rem;
+  border-radius: 3px;
+  border: 1px solid rgba(126,200,227,0.15);
+  background: rgba(126,200,227,0.06);
+  font-size: 0.6rem;
+  opacity: 0.4;
+  transition: opacity 0.15s, border-color 0.15s;
+}
+.imsc-lance-tier-active {
+  opacity: 1;
+  border-color: rgba(126,200,227,0.55);
+  background: rgba(126,200,227,0.2);
+}
+.imsc-lance-tier-label { font-size: 0.55rem; white-space: nowrap; }
+.imsc-lance-tier-dmg   { font-weight: bold; color: #7ec8e3; }
+.imsc-lance-charge-value {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #7ec8e3;
+}
+.imsc-fire--lance {
+  background: rgba(126,200,227,0.15);
+  color: #7ec8e3;
+  border-color: rgba(126,200,227,0.3);
+}
+.imsc-fire--lance:hover { background: rgba(126,200,227,0.35); }
+
+/* ── Point Defense ─────────────────────────────────────────────────────── */
+.imsc-fire--pd {
+  background: rgba(126,200,227,0.15);
+  color: #7ec8e3;
+  border-color: rgba(126,200,227,0.3);
+}
+.imsc-fire--pd:hover { background: rgba(126,200,227,0.35); }
+
+/* ── Fire-blocked label ────────────────────────────────────────────────── */
+.imsc-fire-blocked {
+  font-size: 0.7rem;
+  opacity: 0.5;
+  font-style: italic;
+  padding: 0.25rem 0;
+}
+
+/* ── Targeting Popup ───────────────────────────────────────────────────── */
+.imsc-targeting-popup {
+  background: rgb(18, 42, 44);
+  color: #ddd;
+}
+.imsc-tp-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+.imsc-tp-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255,255,255,0.04);
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.imsc-tp-weapon-icon {
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 2rem;
+  border-radius: 4px;
+  border: none;
+}
+.imsc-tp-header-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.imsc-tp-weapon-name { font-weight: 700; font-size: 0.85rem; }
+.imsc-tp-mode-name   { font-size: 0.7rem; opacity: 0.65; }
+.imsc-tp-header-stats {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+}
+.imsc-tp-stat {
+  background: rgba(255,255,255,0.06);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.imsc-tp-stat i { margin-right: 0.2rem; opacity: 0.6; }
+.imsc-tp-stat--cost  { color: #e8a33a; }
+.imsc-tp-stat--bonus { color: #7ec8e3; }
+
+.imsc-tp-empty {
+  text-align: center;
+  padding: 1.5rem;
+  opacity: 0.5;
+  font-style: italic;
+}
+.imsc-tp-empty i { margin-right: 0.3rem; }
+
+.imsc-tp-targets {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.imsc-tp-target {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+  transition: background 0.15s;
+}
+.imsc-tp-target:hover { background: rgba(255,255,255,0.06); }
+.imsc-tp-target-icon {
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 2rem;
+  border-radius: 50%;
+  border: none;
+}
+.imsc-tp-target-icon--l1 {
+  opacity: 0.75;
+}
+.imsc-tp-target-info { flex: 1; }
+.imsc-tp-target-name { font-weight: 600; font-size: 0.8rem; display: block; }
+.imsc-tp-l1-meta {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.65rem;
+  opacity: 0.8;
+  margin-top: 0.1rem;
+  color: #f1c40f;
+}
+.imsc-tp-l1-meta i { margin-right: 0.15rem; }
+.imsc-tp-target-details {
+  display: flex;
+  gap: 0.4rem;
+  font-size: 0.65rem;
+  opacity: 0.65;
+  margin-top: 0.1rem;
+}
+.imsc-tp-detail i { margin-right: 0.15rem; }
+.imsc-tp-zone--1 { color: #44ff88; }
+.imsc-tp-zone--2 { color: #f1c40f; }
+.imsc-tp-zone--3 { color: #e74c3c; }
+
+.imsc-tp-target-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+}
+.imsc-tp-acc {
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+.imsc-tp-acc--auto    { color: #44ff88; }
+.imsc-tp-acc--boosted { color: #88ccff; }
+.imsc-tp-acc--ranged  { color: #f1c40f; }
+.imsc-ranging-active  { font-size: 0.65rem; opacity: 0.8; margin-left: 0.2rem; }
+.imsc-tp-defenses {
+  display: flex;
+  gap: 0.3rem;
+  font-size: 0.65rem;
+  opacity: 0.65;
+}
+.imsc-tp-armour-val { color: #e8a33a; }
+.imsc-tp-fire-btn {
+  border: 1px solid rgba(231,76,60,0.4);
+  border-radius: 6px;
+  background: rgba(231,76,60,0.15);
+  color: #e74c3c;
+  cursor: pointer;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+  transition: background 0.15s;
+  flex: 0 0 auto;
+}
+.imsc-tp-fire-btn:hover { background: rgba(231,76,60,0.35); }
+
+/* ── Strike craft attack popup: already-attacked row ─────────────────── */
+.imsc-tp-target--done {
+  opacity: 0.45;
+}
+.imsc-tp-target--done:hover { background: rgba(255,255,255,0.02); }
+
+.imsc-sc-attacked-badge {
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid rgba(68,255,136,0.35);
+  background: rgba(68,255,136,0.10);
+  color: #44ff88;
+  font-size: 0.85rem;
+}
+
+/* ── Recover craft popup: green recall button ────────────────────────── */
+.imsc-rc-recall-btn {
+  border-color: rgba(0,255,136,0.45);
+  background: rgba(0,255,136,0.15);
+  color: #00ff88;
+}
+.imsc-rc-recall-btn:hover { background: rgba(0,255,136,0.35); }
+
+/* ── Recover craft popup: header icon placeholder ────────────────────── */
+.imsc-rc-header-icon {
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: rgba(0,255,136,0.20);
+  color: #00ff88;
+  font-size: 1rem;
+}
+
+.imsc-empty-slot {
+  opacity: 0.4;
+  font-style: italic;
+  font-size: 0.75rem;
+  padding: 0.25rem 0;
+}
+
+/* ── Battle Clarity popup: lock badge + disabled fire button ──────────── */
+
+.imsc-tp-lock-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 3px;
+  border: 1px solid;
+  white-space: nowrap;
+  text-align: center;
+  min-width: 1.8rem;
+}
+
+.imsc-tp-fire-btn--no-lock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.25);
+  cursor: default;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+  flex: 0 0 auto;
+}
+
+/* ── Fire Result Chat Card ─────────────────────────────────────────────── */
+
+.imsc-fire-result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.4rem;
+}
+.imsc-fire-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.imsc-fire-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.imsc-fire-title {
+  display: flex;
+  flex-direction: column;
+}
+.imsc-fire-title strong { font-size: 0.85rem; }
+.imsc-fire-mode {
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+.imsc-fire-target-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+}
+.imsc-fire-target-row i { opacity: 0.5; }
+.imsc-fire-quadrant { opacity: 0.65; font-size: 0.75rem; }
+
+.imsc-fire-auto {
+  text-align: center;
+  padding: 0.4rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #44ff88;
+  background: rgba(68,255,136,0.08);
+  border: 1px solid rgba(68,255,136,0.2);
+  border-radius: 4px;
+}
+.imsc-fire-auto i { margin-right: 0.3rem; }
+
+.imsc-fire-roll {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem;
+  background: rgba(0,0,0,0.15);
+  border-radius: 4px;
+}
+.imsc-fire-comparison {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.imsc-fire-vs {
+  opacity: 0.4;
+  font-size: 0.7rem;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+.imsc-fire-tn { opacity: 0.75; }
+.imsc-fire-sl {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.imsc-fire-outcome {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.imsc-fire-success { color: #44ff88; }
+.imsc-fire-failure { color: #e74c3c; }
+
+.imsc-fire-details {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  justify-content: center;
+}
+.imsc-fire-detail i { margin-right: 0.15rem; }
+.imsc-fire-cost { color: #e8a33a; }
+
+/* ── Overcharge toggle (TargetingPopup) ── */
+.imsc-tp-overcharge-row {
+  display: flex;
+  justify-content: center;
+  padding: 0.3rem 0.6rem 0;
+}
+.imsc-tp-overcharge-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.5);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.imsc-tp-overcharge-btn:hover {
+  background: rgba(255, 102, 68, 0.12);
+  border-color: rgba(255, 102, 68, 0.4);
+  color: #ff6644;
+}
+.imsc-tp-overcharge--on {
+  background: rgba(255, 102, 68, 0.15) !important;
+  border-color: rgba(255, 102, 68, 0.5) !important;
+  color: #ff6644 !important;
+}
+.imsc-tp-overcharge--on i {
+  animation: imsc-pulse 0.9s ease-in-out infinite;
+}
+.imsc-tp-oc-note {
+  font-size: 0.65rem;
+  font-weight: 400;
+  opacity: 0.75;
+  margin-left: 0.2rem;
+}
+

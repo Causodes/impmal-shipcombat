@@ -1,0 +1,166 @@
+<section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
+
+    {{!-- Role claim prompt --}}
+    {{#with (lookup roles "sensors")}}
+    {{#unless isMyRole}}
+        {{#unless @root.isGM}}
+        <div class="sheet-list">
+            <div class="list-content">
+                <div class="list-row">
+                    <div class="row-content">
+                        <div class="list-name">{{localize "IMSC.Prompt.ClaimRole"}}</div>
+                        <div class="list-controls">
+                            <button data-action="claimRole" data-role-id="sensors">
+                                <i class="fa-solid fa-satellite-dish"></i> {{localize "IMSC.Role.Sensors"}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{/unless}}
+    {{/unless}}
+    {{/with}}
+
+    {{!-- ═══════ Captain Boost Banner ═══════ --}}
+    {{#if sensorsCtx.captainBoosts.length}}
+    <div class="imsc-captain-boost-bar">
+        <span class="imsc-captain-boost-bar-label"><i class="fa-solid fa-flag"></i> {{localize "IMSC.Captain.ActiveOrdersShort"}}:</span>
+        {{#each sensorsCtx.captainBoosts}}
+        <span class="imsc-captain-boost-chip">{{label}}</span>
+        {{/each}}
+    </div>
+    {{/if}}
+
+    {{!-- ═══════ Docked Resource Bar ═══════ --}}
+    <div class="sheet-list imsc-role-status-bar">
+        <div class="list-header row-content">
+            <div class="list-name">{{localize "IMSC.Sensors.StatusTitle"}}</div>
+            {{#with (lookup roles "sensors")}}
+            {{> "modules/impmal-shipcombat/templates/actor/partials/payload-status-badge.hbs"
+                payloadId=payloadId payloadLabel=payloadLabel payloadDesc=payloadDesc}}
+            {{> "modules/impmal-shipcombat/templates/actor/partials/core-status-banner.hbs"
+                coreCount=coreCount coreActionsPlayedLabels=@root.sensorsCtx.coreActionsPlayedLabels hasCoreStaged=hasCoreStaged}}
+            {{/with}}
+        </div>
+        <div class="list-content">
+            <div class="imsc-role-status-panel">
+                <div class="imsc-resource-bar-row">
+                    <span class="imsc-resource-bar-label">{{localize "IMSC.Sensors.PowerTrack"}}</span>
+
+                    <div class="imsc-resource-bar-track imsc-resource-bar-track--plasma">
+                        <div class="imsc-resource-bar-fill imsc-bar-data" style="width: {{sensorsCtx.powerPct}}%"></div>
+                    </div>
+                    <span class="imsc-resource-bar-value" style="color: #7ec8e3">{{sensorsCtx.power}}/{{sensorsCtx.powerMax}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{!-- ═══════ Auspex Radar ═══════ --}}
+    <div class="sheet-list imsc-radar-section">
+        <div class="list-header row-content">
+            <div class="list-name">{{localize "IMSC.Sensors.AuspexRadar"}}</div>
+        </div>
+        <div class="list-content">
+            <div class="imsc-radar-toolbar">
+                <button class="imsc-bearing-toggle-btn {{#if sensorsCtx.isTrueBearing}}active{{/if}}" data-action="toggleBearing"
+                        data-tooltip="{{localize 'IMSC.Sensors.BearingToggle'}}">
+                    <i class="fa-solid fa-compass-drafting"></i>
+                    {{#if sensorsCtx.isTrueBearing}}TRUE{{else}}REL{{/if}}
+                </button>
+                <button class="imsc-bearing-toggle-btn imsc-popout-btn" data-action="popOutRadar"
+                        data-tooltip="{{localize 'IMSC.Sensors.PopOutRadar'}}">
+                    <i class="fa-solid fa-up-right-from-square"></i>
+                </button>
+            </div>
+            <div class="imsc-radar-wrap">
+                <canvas data-auspex-radar></canvas>
+                {{!-- Popup injected by AuspexRadar.js on blip click --}}
+            </div>
+            <div class="imsc-radar-toolbar-bottom">
+                <div class="imsc-radar-zoom-wrap" data-tooltip="Radar scale (scroll wheel on radar also works)">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="range" class="imsc-radar-zoom" min="5" max="{{sensorsCtx.maxScanRange}}" step="1"
+                           value="{{sensorsCtx.radarScale}}" />
+                    <span class="imsc-radar-zoom-label">{{sensorsCtx.radarScale}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{!-- ═══════ BDA Button ═══════ --}}
+    {{#if (or sensorsCtx.bdaAvailable sensorsCtx.bdaCorrectionPending)}}
+    <div class="sheet-list imsc-bda-section {{#if sensorsCtx.bdaCorrectionPending}}imsc-bda-section--correction{{else}}imsc-bda-section--available{{/if}}">
+        <div class="list-content">
+            <button class="imsc-bda-roll-btn" data-action="openBDAPopup"
+                    data-tooltip="{{localize 'IMSC.BDA.OpenPopupTooltip'}}">
+                <i class="fa-solid fa-satellite-dish"></i>
+                {{#if sensorsCtx.bdaCorrectionPending}}
+                    {{localize "IMSC.BDA.CorrectionTitle"}}
+                    <span class="imsc-bda-sl-badge">SL {{sensorsCtx.bdaResultSL}}</span>
+                {{else}}
+                    {{localize "IMSC.BDA.Title"}}
+                {{/if}}
+            </button>
+        </div>
+    </div>
+    {{/if}}
+
+    {{!-- ═══════ Augur Abilities Reference ═══════ --}}
+    <div class="sheet-list imsc-augur-abilities-section">
+        <div class="list-header row-content">
+            <div class="list-name">{{localize "IMSC.Sensors.AbilitiesReference"}}</div>
+        </div>
+        <div class="list-content">
+            <table class="imsc-augur-abilities-table">
+                <thead>
+                    <tr>
+                        <th class="imsc-abl-name">{{localize "IMSC.Sensors.Ability"}}</th>
+                        <th class="imsc-abl-cost">{{localize "IMSC.Sensors.Cost"}}</th>
+                        <th class="imsc-abl-desc">{{localize "IMSC.Sensors.Description"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="imsc-abl-category-row"><td colspan="3">{{localize "IMSC.Sensors.LockUpgrades"}}</td></tr>
+                    <tr>
+                        <td class="imsc-abl-name"><i class="fa-solid fa-satellite-dish {{sensorsCtx.lockTier0.tierClass}}"></i> {{sensorsCtx.lockTier0.labelLocalized}}</td>
+                        <td class="imsc-abl-cost">{{sensorsCtx.lockTier0.cost}} AP</td>
+                        <td class="imsc-abl-desc">
+                            {{sensorsCtx.lockTier0.descLocalized}}
+                        </td>
+                    </tr>
+                    {{#each sensorsCtx.lockActions}}
+                    <tr>
+                        <td class="imsc-abl-name"><i class="fa-solid fa-satellite-dish {{tierClass}}"></i> {{labelLocalized}}</td>
+                        <td class="imsc-abl-cost">{{cost}} AP</td>
+                        <td class="imsc-abl-desc">
+                            {{descLocalized}}
+                            <div class="imsc-abl-meta">{{localize "IMSC.Sensors.DecayRounds" rounds=decayRounds}} {{localize "IMSC.Sensors.GunnerConsumesLock"}}</div>
+                        </td>
+                    </tr>
+                    {{/each}}
+                    <tr class="imsc-abl-category-row"><td colspan="3">{{localize "IMSC.Sensors.UtilityActions"}}</td></tr>
+                    {{#each sensorsCtx.utilityActions}}
+                    <tr>
+                        <td class="imsc-abl-name"><i class="fa-solid fa-wrench"></i> {{labelLocalized}}</td>
+                        <td class="imsc-abl-cost">{{cost}} AP</td>
+                        <td class="imsc-abl-desc">{{descLocalized}}</td>
+                    </tr>
+                    {{/each}}
+                    <tr class="imsc-abl-category-row"><td colspan="3">{{localize "IMSC.Sensors.CoreAbilities"}}</td></tr>
+                    {{#each sensorsCtx.coreActions}}
+                    <tr>
+                        <td class="imsc-abl-name"><i class="fa-solid fa-bolt"></i> {{labelLocalized}}</td>
+                        <td class="imsc-abl-cost">{{ap}} AP</td>
+                        <td class="imsc-abl-desc">{{descLocalized}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {{> 'modules/impmal-shipcombat/templates/actor/partials/complete-turn.hbs' tabRoleId="sensors" turnDone=(lookup @root.sys.turnDone "sensors")}}
+
+</section>

@@ -1,0 +1,76 @@
+{
+  "id": "impmal-shipcombat",
+  "title": "Imperium Maledictum – Ship Combat",
+  "description": "Asymmetric 6-player bridge-crew ship combat for Imperium Maledictum. Features the Power Gate, Portent Deck, Doctrine Synchronisation, and Private Vision Tunnels.",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": 13,
+    "verified": 13,
+    "maximum": 13
+  },
+  "authors": [
+    {
+      "name": "Causodes"
+    }
+  ],
+  "socket": true,
+  "relationships": {
+    "systems": [
+      {
+        "id": "impmal",
+        "type": "system"
+      }
+    ],
+    "required": [
+      {
+        "id": "socketlib",
+        "type": "module"
+      },
+      {
+        "id": "warhammer-lib",
+        "type": "module"
+      }
+    ]
+  },
+  "esmodules": [
+    "impmal-shipcombat.js"
+  ],
+  "scripts": [],
+  "styles": [
+    "styles/shared.css",
+    "styles/header.css",
+    "styles/overview.css",
+    "styles/pilot.css",
+    "styles/enginseer.css",
+    "styles/gunner.css",
+    "styles/sensors.css",
+    "styles/chat.css",
+    "styles/npc.css",
+    "styles/torpedo.css",
+    "styles/ordnance.css",
+    "styles/captain.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "documentTypes": {
+    "Actor": {
+      "ship": {},
+      "npcShip": {},
+      "torpedo": {},
+      "strikeCraft": {}
+    },
+    "Item": {
+      "component": {}
+    }
+  },
+  "flags": {
+    "hotReload": {
+      "extensions": ["css", "hbs", "json"]
+    }
+  }
+}

@@ -1,0 +1,320 @@
+/* ── Torpedo Sheet ───────────────────────────────────────────────────────── */
+
+.imsc-torpedo-sheet {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Header block  -  uses system .sheet-header; shrink portrait to match ship sheets */
+.imsc-torpedo-header-block .sheet-header img {
+  flex: 0 0 48px !important;
+  width: 48px !important;
+  height: 48px !important;
+}
+.imsc-torpedo-header-block .sheet-header {
+  gap: 0.3rem;
+}
+/* Center the name */
+.imsc-torpedo-header-block .details-row.name input {
+  text-align: center;
+  font-size: 0.95rem;
+  padding: 0.1rem 0.2rem;
+  height: auto;
+}
+/* Bars sit below the name inside header-details */
+.imsc-torpedo-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+/* Resource bars */
+.imsc-torpedo-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.imsc-torpedo-bar > label {
+  flex: 0 0 80px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  opacity: 0.7;
+  text-align: right;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.imsc-torpedo-bar-track {
+  flex: 1;
+  height: 18px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+.imsc-torpedo-bar-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.imsc-torpedo-bar-fill.hull { background: rgba(200,60,60,0.5); }
+.imsc-torpedo-bar-fill.fuel { background: rgba(60,160,220,0.5); }
+.imsc-torpedo-bar-fill.ammo { background: rgba(220,180,40,0.5); }
+.imsc-torpedo-bar-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: #fff;
+  gap: 2px;
+}
+.imsc-torpedo-inline {
+  width: 28px;
+  background: none;
+  border: none;
+  color: #fff;
+  text-align: center;
+  font-size: 0.7rem;
+  padding: 0;
+}
+
+/* Stat grid */
+.imsc-torpedo-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  text-align: center;
+}
+.imsc-torpedo-stat label {
+  display: block;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+.imsc-torpedo-stat input {
+  width: 100%;
+  text-align: center;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 3px;
+  color: #fff;
+  font-size: 0.85rem;
+  padding: 2px;
+}
+
+/* Traits */
+.imsc-torpedo-traits h4 {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin: 0;
+}
+.imsc-torpedo-trait-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  text-align: center;
+}
+.imsc-torpedo-trait label {
+  display: block;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+.imsc-torpedo-trait input[type="number"] {
+  width: 100%;
+  text-align: center;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 3px;
+  color: #fff;
+  font-size: 0.85rem;
+  padding: 2px;
+}
+.imsc-torpedo-trait input[type="checkbox"] {
+  margin: 4px auto 0;
+  display: block;
+}
+
+/* Trait tags */
+.imsc-torpedo-trait-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+.imsc-torpedo-tag {
+  background: rgba(200,60,60,0.2);
+  border: 1px solid rgba(200,60,60,0.4);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-size: 0.65rem;
+  color: #e88;
+  text-transform: uppercase;
+}
+
+/* ── Movement Controls ─────────────────────────────────────────────────── */
+.imsc-torpedo-movement {
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px;
+  padding: 6px;
+  background: rgba(0,0,0,0.15);
+}
+.imsc-torpedo-movement h4 {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin: 0 0 4px;
+}
+.imsc-torpedo-movement-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  opacity: 0.6;
+  margin-bottom: 6px;
+}
+.imsc-torpedo-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.imsc-torpedo-slider-row label {
+  width: 50px;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  opacity: 0.6;
+  text-align: right;
+}
+.imsc-torpedo-slider-row input[type="range"] {
+  flex: 1;
+  height: 6px;
+}
+.imsc-torpedo-slider-row span {
+  width: 36px;
+  font-size: 0.7rem;
+  text-align: right;
+}
+.imsc-torpedo-movement-buttons {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+.imsc-torpedo-movement-buttons button {
+  flex: 1;
+  font-size: 0.7rem;
+  padding: 3px 6px;
+  cursor: pointer;
+}
+
+/* ── Ship Power Bar (inside torpedo/SC movement) ───────────────────────── */
+.imsc-torpedo-ship-power {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+/* ── Compact Power Bar (torpedo / strike craft) ────────────────────────── */
+.imsc-torpedo-power-block {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.imsc-torpedo-power-block > label {
+  width: 50px;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  opacity: 0.6;
+  text-align: right;
+  flex-shrink: 0;
+}
+.imsc-torpedo-power-block .imsc-power-bar--compact {
+  height: 1rem;
+  flex: 1;
+}
+.imsc-torpedo-power-block .imsc-power-range {
+  height: 1rem;
+}
+.imsc-torpedo-power-block .imsc-power-readout {
+  width: 36px;
+  font-size: 0.7rem;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Detonate Button ───────────────────────────────────────────────────── */
+.imsc-torpedo-detonate {
+  text-align: center;
+}
+.imsc-detonate-btn {
+  width: 100%;
+  padding: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: rgba(200,40,40,0.3);
+  border: 1px solid rgba(200,40,40,0.6);
+  color: #ff6666;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.imsc-detonate-btn:hover {
+  background: rgba(200,40,40,0.5);
+}
+.imsc-attack-btn {
+  width: 100%;
+  padding: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: rgba(40,120,200,0.3);
+  border: 1px solid rgba(40,120,200,0.6);
+  color: #66aaff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.imsc-attack-btn:hover {
+  background: rgba(40,120,200,0.5);
+}
+
+/* ── Turn Done ─────────────────────────────────────────────────────────── */
+.imsc-torpedo-turn {
+  text-align: center;
+}
+.imsc-torpedo-turn button {
+  width: 100%;
+  padding: 4px;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+/* ── Launch-turn lockout overlay ──────────────────────────────────────── */
+.imsc-torpedo-lockout {
+  cursor: default;
+  font-size: 0.85rem;
+}
+.imsc-torpedo-lockout i {
+  font-size: 1.4rem;
+  animation: imsc-flicker 3s ease-in-out infinite;
+}
+
+/* ── Torpedo Damage Chat ───────────────────────────────────────────────── */
+.imsc-torpedo-damage h3 {
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+  color: #e88;
+}
+.imsc-torpedo-damage p {
+  margin: 2px 0;
+  font-size: 0.8rem;
+}
+

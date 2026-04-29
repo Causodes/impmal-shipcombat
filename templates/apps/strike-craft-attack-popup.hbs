@@ -1,0 +1,62 @@
+{{!-- strike-craft-attack-popup.hbs  -  target list for a strike craft attack run --}}
+<div class="imsc-tp-wrapper">
+
+    {{!-- Header: craft identity + ammo remaining --}}
+    <div class="imsc-tp-header">
+        <img src="{{craftImg}}" class="imsc-tp-weapon-icon">
+        <div class="imsc-tp-header-text">
+            <span class="imsc-tp-weapon-name">{{craftName}}</span>
+            <span class="imsc-tp-mode-name">{{craftTypeLabel}}  -  {{localize "IMSC.StrikeCraft.AttackRun"}}</span>
+        </div>
+
+    </div>
+
+    {{!-- Target list --}}
+    {{#if noTargets}}
+    <div class="imsc-tp-empty">
+        <i class="fa-solid fa-ban"></i>
+        {{localize "IMSC.StrikeCraft.NoTargets"}}
+    </div>
+    {{else}}
+    <div class="imsc-tp-targets">
+        {{#each targets}}
+        <div class="imsc-tp-target{{#if this.alreadyAttacked}} imsc-tp-target--done{{/if}}"
+             data-token-id="{{this.tokenId}}">
+            <img src="{{this.img}}" class="imsc-tp-target-icon">
+            <div class="imsc-tp-target-info">
+                <span class="imsc-tp-target-name">{{this.name}}</span>
+                <div class="imsc-tp-target-details">
+                    <span class="imsc-tp-detail">
+                        <i class="fa-solid fa-ruler"></i>
+                        {{this.distance}} {{localize "IMSC.Label.VoidUnits"}}
+                    </span>
+                    <span class="imsc-tp-detail imsc-tp-zone imsc-tp-zone--{{this.zone}}">
+                        {{this.zoneLabel}}
+                    </span>
+                    <span class="imsc-tp-detail">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        {{this.hitQuadrantLabel}}
+                    </span>
+                </div>
+            </div>
+            <div class="imsc-tp-target-stats">
+                <div class="imsc-tp-acc{{#if (imscEq this.zone 1)}} imsc-tp-acc--boosted{{/if}}"
+                     data-tooltip="{{this.accuracyTooltip}}">
+                    {{this.totalAccuracy}}%
+                </div>
+            </div>
+            {{#if this.alreadyAttacked}}
+            <div class="imsc-sc-attacked-badge" data-tooltip="{{localize 'IMSC.StrikeCraft.AlreadyAttacked'}}">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            {{else}}
+            <button class="imsc-tp-fire-btn" data-action="confirmAttack" data-token-id="{{this.tokenId}}">
+                <i class="fa-solid fa-crosshairs"></i>
+            </button>
+            {{/if}}
+        </div>
+        {{/each}}
+    </div>
+    {{/if}}
+
+</div>
