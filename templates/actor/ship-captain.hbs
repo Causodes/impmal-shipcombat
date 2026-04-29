@@ -69,8 +69,15 @@
         </div>
     </div>
 
-    {{!-- ═══════ Leadership Roll / Alloc (not sticky) ═══════ --}}
+    {{!-- ═══════ Leadership Allocation ═══════ --}}
     <div class="sheet-list">
+        <div class="list-header row-content">
+            <div class="list-name">{{localize "IMSC.Captain.LeadershipAllocation"}}</div>
+            <a class="imsc-full-reset-link" data-action="rollInitiative"
+               data-tooltip="{{localize 'IMSC.Captain.RollInitiativeBtn'}}">
+                <i class="fa-solid fa-dice-d20"></i>
+            </a>
+        </div>
         <div class="list-content">
             <div class="imsc-helm-stats">
                 <div class="imsc-helm-stat" data-tooltip="{{localize 'IMSC.Captain.LeadershipSLTooltip'}}">
@@ -78,7 +85,7 @@
                     {{#if captainCtx.leadershipRolled}}
                         <span class="imsc-helm-stat-value imsc-sl-badge">{{captainCtx.remainingLeadershipSL}}</span>
                     {{else}}
-                        <button class="imsc-roll-piloting-btn" data-action="rollLeadership">
+                        <button class="imsc-roll-piloting-btn" data-action="rollLeadershipSL">
                             <i class="fa-solid fa-dice"></i> {{localize "IMSC.Captain.RollLeadership"}}
                         </button>
                     {{/if}}
@@ -94,7 +101,7 @@
                         <span class="imsc-helm-stat-value">{{captainCtx.allocInspire}}</span>
                         <button class="imsc-alloc-btn" data-action="allocLeadershipSL" data-stat="inspire" data-delta="1"
                                 {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
-                                {{#if (gte (add captainCtx.allocInspire captainCtx.allocResolve) captainCtx.leadershipSL)}}disabled{{/if}}>
+                                {{#if (gte (add (add captainCtx.allocInspire captainCtx.allocResolve) captainCtx.allocInitiative) captainCtx.leadershipSL)}}disabled{{/if}}>
                             +
                         </button>
                     </div>
@@ -110,7 +117,23 @@
                         <span class="imsc-helm-stat-value">{{captainCtx.allocResolve}}</span>
                         <button class="imsc-alloc-btn" data-action="allocLeadershipSL" data-stat="resolve" data-delta="1"
                                 {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
-                                {{#if (gte (add captainCtx.allocInspire captainCtx.allocResolve) captainCtx.leadershipSL)}}disabled{{/if}}>
+                                {{#if (gte (add (add captainCtx.allocInspire captainCtx.allocResolve) captainCtx.allocInitiative) captainCtx.leadershipSL)}}disabled{{/if}}>
+                            +
+                        </button>
+                    </div>
+                </div>
+                <div class="imsc-helm-stat" data-tooltip="{{localize 'IMSC.Captain.InitiativeTooltip'}}">
+                    <span class="imsc-helm-stat-label">{{localize "IMSC.Captain.AllocInitiative"}}</span>
+                    <div class="imsc-alloc-row">
+                        <button class="imsc-alloc-btn" data-action="allocLeadershipSL" data-stat="initiative" data-delta="-1"
+                                {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
+                                {{#unless captainCtx.allocInitiative}}disabled{{/unless}}>
+                            &minus;
+                        </button>
+                        <span class="imsc-helm-stat-value">{{captainCtx.allocInitiative}}</span>
+                        <button class="imsc-alloc-btn" data-action="allocLeadershipSL" data-stat="initiative" data-delta="1"
+                                {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
+                                {{#if (gte (add (add captainCtx.allocInspire captainCtx.allocResolve) captainCtx.allocInitiative) captainCtx.leadershipSL)}}disabled{{/if}}>
                             +
                         </button>
                     </div>

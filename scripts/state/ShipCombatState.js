@@ -290,10 +290,22 @@ export class ShipCombatState {
       updates[`resources.${roleId}.coreActionsPlayed`] = [];
     }
     updates["resources.captain.mulliganUsed"]         = false;
+
+    // ── Initiative: carry allocInitiative bonus forward to Foundry combat tracker ──
+    const rolledInitiative_ar = data.resources?.captain?.rolledInitiative ?? 0;
+    const allocInitiative_ar  = data.resources?.captain?.allocInitiative  ?? 0;
+    if ((rolledInitiative_ar > 0 || allocInitiative_ar > 0) && game.combat) {
+      const shipCombatant = game.combat.combatants.find(c => c.actor?.id === this.ship?.id);
+      if (shipCombatant) {
+        await game.combat.setInitiative(shipCombatant.id, rolledInitiative_ar + allocInitiative_ar);
+      }
+    }
+
     updates["resources.captain.leadershipRolled"]     = false;
     updates["resources.captain.leadershipSL"]         = 0;
     updates["resources.captain.allocInspire"]         = 0;
     updates["resources.captain.allocResolve"]         = 0;
+    updates["resources.captain.allocInitiative"]      = 0;
     updates["resources.captain.coreActionUsed"]            = false;
     updates["resources.captain.selectedCoreAction"]        = null;
     updates["resources.captain.priorityTargetId"]          = null;
@@ -656,6 +668,16 @@ export class ShipCombatState {
     if (roleId.includes(".")) {
       return this.update({ [`${roleId}.${key}`]: value });
     }
+    // When rolledInitiative is set (captain rolls initiative formula), update combatant initiative
+    if (roleId === "captain" && key === "rolledInitiative") {
+      if (game.combat) {
+        const shipCombatant = game.combat.combatants.find(c => c.actor?.id === this.ship?.id);
+        if (shipCombatant) {
+          await game.combat.setInitiative(shipCombatant.id, Number(value));
+        }
+      }
+      return this.update({ "resources.captain.rolledInitiative": value });
+    }
     // When captain's allocResolve changes, sync triageCount by the same delta
     if (roleId === "captain" && key === "allocResolve") {
       const data = this.getData();
@@ -816,8 +838,10 @@ export class ShipCombatState {
     updates["resources.captain.payload"]              = "";
     updates["resources.captain.leadershipRolled"]     = false;
     updates["resources.captain.leadershipSL"]         = 0;
+    updates["resources.captain.rolledInitiative"]     = 0;
     updates["resources.captain.allocInspire"]         = 0;
     updates["resources.captain.allocResolve"]         = 0;
+    updates["resources.captain.allocInitiative"]      = 0;
     updates["resources.captain.playedCards"]          = [];
     updates["resources.captain.holdTheLineActive"]    = false;
     updates["resources.captain.hardenedShields"]      = false;
@@ -1037,6 +1061,7 @@ export class ShipCombatState {
       "resources.captain.payload":               "",
       "resources.captain.leadershipRolled":      false,
       "resources.captain.leadershipSL":          0,
+      "resources.captain.rolledInitiative":      0,
       "resources.captain.allocInspire":          0,
       "resources.captain.allocResolve":          0,
     };

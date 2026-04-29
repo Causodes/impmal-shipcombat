@@ -58,6 +58,9 @@ Handlebars.registerHelper("imscRole", key => game.i18n.localize(`IMSC.Role.${key
 Hooks.once("init", async () => {
   console.log(`${MODULE_ID} | Initialising ship combat module`);
 
+  // Allow fractional initiative so skill/100 tiebreakers are preserved
+  CONFIG.Combat.initiative.decimals = 2;
+
   // ── Register system adapter ─────────────────────────────────────────────
   SystemAdapter.register(new ImpmalAdapter());
 

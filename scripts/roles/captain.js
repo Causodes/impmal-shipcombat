@@ -207,7 +207,8 @@ export function buildCaptainContext(sys, opts = {}) {
     leadershipSL:           captain.leadershipSL      ?? 0,
     allocInspire:           captain.allocInspire      ?? 0,
     allocResolve:           captain.allocResolve      ?? 0,
-    remainingLeadershipSL:  (captain.leadershipSL ?? 0) - (captain.allocInspire ?? 0) - (captain.allocResolve ?? 0),
+    allocInitiative:        captain.allocInitiative   ?? 0,
+    remainingLeadershipSL:  (captain.leadershipSL ?? 0) - (captain.allocInspire ?? 0) - (captain.allocResolve ?? 0) - (captain.allocInitiative ?? 0),
     allocLocked:            captain.leadershipRolled  ?? false,
     // Played cards this round
     playedCards,
@@ -306,7 +307,43 @@ async function _onFullRedraw(event, _target) {
 /**
  * Roll Rapport (Leadership) once per turn → set leadership SL pool for Inspire/Resolve allocation.
  */
-async function _onRollLeadership() {
+/** Roll the ship's initiative: 1d10 + combat.initiative + leadership.total/100. */
+async function _onRollInitiative() {
+  let crewActor = null;
+  const sys = this.actor.system;
+  const captainRef = sys.crewActors?.captain;
+  if (captainRef?.uuid) {
+    try { crewActor = await fromUuid(captainRef.uuid); } catch { /* ignore */ }
+  }
+  if (!crewActor) {
+    const entry = Object.entries(sys.roles ?? {}).find(([, r]) => r === "captain");
+    if (entry) {
+      const user = game.users.get(entry[0]);
+      crewActor = user?.character ?? null;
+    }
+  }
+  if (!crewActor) {
+    ui.notifications.warn(game.i18n.localize("IMSC.Warning.NoCaptainAssigned"));
+    return;
+  }
+
+  const presenceSkill = crewActor.system?.skills?.presence;
+  const specs = Array.isArray(presenceSkill?.specialisations) ? presenceSkill.specialisations : [];
+  const leadershipSpec = specs.find(s => String(s?.name ?? "").toLowerCase().includes("leadership"));
+  const skillTotal = Number(leadershipSpec?.system?.total ?? presenceSkill?.total ?? 0);
+  const skillMod = (skillTotal / 100).toFixed(2);
+
+  const iniRoll = await new Roll(`1d10 + ${skillMod}`).evaluate();
+  await iniRoll.toMessage({
+    flavor: game.i18n.localize("IMSC.Captain.RollInitiativeBtn"),
+    speaker: ChatMessage.getSpeaker({ actor: crewActor }),
+  });
+
+  emitToGM("updateResource", { roleId: "captain", key: "rolledInitiative", value: iniRoll.total });
+}
+
+/** Roll Presence (Leadership) to generate the SL pool for inspire/resolve/initiative allocation. */
+async function _onRollLeadershipSL() {
   const sys = this.actor.system;
   if (sys.resources?.captain?.leadershipRolled) {
     ui.notifications.warn(game.i18n.localize("IMSC.Warning.CaptainLeadershipAlreadyRolled"));
@@ -334,10 +371,11 @@ async function _onRollLeadership() {
   if (!result) return;
 
   const sl = Math.max(0, result.SL);
-  emitToGM("updateResource", { roleId: "captain", key: "leadershipSL",     value: sl    });
-  emitToGM("updateResource", { roleId: "captain", key: "leadershipRolled", value: true  });
-  emitToGM("updateResource", { roleId: "captain", key: "allocInspire",     value: 0     });
-  emitToGM("updateResource", { roleId: "captain", key: "allocResolve",     value: 0     });
+  emitToGM("updateResource", { roleId: "captain", key: "leadershipSL",     value: sl   });
+  emitToGM("updateResource", { roleId: "captain", key: "leadershipRolled", value: true });
+  emitToGM("updateResource", { roleId: "captain", key: "allocInspire",     value: 0    });
+  emitToGM("updateResource", { roleId: "captain", key: "allocResolve",     value: 0    });
+  emitToGM("updateResource", { roleId: "captain", key: "allocInitiative",  value: 0    });
 }
 
 /**
@@ -348,25 +386,30 @@ async function _onAllocLeadershipSL(event, target) {
   const captain = sys.resources?.captain ?? {};
   if (!captain.leadershipRolled) return;
 
-  const stat  = target.dataset.stat;   // "inspire" | "resolve"
+  const stat  = target.dataset.stat;   // "inspire" | "resolve" | "initiative"
   const delta = Number(target.dataset.delta);
-  const allocInspire = captain.allocInspire ?? 0;
-  const allocResolve = captain.allocResolve ?? 0;
-  const leadershipSL = captain.leadershipSL ?? 0;
+  const allocInspire    = captain.allocInspire    ?? 0;
+  const allocResolve    = captain.allocResolve    ?? 0;
+  const allocInitiative = captain.allocInitiative ?? 0;
+  const leadershipSL    = captain.leadershipSL    ?? 0;
 
-  let newInspire = allocInspire;
-  let newResolve = allocResolve;
+  let newInspire    = allocInspire;
+  let newResolve    = allocResolve;
+  let newInitiative = allocInitiative;
 
   if (stat === "inspire") {
     newInspire = Math.max(0, allocInspire + delta);
   } else if (stat === "resolve") {
     newResolve = Math.max(0, allocResolve + delta);
+  } else if (stat === "initiative") {
+    newInitiative = Math.max(0, allocInitiative + delta);
   }
 
-  if (newInspire + newResolve > leadershipSL) return;
+  if (newInspire + newResolve + newInitiative > leadershipSL) return;
 
-  emitToGM("updateResource", { roleId: "captain", key: "allocInspire", value: newInspire });
-  emitToGM("updateResource", { roleId: "captain", key: "allocResolve", value: newResolve });
+  if (stat === "inspire")    emitToGM("updateResource", { roleId: "captain", key: "allocInspire",    value: newInspire    });
+  if (stat === "resolve")    emitToGM("updateResource", { roleId: "captain", key: "allocResolve",    value: newResolve    });
+  if (stat === "initiative") emitToGM("updateResource", { roleId: "captain", key: "allocInitiative", value: newInitiative });
 }
 
 // ── Core Action Handlers ─────────────────────────────────────────────────────
@@ -508,7 +551,8 @@ export const CAPTAIN_ACTIONS = {
   captainDiscardCard:   _onDiscardCard,
   captainMulligan:      _onMulligan,
   captainFullRedraw:    _onFullRedraw,
-  rollLeadership:       _onRollLeadership,
+  rollInitiative:       _onRollInitiative,
+  rollLeadershipSL:     _onRollLeadershipSL,
   allocLeadershipSL:    _onAllocLeadershipSL,
   captainCoreAction:    _onCaptainCoreAction,
   fluxToCharge:         _onFluxToCharge,

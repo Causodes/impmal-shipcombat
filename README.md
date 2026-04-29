@@ -18,9 +18,14 @@ Six roles cover the full bridge crew. The GM has access to all tabs simultaneous
 ### Supreme Commander
 *Skill: Presence (Leadership)*
 
-The Captain manages a **Standing Orders** deck - a hand of tactical order cards drawn each round. Rolling Presence (Leadership) allocates SL to:
+The Captain manages a **Standing Orders** deck - a hand of tactical order cards drawn each round.
+
+**Initiative** - click the d20 icon to roll the ship's initiative for the combat tracker: `1d10 + Leadership skill total / 100`. The decimal fraction acts as a tiebreaker. Additional SL can be allocated to the Initiative track each round to boost the result by +1 per SL for that turn only.
+
+Rolling Presence (Leadership) allocates SL to:
 - **Inspire** - draw extra cards and increase maximum hand size this round per SL
 - **Resolve** - gain extra damage control actions this round per SL
+- **Initiative** - boost this round's combat initiative by +1 per SL allocated
 
 Order cards fall into four categories:
 

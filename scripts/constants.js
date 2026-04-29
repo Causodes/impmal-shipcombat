@@ -162,7 +162,7 @@ export const DEFAULT_COMBAT_STATE = {
     sensors:   { actionUsed: false, coreActionUsed: false, bdaAvailable: false, bdaCorrectionPending: false, bdaResultSL: 0, bdaTargetTokenId: null, locks: [], effects: [], fireCorrection: null, payload: "", coreCount: 0, coreActionsPlayed: [] },
     gunner:    { ammo: 0, power: 0, ordnanceSL: 0, allocAccuracy: 0, allocPenetration: 0, allocFirepower: 0, slLocked: false, ordnanceRolled: false, arcOverlayActive: false, payload: "", coreCount: 0, coreActionsPlayed: [] },
     ordnance:  { manpower: 0, manpowerMax: 0, armedTorpedoes: 0, armedCraft: 0, craftDestroyed: 0, craftRecovering: 0, craftPartialRecovery: 0, bosunSL: 0, bosunRolled: false, allocEfficiency: 0, allocExpedience: 0, actionUsed: false, coreActionUsed: false, commitments: [], stagedPayloads: {}, availablePayloads: 0, coreCount: 0, coreActionsPlayed: [] },
-    captain:   { stance: "none", pendingStance: "", hand: [], drawPile: [], discardPile: [], triageCount: 2, triageConditionsUsed: [], handCapBonus: 0, playedCards: [], holdTheLineActive: false, payload: "", coreCount: 0 },
+    captain:   { stance: "none", pendingStance: "", hand: [], drawPile: [], discardPile: [], triageCount: 2, triageConditionsUsed: [], handCapBonus: 0, playedCards: [], holdTheLineActive: false, payload: "", coreCount: 0, allocInitiative: 0, rolledInitiative: 0 },
   },
   turnDone: {},
   overchargeUsed: {},

@@ -201,7 +201,8 @@ export class NpcShipModel extends warhammer.models.BaseWarhammerActorModel {
 
     // ── Combat stub (HealthEstimate / CombatTracker compatibility) ────────────
     schema.combat = new fields.SchemaField({
-      action: new fields.StringField({ initial: "" }),
+      action:     new fields.StringField({ initial: "" }),
+      initiative: new fields.NumberField({ initial: 0, integer: true }),
       wounds: new fields.SchemaField({
         value: new fields.NumberField({ initial: 0, min: 0, integer: true }),
         max:   new fields.NumberField({ initial: 0, min: 0, integer: true }),

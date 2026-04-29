@@ -63,6 +63,7 @@ export class NpcShipSheet extends IMActorSheet {
       npcFluxToCharge:    _onFluxToCharge,
       // Movement tab
       npcRollPiloting:    _onNpcRollPiloting,
+      npcRollInitiative:  _onNpcRollInitiative,
       npcAllocBonus:      _onNpcAllocBonus,
       npcConfirmHelm:     _onNpcConfirmHelm,
       npcResetHelm:       _onNpcResetHelm,
@@ -622,6 +623,34 @@ async function _onNpcRollPiloting() {
     "system.resources.pilot.pilotingSL": Math.max(0, sl),
     "system.resources.pilot.pilotingMessageId": msg.id,
   });
+}
+
+/**
+ * Roll Piloting initiative for the NPC ship and update its combatant initiative
+ * in the Foundry combat tracker.  SL = floor((attribute − d100) / 10), min 0.
+ * Looks up the combatant by canvas token ID so unlinked NPC tokens resolve
+ * correctly (actor.id on a synthetic token differs from the world actor id).
+ */
+async function _onNpcRollInitiative() {
+  const sys      = this.actor.system;
+  const piloting = sys.attributes?.piloting ?? 40;
+  const skillMod = (piloting / 100).toFixed(2);
+
+  const roll = await new Roll(`1d10 + ${skillMod}`).evaluate();
+
+  await roll.toMessage({
+    flavor: game.i18n.localize("IMSC.NpcShip.RollInitiative"),
+    speaker: ChatMessage.getSpeaker({ actor: this.actor }),
+  });
+
+  if (!game.combat) return;
+  const token = this.actor.getActiveTokens()?.[0];
+  const combatant = token
+    ? game.combat.combatants.find(c => c.tokenId === token.id)
+    : game.combat.combatants.find(c => c.actor?.id === this.actor.id);
+  if (combatant) {
+    await combatant.update({ initiative: roll.total });
+  }
 }
 
 /** Allocate bonus to speed or maneuverability (unrestricted). */

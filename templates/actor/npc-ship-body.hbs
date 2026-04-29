@@ -3,6 +3,9 @@
 
     {{!-- ═══════ Action Buttons ═══════ --}}
     <div class="imsc-npc-actions-grid">
+        <button class="imsc-npc-action-pill" data-action="npcRollInitiative">
+            <i class="fa-solid fa-dice"></i> {{localize "IMSC.NpcShip.RollInitiative"}}
+        </button>
         <button class="imsc-npc-action-pill" data-action="npcReduceHeat"
                 {{#if sys.engActionUsed}}disabled{{/if}}>
             <i class="fa-solid fa-temperature-arrow-down"></i> {{localize "IMSC.NpcShip.ReduceHeat"}}
