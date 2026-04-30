@@ -73,7 +73,8 @@
             {{!-- Power Bar --}}
             <div class="imsc-helm-control-block">
                 <label class="imsc-helm-section-label">{{localize "IMSC.Helm.Power"}}</label>
-                <div class="imsc-power-bar" data-helm-power-bar>
+                <div class="imsc-power-bar" data-helm-power-bar data-minmove-pct="{{helm.minMovePct}}">
+                    <div class="imsc-power-minmove-line"></div>
                     <input type="range" class="imsc-power-range" data-helm-fuel
                            min="0" max="{{helm.powerMax}}" step="5">
                 </div>

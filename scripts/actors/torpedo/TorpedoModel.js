@@ -53,9 +53,8 @@ export class TorpedoModel extends warhammer.models.BaseWarhammerActorModel {
     // ── Helm state (simplified  -  no piloting roll) ────────────────────
     schema.helm = new fields.SchemaField({
       bearing:      new fields.NumberField({ initial: 0, integer: true }),
-      fuelBurned:   new fields.NumberField({ initial: 0, min: 0, integer: true }),
+      thrustPct:    new fields.NumberField({ initial: 0, min: 0, integer: true }),
       prevTurnMove: new fields.NumberField({ initial: 0, min: 0, integer: true }),
-      confirmed:    new fields.BooleanField({ initial: false }),
     });
 
     // ── Turn tracking ───────────────────────────────────────────────────

@@ -82,12 +82,20 @@ export async function apToThrust(userId) {
 }
 
 /**
- * Confirm a helm movement segment. Updates fuel burned and token position.
+ * Confirm a helm movement segment. Updates fuel burned, drift accumulated, prevTurnMove, and token position.
  */
-export async function confirmMovement({ fuelUsed, newX, newY, newRotation, gridSquaresMoved, waypoints }) {
+export async function confirmMovement({ fuelUsed, driftUsed = 0, speed, newX, newY, newRotation, gridSquaresMoved, waypoints }) {
+  const data = this.getData();
+  const effectiveSpeed = speed
+    ?? (this.ship?.system?.movement?.speed ?? 6) + (data.resources?.pilot?.allocSpeed ?? 0);
+  const existingDrift  = data.resources?.pilot?.driftBurned ?? 0;
+  const newDriftBurned = existingDrift + driftUsed;
+  // prevTurnMove = total grid squares moved this turn (fuel-based + accumulated drift)
+  const prevTurnMove = (fuelUsed / 100) * effectiveSpeed + newDriftBurned;
   await this.update({
-    "resources.pilot.fuelBurned": fuelUsed,
-    "resources.pilot.prevTurnMove": gridSquaresMoved ?? fuelUsed,
+    "resources.pilot.fuelBurned":   fuelUsed,
+    "resources.pilot.driftBurned":  newDriftBurned,
+    "resources.pilot.prevTurnMove": prevTurnMove,
   });
 
   if (!waypoints?.length) {

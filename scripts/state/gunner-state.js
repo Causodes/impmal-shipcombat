@@ -171,7 +171,9 @@ export async function fireWeapon({ weaponId, actorId, fireMode, targetToken, hit
 
         const shotResult = shotRoll.total;
         const hit = shotResult <= effectiveAccuracy;
-        const isCrit = hit && shotResult <= 5;
+        const tens = Math.floor(shotResult / 10) % 10;
+        const units = shotResult % 10;
+        const isCrit = hit && tens === units;
         const isJam = !hit && shotResult >= 96 && traits.unreliable;
 
         salvoRolls.push({ roll: shotResult, target: effectiveAccuracy, hit, isCrit, isJam });
@@ -315,7 +317,9 @@ export async function fireWeapon({ weaponId, actorId, fireMode, targetToken, hit
 
   for (let i = 0; i < hitsThroughShield; i++) {
     const isCritHit = salvoRolls[i]?.isCrit ?? false;
-    const thisHitDmg = damagePerHit + (isCritHit ? devastatingBonus : 0);
+    const thisHitDmg = isCritHit
+      ? Math.max(0, rawDamagePerHit + devastatingBonus - effectiveArmour)
+      : damagePerHit;
     totalDamage += thisHitDmg;
     hitDetails.push({ damage: thisHitDmg, isCrit: isCritHit });
 
@@ -412,6 +416,20 @@ export async function fireWeapon({ weaponId, actorId, fireMode, targetToken, hit
     speakerActor: firingActor,
     critResult,
   });
+
+  // ── 9. Animation hook (GM-local) ──
+  // socket.js broadcasts this to all clients after fireWeapon completes.
+  Hooks.callAll("impmalShipWeaponFired", {
+    weapon,
+    weaponCategory: weapon.system.weaponCategory ?? "",
+    fireMode,
+    firingActor,
+    targetToken: targetTok ?? null,
+    totalHits,
+    isNpcFire,
+  });
+
+  return { totalHits, totalSalvo };
 }
 
 /**
@@ -480,7 +498,7 @@ export async function _fireWeaponChat(weapon, fireMode, targetName, hitQuadrant,
     jammed,
     hasSalvoRolls: styledSalvoRolls.length > 0,
     hasShieldResults: shieldResults !== null,
-    hasDamageResults: damageResults !== null && damageResults.totalDamage > 0,
+    hasDamageResults: damageResults !== null && (damageResults.totalDamage > 0 || damageResults.rendTotal > 0 || damageResults.hitsThroughShield > 0),
     summaryDelay,
     // NPC crit revealed immediately; player crit revealed after BDA
     critResult: isNpcFire ? (critResult ?? null) : null,
@@ -520,7 +538,7 @@ export async function _fireWeaponChat(weapon, fireMode, targetName, hitQuadrant,
       `modules/${MODULE_ID}/templates/chat/bda-pending.hbs`,
       { targetName, weaponName: weapon.name, weaponImg: weapon.img, fireModeLabel }
     );
-    await ChatMessage.create({
+    const bdaMsg = await ChatMessage.create({
       content: bdaContent,
       user:    augurUserId,
       speaker: ChatMessage.getSpeaker({ actor: speakerActor ?? this.ship }),
@@ -532,6 +550,9 @@ export async function _fireWeaponChat(weapon, fireMode, targetName, hitQuadrant,
         },
       },
     });
+    if (bdaMsg?.id) {
+      await this.update({ "resources.sensors.bdaMessageId": bdaMsg.id });
+    }
   } else {
     // No Augur assigned: post fire result immediately
     // For player fire without augur, also reveal crit now

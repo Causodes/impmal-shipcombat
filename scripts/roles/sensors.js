@@ -23,7 +23,7 @@
  *     - Adjust Bearing: +10 to hit on next attack (same weapon, same target)
  *     - Target Weak Point: +SL to AP on next attack
  *     - Fire for Effect: crit threshold reduced by SL on next attack
- *     - Cease Fire, Switch Target: free Tier 1 lock on a different target
+ *     - Break Off, Reallocate: grants 20% max AP; gunner may retarget next turn
  *
  * Focused Scan: free once/turn, roll Sensors → success returns +SL AP.
  *
@@ -406,6 +406,7 @@ function _buildNpcConditions(locks) {
           locLabel:     game.i18n.localize(`IMSC.Crit.Location.${locId}`),
           conditionName:   tier ? game.i18n.localize(`IMSC.Crit.Condition.${locId}.${tier}`) : "",
           conditionEffect: tier ? game.i18n.localize(`IMSC.Crit.Effect.${locId}.${tier}`) : "",
+          tierLabel:    tier ? game.i18n.localize(`IMSC.Crit.Tier.${tier.charAt(0).toUpperCase() + tier.slice(1)}`) : "",
           tierClass:    tier ? `imsc-crit-tier--${tier}` : "",
         };
       })

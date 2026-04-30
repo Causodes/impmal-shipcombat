@@ -76,6 +76,17 @@
             </div>
         </div>
 
+        <div class="form-group">
+            <label>{{localize "IMSC.Component.WeaponCategory"}}</label>
+            <div class="form-fields">
+                <select name="system.weaponCategory">
+                    {{#each weaponCategoryChoices}}
+                    <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+
         {{!-- Traits  -  same structure as impmal item-traits.hbs partial --}}
         <div class="form-group item-traits stacked">
             <label><a data-action="editWeaponTraits">{{localize "IMSC.Component.Traits"}} <i class="fa-solid fa-gear"></i></a></label>

@@ -1362,7 +1362,7 @@ function _buildIntelHTML(blip, tier) {
           const locLabel   = game.i18n.localize(`IMSC.Crit.Location.${c.locId}`);
           const condName   = game.i18n.localize(`IMSC.Crit.Condition.${c.locId}.${c.condTier}`);
           const condEffect = game.i18n.localize(`IMSC.Crit.Effect.${c.locId}.${c.condTier}`);
-          h += `<div class="imsc-rpop-wep-entry imsc-crit-tier--${c.condTier}" title="${_esc(condEffect)}">`;          h += `<span class="imsc-rpop-wep-name">${_esc(locLabel)} — ${_esc(condName)}</span>`;
+          h += `<div class="imsc-rpop-wep-entry imsc-crit-tier--${c.condTier}" title="${_esc(condEffect)}">`;          h += `<span class="imsc-rpop-wep-name">${_esc(locLabel)}</span>`;
           h += `<span class="imsc-rpop-cond-tier">${_capitalize(c.condTier)}</span>`;
           h += `</div>`;
         }

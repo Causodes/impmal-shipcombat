@@ -62,6 +62,22 @@ export class VoidshipComponentModel extends warhammer.models.BaseWarhammerItemMo
         none:   "IMSC.WeaponResource.None",
       },
     });
+    schema.weaponCategory = new fields.StringField({
+      initial: "",
+      blank: true,
+      choices: {
+        "":               "IMSC.WeaponCategory.None",
+        macrocannon:      "IMSC.WeaponCategory.Macrocannon",
+        nova_cannon:      "IMSC.WeaponCategory.NovaCannon",
+        railgun:          "IMSC.WeaponCategory.Railgun",
+        pdc_projectile:   "IMSC.WeaponCategory.PdcProjectile",
+        lance:            "IMSC.WeaponCategory.Lance",
+        laser_pdc:        "IMSC.WeaponCategory.LaserPdc",
+        melta:            "IMSC.WeaponCategory.Melta",
+        plasma:           "IMSC.WeaponCategory.Plasma",
+        missile:          "IMSC.WeaponCategory.Missile",
+      },
+    });
     schema.damage       = new fields.NumberField({ initial: 0, integer: true });
     schema.salvoSize    = new fields.NumberField({ initial: 1, min: 1, integer: true });
     schema.chargeStep   = new fields.NumberField({ initial: 5, min: 1, integer: true });

@@ -77,6 +77,8 @@ export class NpcShipSheet extends IMActorSheet {
       panToOrdnance:       _onNpcPanToOrdnance,
       npcRTB:              _onNpcRTB,
       npcSaveCraftConfig:  _onNpcSaveCraftConfig,
+      // Conditions
+      npcStepCondition:    _onNpcStepCondition,
     },
     position: { width: 640, height: 720 },
     defaultTab: "main",
@@ -194,6 +196,7 @@ export class NpcShipSheet extends IMActorSheet {
           locLabel:       game.i18n.localize(`IMSC.Crit.Location.${loc.id}`),
           conditionName:  tier ? game.i18n.localize(`IMSC.Crit.Condition.${loc.id}.${tier}`) : "",
           conditionEffect: tier ? game.i18n.localize(`IMSC.Crit.Effect.${loc.id}.${tier}`) : "",
+          tierLabel:      tier ? game.i18n.localize(`IMSC.Crit.Tier.${tier.charAt(0).toUpperCase() + tier.slice(1)}`) : "",
           jammedItemName: cond.jammedItemId ? (cond.jammedItemName ?? null) : null,
           tierClass:     tier ? `imsc-crit-tier--${tier}` : "",
         };
@@ -554,6 +557,9 @@ function _npcHelmOnRender(sheet) {
   const bearingDisp   = sheet.element.querySelector("[data-bearing-display]");
   const fuelDisp      = sheet.element.querySelector("[data-fuel-display]");
 
+  // Min-move marker position: written as data-minmove-pct on the power bar by the template
+  const minMovePct = parseInt(powerBarEl?.dataset?.minmovePct ?? "0") || 0;
+
   if (powerInput) {
     powerInput.max   = String(powerMax);
     powerInput.value = String(sheet._helmState.fuelSlider);
@@ -566,6 +572,7 @@ function _npcHelmOnRender(sheet) {
     if (powerBarEl) {
       powerBarEl.style.setProperty("--committed", `${committed}%`);
       powerBarEl.style.setProperty("--extra",     `${extra}%`);
+      powerBarEl.style.setProperty("--minmove",   `${minMovePct}%`);
     }
     if (fuelDisp) fuelDisp.textContent = `${selectedPct}%`;
   };
@@ -786,6 +793,18 @@ function _adjustShieldSector(sheet, sector, delta) {
     "system.voidshieldFluxRemaining": (sys.voidshieldFluxRemaining ?? 0) - actualDelta,
   };
   sheet.actor.update(updates);
+}
+
+async function _onNpcStepCondition(event, target) {
+  const locId = target.dataset.locId;
+  if (!locId) return;
+  const cond     = this.actor.toObject()?.system?.conditions?.[locId] ?? {};
+  const nextTier = cond.tier === "high" ? "medium"
+    : cond.tier === "medium" ? "low"
+    : null;
+  await this.actor.update({
+    [`system.conditions.${locId}`]: nextTier ? { ...cond, tier: nextTier } : { tier: null },
+  });
 }
 
 function _onAdjustShield(event, target) {

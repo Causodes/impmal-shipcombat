@@ -29,6 +29,7 @@ import { ImpmalAdapter } from "./scripts/systems/impmal-adapter.js";
 import { registerSettings } from "./scripts/settings.js";
 import { registerFlavorHelper } from "./scripts/flavor.js";
 import { BDAPopup, launchBDAFromChat } from "./scripts/apps/BDAPopup.js";
+import { registerAnimations } from "./scripts/animations.js";
 
 // ── Handlebars helpers ─────────────────────────────────────────────────────
 
@@ -224,6 +225,12 @@ Hooks.once("socketlib.ready", () => {
   console.log(`${MODULE_ID} | Registered with socketlib`);
 });
 
+// ── Optional animations (Sequencer + JB2A) ────────────────────────────────
+
+Hooks.once("ready", () => {
+  registerAnimations();
+});
+
 // ── Ghost cleanup on canvas teardown ──────────────────────────────────────
 
 Hooks.on("canvasTearDown", () => {
@@ -319,6 +326,18 @@ Hooks.on("refreshToken", (token) => {
   ShieldArcOverlay._redrawToken(token);
   WeaponArcOverlay.onRefreshToken(token);
   applyTokenVisibility(token);
+});
+
+// When a ship token's committed position changes (drag released, animation end),
+// re-evaluate lock tiers with the new position so autoscan overlays appear/vanish.
+Hooks.on("updateToken", (tokenDoc, changes) => {
+  if (!("x" in changes || "y" in changes)) return;
+  const actor = tokenDoc.actor;
+  if (!actor) return;
+  if (actor.type === `${MODULE_ID}.ship` || actor.type === `${MODULE_ID}.npcShip`) {
+    ShieldArcOverlay.refresh();
+    refreshTokenVisibility();
+  }
 });
 
 // When a token is deleted, destroy its shield overlay immediately.

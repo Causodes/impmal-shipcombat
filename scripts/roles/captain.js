@@ -77,6 +77,7 @@ export function buildCaptainContext(sys, opts = {}) {
       locLabel:         game.i18n.localize(`IMSC.Crit.Location.${locId}`),
       conditionName:    tier ? game.i18n.localize(`IMSC.Crit.Condition.${locId}.${tier}`) : "",
       conditionEffect:  tier ? game.i18n.localize(`IMSC.Crit.Effect.${locId}.${tier}`) : "",
+      tierLabel:        tier ? game.i18n.localize(`IMSC.Crit.Tier.${tier.charAt(0).toUpperCase() + tier.slice(1)}`) : "",
       triageName:       game.i18n.localize(`IMSC.Crit.Triage.${locId}`),
       // jammedItemName exposed for Weapons/Sensors
       jammedItemName:   cond.jammedItemId ? (cond.jammedItemName ?? null) : null,

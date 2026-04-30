@@ -123,7 +123,7 @@ After the Gunner fires
 - Adjust Bearing (+10 to hit next attack)
 - Target Weak Point (+SL armour penetration next attack)
 - Fire for Effect (crit threshold reduced by SL percentage points — e.g. SL 3 drops threshold from 10% to 7% of hull max)
-- Cease Fire, Switch Target (free Tier 1 lock on a different contact + 20% of max Auxiliary Power)
+- Break Off, Reallocate (drops current target's lock to Lock 0 + grants 20% of max Auxiliary Power; gunner may retarget next turn)
 
 **Utility actions (targeted; require Lock 1):**
 - *Sensor Disruption* — designated enemy suffers -10 to all rolls for 1 round
@@ -173,7 +173,7 @@ The Gunner fires the ship's weapon batteries. Rolling Ranged (Ordnance) allocate
 | Shield Burn | Each hit absorbed by shields drains additional void flux |
 | Rend | Each hit permanently reduces sector armour regardless of hull damage dealt |
 | Armour Penetration | Reduces effective sector armour per hit |
-| Devastating | Lowers the critical hit threshold |
+| Devastating | Doubles that hit deal bonus damage equal to this value |
 | Unreliable | Roll 1d10 before firing; on a 1 the weapon jams and the salvo is lost |
 | Overcharge | When fired overcharged: 2 heat per shot, triple weapon trait values |
 | Hit Rating | Flat bonus or penalty to base hit chance for all shots |

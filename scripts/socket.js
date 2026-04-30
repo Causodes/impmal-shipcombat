@@ -24,6 +24,7 @@ export function setupSocket() {
     "designateHostileTorpedo",
     "torpedoPowerBoost",
     "consumeLock",
+    "removeLock",
     "resolveBDA",
     "setFireCorrection",
     "spendAP",
@@ -44,6 +45,7 @@ export function setupSocket() {
   // Broadcast handler: runs on ALL connected clients simultaneously
   _socket.register("animateTokenPath", (payload) => _handleAnimateTokenPath(payload));
   _socket.register("showGunnerArcs", (payload) => _handleShowGunnerArcs(payload));
+  _socket.register("playWeaponAnimation", (payload) => _handlePlayWeaponAnimation(payload));
 }
 
 async function _handleAction(action, payload = {}) {
@@ -196,9 +198,24 @@ async function _handleAction(action, payload = {}) {
       await ShipCombatState.fluxToCharge();
       break;
 
-    case "fireWeapon":
-      await ShipCombatState.fireWeapon(payload);
+    case "fireWeapon": {
+      const _fwResult = await ShipCombatState.fireWeapon(payload);
+      // Broadcast animation to all clients (including GM) via socket
+      const _aActor  = payload.actorId  ? game.actors.get(payload.actorId)  : null;
+      const _aWeapon = _aActor?.items.get(payload.weaponId) ?? null;
+      if (_aWeapon?.system?.weaponCategory) {
+        emitToAll("playWeaponAnimation", {
+          weaponCategory: _aWeapon.system.weaponCategory,
+          fireMode:       payload.fireMode ?? "",
+          firingActorId:  payload.actorId  ?? null,
+          targetTokenId:  payload.targetToken ?? null,
+          totalHits:      _fwResult?.totalHits ?? 0,
+          totalSalvo:     _fwResult?.totalSalvo ?? 0,
+          isNpcFire:      payload.isNpcFire ?? false,
+        });
+      }
       break;
+    }
 
     case "repairHull":
       await ShipCombatState.repairHull(payload.plasmaSpent, payload.sl);
@@ -236,6 +253,10 @@ async function _handleAction(action, payload = {}) {
       await ShipCombatState.consumeLock(payload);
       break;
 
+    case "removeLock":
+      await ShipCombatState.removeLock(payload.targetTokenId);
+      break;
+
     case "resolveBDA":
       await ShipCombatState.resolveBDA(payload);
       break;
@@ -252,9 +273,21 @@ async function _handleAction(action, payload = {}) {
       await ShipCombatState.torpedoDamage(payload);
       break;
 
-    case "strikeCraftAttack":
-      await ShipCombatState.strikeCraftAttack(payload);
+    case "strikeCraftAttack": {
+      const _scResult = await ShipCombatState.strikeCraftAttack(payload);
+      if (payload.craftActorId && payload.targetTokenId) {
+        emitToAll("playWeaponAnimation", {
+          weaponCategory: "laser_pdc",
+          fireMode:       "",
+          firingActorId:  payload.craftActorId,
+          targetTokenId:  payload.targetTokenId,
+          totalHits:      _scResult?.totalHits ?? 0,
+          totalSalvo:     payload.salvoSize    ?? 1,
+          isNpcFire:      false,
+        });
+      }
       break;
+    }
 
     case "triageCondition":
       await ShipCombatState.triageCondition(payload);
@@ -347,6 +380,26 @@ async function _handleShowGunnerArcs(_payload) {
       WeaponArcOverlay.activate(ship);
     }
   } catch { /* overlay module not available on this client */ }
+}
+
+/**
+ * Broadcast weapon animation to all clients.
+ * Resolves token placeables locally on each client by ID.
+ */
+function _handlePlayWeaponAnimation({ weaponCategory, fireMode, firingActorId, targetTokenId, totalHits, totalSalvo, isNpcFire, blastRadius }) {
+  if (!canvas?.ready) return;
+  const firingActor = firingActorId ? game.actors.get(firingActorId) : null;
+  const targetToken = targetTokenId ? canvas.tokens.get(targetTokenId) : null;
+  Hooks.callAll("impmalShipWeaponFired", {
+    weaponCategory,
+    fireMode,
+    firingActor,
+    targetToken,
+    totalHits,
+    totalSalvo,
+    isNpcFire,
+    blastRadius,
+  });
 }
 
 /**

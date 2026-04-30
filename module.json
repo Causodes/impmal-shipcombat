@@ -30,6 +30,18 @@
         "id": "warhammer-lib",
         "type": "module"
       }
+    ],
+    "optional": [
+      {
+        "id": "sequencer",
+        "type": "module",
+        "reason": "Enables animated weapon effects on the canvas."
+      },
+      {
+        "id": "jb2a_patreon",
+        "type": "module",
+        "reason": "Provides the JB2A asset library used by the optional animations."
+      }
     ]
   },
   "esmodules": [

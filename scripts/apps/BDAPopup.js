@@ -57,6 +57,13 @@ export async function launchBDAFromChat(ship, message) {
     return;
   }
 
+  // When launched from the Sensors tab (no chat card passed), try to find the
+  // BDA-pending card that was stored in state when the weapon was fired.
+  if (!message) {
+    const storedId = ship.system.resources?.sensors?.bdaMessageId ?? null;
+    if (storedId) message = game.messages.get(storedId) ?? null;
+  }
+
   // Sensor Blind (weaponsSensors medium/high): −10 to Augur tests
   const wsCond    = ship.system.conditions?.weaponsSensors?.tier;
   const sensorMod = (wsCond === "medium" || wsCond === "high") ? -10 : 0;
@@ -196,13 +203,13 @@ export class BDAPopup extends foundry.applications.api.HandlebarsApplicationMixi
     if (!correction) return;
 
     if (correctionId === "ceaseFireSwitch") {
-      if (targetTokenId) emitToGM("upgradeLock", { targetTokenId, tier: 1 });
-      // Grant 20% of max AP
+      // Grant 20% of max AP and drop the lock on the target to Lock 0
       const reactor = this.ship?.items?.find(i => i.type === `${MODULE_ID}.component` && i.system?.slot === "reactor");
       const maxAP = reactor?.system?.bankCapacity ?? 40;
       const currentAP = this.ship?.system?.resources?.enginseer?.auxiliaryPower ?? 0;
       const grant = Math.floor(maxAP * 0.2);
       emitToGM("updateResource", { roleId: "enginseer", key: "auxiliaryPower", value: Math.min(maxAP, currentAP + grant) });
+      if (targetTokenId) emitToGM("removeLock", { targetTokenId });
       emitToGM("updateResource", { roleId: "sensors", key: "bdaCorrectionPending", value: false });
     } else {
       emitToGM("setFireCorrection", {

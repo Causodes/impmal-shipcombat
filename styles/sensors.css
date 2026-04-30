@@ -624,6 +624,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.imsc-rpop-cond-tier {
+  flex: 0 0 auto;
+  margin-right: 0.5rem;
+}
 .imsc-rpop-wep-entry[data-wep-pos]:hover {
   background: rgba(255, 68, 68, 0.15);
   color: #ff6666;
@@ -1356,17 +1360,22 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.12rem;
+  gap: 0.25rem;
   width: 100%;
-  padding: 0.5rem 0.7rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 2px;
   background: rgba(255, 255, 255, 0.03);
   cursor: pointer;
   text-align: left;
   transition: background 0.12s, border-color 0.12s;
   color: var(--color-text-primary, #eee);
-  line-height: 1;
+  line-height: 1.4;
+  white-space: normal;
+  word-wrap: break-word;
 }
 
 .imsc-bda-correction-btn:hover {
@@ -1376,7 +1385,7 @@
 
 .imsc-bda-correction-name {
   font-family: var(--header-font, serif);
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--color-text-primary, #eee);
@@ -1384,8 +1393,9 @@
 
 .imsc-bda-correction-hint {
   font-family: var(--type-font, serif);
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.42);
-  line-height: 1.35;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.68);
+  line-height: 1.45;
+  white-space: normal;
 }
 

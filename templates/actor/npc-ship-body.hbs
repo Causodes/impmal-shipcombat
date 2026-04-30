@@ -99,17 +99,24 @@
             {{#if hasAnyCondition}}
             {{#each conditionsList}}
             {{#if hasCondition}}
-            <div class="list-row imsc-crit-row {{tierClass}}" data-tooltip='{{conditionEffect}}'>
+            <div class="list-row imsc-crit-row {{tierClass}}" data-tooltip='{{conditionEffect}}' data-loc-id="{{locId}}">
                 <div class="row-content">
                     <div class="list-name">
                         <span class="imsc-crit-location">{{locLabel}}</span>
-                        <span class="imsc-crit-sep">  -  </span>
                         <span class="imsc-crit-name">{{conditionName}}</span>
                         {{#if jammedItemName}}
                         <span class="imsc-crit-meta"><i class="fa-solid fa-gun-slash"></i> {{jammedItemName}}</span>
                         {{/if}}
                     </div>
-                    <div class="imsc-crit-tier-badge {{tierClass}}">{{tier}}</div>
+                    <div class="imsc-crit-tier-badge {{tierClass}}">{{tierLabel}}</div>
+                    <div class="list-controls">
+                        <button type="button"
+                                data-action="npcStepCondition"
+                                data-loc-id="{{locId}}"
+                                data-tooltip="{{localize 'IMSC.NpcShip.StepConditionDown'}}">
+                            <i class="fa-solid fa-arrow-down"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
             {{/if}}

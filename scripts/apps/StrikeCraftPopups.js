@@ -288,6 +288,7 @@ export class StrikeCraftAttackPopup extends foundry.applications.api.HandlebarsA
     const salvoSize  = (sys.payloadCount ?? 1) * flightSize;
 
     emitToGM("strikeCraftAttack", {
+      craftActorId:  this.craftActor.id,
       craftName:     this.craftActor.name,
       craftImg:      this.craftActor.img,
       targetTokenId: tokenId,

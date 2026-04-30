@@ -119,13 +119,18 @@ export class StrikeCraftSheet extends IMActorSheet {
     const speed = sys.movement.speed;
     const mano  = sys.movement.maneuverability;
     const helm  = sys.helm ?? {};
+    const minMove = Math.ceil(speed / 2);
+    const totalSquares = minMove + speed;
+    const thrustPct = helm.thrustPct ?? 0;
+    const minMovePct = totalSquares > 0 ? Math.round(minMove / totalSquares * 100) : 0;
     context.helm = {
       speed,
       mano,
-      minMove:    Math.ceil(speed / 2),
+      minMove,
+      minMovePct,
       maxBearing: mano * 15,
       bearing:    helm.bearing ?? 0,
-      fuelBurned: helm.fuelBurned ?? 0,
+      thrustPct,
       powerMax:   100,
     };
 
@@ -158,23 +163,23 @@ export class StrikeCraftSheet extends IMActorSheet {
       const sys = this.actor.system;
       const speed = sys.movement.speed;
       const helm  = sys.helm ?? {};
-      const fuelBurned = helm.fuelBurned ?? 0;
+      const committedPct = helm.thrustPct ?? 0;
       const minMove = Math.ceil(speed / 2);
+      const totalSquares = minMove + speed;
 
       const curBearing = parseInt(html.querySelector("[data-helm-bearing]")?.value) || 0;
       const curFuel    = parseInt(html.querySelector("[data-helm-fuel]")?.value)    || 0;
-      const thrustPct  = curFuel - fuelBurned;
-      const isFirstCommit = fuelBurned === 0;
-      const driftUnits = isFirstCommit ? minMove : 0;
+      const deltaSquares = (curFuel - committedPct) / 100 * totalSquares;
 
-      if (thrustPct <= 0 && driftUnits === 0) {
+      if (deltaSquares <= 0) {
         HelmPreview.hide();
         return;
       }
-      const projected = HelmPreview.projectPosition(token, curBearing, thrustPct, speed, driftUnits);
+      const thrustArg = deltaSquares * 100 / speed;
+      const projected = HelmPreview.projectPosition(token, curBearing, thrustArg, speed, 0);
       if (!projected) { HelmPreview.hide(); return; }
       HelmPreview.show(token, projected);
-      HelmPreview.updateLine(curBearing, thrustPct, speed, driftUnits);
+      HelmPreview.updateLine(curBearing, thrustArg, speed, 0);
     };
 
     // Bearing slider live update
@@ -191,32 +196,36 @@ export class StrikeCraftSheet extends IMActorSheet {
     const powerBarEl = html.querySelector("[data-helm-power-bar]");
     const fuelSlider = html.querySelector("[data-helm-fuel]");
     const fuelDisplay = html.querySelector("[data-fuel-display]");
-    const fuelBurned = context.helm.fuelBurned;
+    const thrustPct  = context.helm.thrustPct;
     const powerMax   = context.helm.powerMax;
+    const minMovePct = context.helm.minMovePct;
 
     const _syncPowerBar = (selectedPct) => {
+      if (!powerMax) return;
       const ratio     = 100 / powerMax;
-      const committed = fuelBurned * ratio;
-      const extra     = Math.max(0, selectedPct - fuelBurned) * ratio;
+      const committed = thrustPct * ratio;
+      const extra     = Math.max(0, selectedPct - thrustPct) * ratio;
+      const minmove   = (minMovePct / powerMax) * 100;
       if (powerBarEl) {
         powerBarEl.style.setProperty("--committed", `${committed}%`);
         powerBarEl.style.setProperty("--extra",     `${extra}%`);
+        powerBarEl.style.setProperty("--minmove",   `${minmove}%`);
       }
       if (fuelDisplay) fuelDisplay.textContent = `${selectedPct}%`;
     };
 
     if (fuelSlider) {
-      fuelSlider.value = String(fuelBurned);
+      fuelSlider.value = String(thrustPct);
       fuelSlider.addEventListener("change", ev => { ev.stopPropagation(); ev.preventDefault(); }, true);
       fuelSlider.addEventListener("input", (ev) => {
         ev.stopPropagation();
-        let val = Math.max(fuelBurned, Math.min(powerMax, Number(ev.target.value)));
+        let val = Math.max(thrustPct, Math.min(powerMax, Number(ev.target.value)));
         if (val !== Number(ev.target.value)) ev.target.value = String(val);
         _syncPowerBar(val);
         _updateCraftPreview();
       }, true);
     }
-    _syncPowerBar(fuelBurned);
+    _syncPowerBar(thrustPct);
 
     // Attack arc  -  show firing cone on hover
     const attackBtn = html.querySelector("[data-action='attack']");
@@ -233,24 +242,26 @@ export class StrikeCraftSheet extends IMActorSheet {
 
     const html = this.element;
     const bearing    = parseInt(html?.querySelector("[data-helm-bearing]")?.value) || 0;
-    const fuelSlider = parseInt(html?.querySelector("[data-helm-fuel]")?.value) || 0;
-    const fuelBurned = helm.fuelBurned ?? 0;
+    const newPct     = parseInt(html?.querySelector("[data-helm-fuel]")?.value) || 0;
+    const oldPct     = helm.thrustPct ?? 0;
+    const powerMax   = 100;
+    const minMove    = Math.ceil(speed / 2);
+    const totalSq    = minMove + speed;
 
-    if (fuelSlider <= fuelBurned) {
-      return ui.notifications.warn("No additional thrust committed.");
+    const deltaSquares = (newPct - oldPct) / powerMax * totalSq;
+
+    if (deltaSquares <= 0) {
+      return ui.notifications.warn("No movement to commit.");
     }
 
-    const prevTurnMove = helm.prevTurnMove ?? 0;
-    const minMove      = Math.ceil(speed / 2);
-    const isFirstCommit = !helm.confirmed;   // use confirmed flag, not fuelBurned, to prevent infinite free drift
-    const driftUnits    = isFirstCommit ? minMove : 0;
+    const thrustArg = deltaSquares * 100 / speed;
 
     // Move the token on canvas via waypoints (curved interpolation)
     const token = this.actor.getActiveTokens()?.[0];
     if (token && canvas?.ready) {
-      const projected = HelmPreview.projectPosition(token, bearing, fuelSlider - fuelBurned, speed, driftUnits);
+      const projected = HelmPreview.projectPosition(token, bearing, thrustArg, speed, 0);
       if (projected) {
-        const waypoints = HelmPreview.projectWaypoints(token, bearing, fuelSlider - fuelBurned, speed, driftUnits);
+        const waypoints = HelmPreview.projectWaypoints(token, bearing, thrustArg, speed, 0);
         if (waypoints?.length > 1) {
           await _animateTokenPath(token, waypoints, projected);
         } else {
@@ -262,12 +273,11 @@ export class StrikeCraftSheet extends IMActorSheet {
       }
     }
 
-    const totalMoved = fuelSlider > 0 ? Math.max(driftUnits, Math.round((fuelSlider / 100) * speed)) : driftUnits;
+    const prevTurnMove = helm.prevTurnMove ?? 0;
     await this.actor.update({
-      "system.helm.fuelBurned": fuelSlider,
-      "system.helm.prevTurnMove": (prevTurnMove || 0) + totalMoved,
+      "system.helm.thrustPct": newPct,
+      "system.helm.prevTurnMove": (prevTurnMove || 0) + Math.round(deltaSquares),
       "system.helm.bearing": bearing,
-      "system.helm.confirmed": true,
     });
 
     HelmPreview.hide();

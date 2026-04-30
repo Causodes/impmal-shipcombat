@@ -457,56 +457,50 @@ export class ShipCombatState {
           // powerBoostActive doubles this torpedo's power maximum for the turn; no speed change
           const speed = tSys.movement?.speed ?? 0;
           const minMove = Math.ceil(speed / 2);
-          const helmConfirmed = tSys.helm?.confirmed ?? false;
+          const torpedoPowerMax = tSys.powerBoostActive ? 200 : 100;
+          const minMovePct = Math.round(minMove / (minMove + speed) * torpedoPowerMax);
+          const thrustPct  = tSys.helm?.thrustPct ?? 0;
 
-          // Detect launch turn: turnComplete was set to true on spawn and
-          // the player couldn't interact (UI is locked). We read it BEFORE
-          // the reset above cleared it.
-          const isLaunchTurn = wasTurnComplete && !helmConfirmed
-                             && (tSys.helm?.prevTurnMove ?? 0) === 0
-                             && (tSys.helm?.fuelBurned ?? 0) === 0;
+          // Detect launch turn: torpedo was force-completed on spawn and hasn't moved
+          const isLaunchTurn = wasTurnComplete
+                             && thrustPct === 0
+                             && (tSys.helm?.prevTurnMove ?? 0) === 0;
 
           const tUpdates = {
             "system.helm.bearing":       0,
-            "system.helm.fuelBurned":    0,
+            "system.helm.thrustPct":     0,
             "system.helm.prevTurnMove":  0,
-            "system.helm.confirmed":     false,
             "system.powerBoostActive":   false,
             "system.designated":         false,
           };
 
-          if (isLaunchTurn) {
-            // ── Launch turn: drift forward, no fuel burn ──
-            if (minMove > 0) {
-              const token = td.object;
-              if (token) {
-                const projected = HelmPreview.projectPosition(token, 0, 0, speed, minMove);
-                if (projected) {
-                  const waypoints = HelmPreview.projectWaypoints(token, 0, 0, speed, minMove);
-                  if (waypoints?.length > 1) {
-                    for (let wi = 0; wi < waypoints.length; wi++) {
-                      const wp = waypoints[wi];
-                      await token.animate(
-                        { x: wp.x, y: wp.y, rotation: wp.rotation },
-                        { duration: 50, chain: wi > 0 },
-                      );
-                    }
-                    await td.update({ x: projected.x, y: projected.y, rotation: projected.rotation }, { animate: false });
-                  } else {
-                    await td.update({ x: projected.x, y: projected.y, rotation: projected.rotation }, { animate: true });
-                  }
-                }
+          // Helper: move torpedo token by deltaSq grid squares along bearingDeg
+          const _autoMoveTorpedo = async (deltaSq, bearingDeg) => {
+            if (deltaSq <= 0) return;
+            const token = td.object;
+            if (!token) return;
+            const thrustArg = deltaSq * 100 / speed;
+            const projected = HelmPreview.projectPosition(token, bearingDeg, thrustArg, speed, 0);
+            if (!projected) return;
+            const waypoints = HelmPreview.projectWaypoints(token, bearingDeg, thrustArg, speed, 0);
+            if (waypoints?.length > 1) {
+              for (let wi = 0; wi < waypoints.length; wi++) {
+                const wp = waypoints[wi];
+                await token.animate(
+                  { x: wp.x, y: wp.y, rotation: wp.rotation },
+                  { duration: 50, chain: wi > 0 },
+                );
               }
+              await td.update({ x: projected.x, y: projected.y, rotation: projected.rotation }, { animate: false });
+            } else {
+              await td.update({ x: projected.x, y: projected.y, rotation: projected.rotation }, { animate: true });
             }
+          };
+
+          if (isLaunchTurn) {
+            // ── Launch turn: drift minMove forward, no fuel burn ──
+            await _autoMoveTorpedo(minMove, 0);
             await td.actor.update(tUpdates);
-          } else if (helmConfirmed) {
-            // ── Player already moved the torpedo this turn ──
-            // The first confirmHelm already includes min-move drift,
-            // so we DON'T apply additional drift. Just burn fuel & reset.
-            const newFuel = Math.max(0, fuel - 1);
-            tUpdates["system.fuel.value"] = newFuel;
-            await td.actor.update(tUpdates);
-            if (newFuel <= 0) tokensToDelete.push(td.id);
           } else if (wasTurnComplete) {
             // ── Torpedo was Designated (externally halted this turn) ──
             // turnComplete was set via Designate Torpedo; skip auto-drift but burn fuel.
@@ -514,32 +508,20 @@ export class ShipCombatState {
             tUpdates["system.fuel.value"] = newFuel;
             await td.actor.update(tUpdates);
             if (newFuel <= 0) tokensToDelete.push(td.id);
-          } else {
-            // ── Player didn't move the torpedo this turn ──
-            // Apply min-move drift + burn fuel (torpedo must always move forward)
+          } else if (thrustPct >= minMovePct) {
+            // ── Player committed at least minimum movement ──
             const newFuel = Math.max(0, fuel - 1);
             tUpdates["system.fuel.value"] = newFuel;
-            if (minMove > 0) {
-              const token = td.object;
-              if (token) {
-                const projected = HelmPreview.projectPosition(token, 0, 0, speed, minMove);
-                if (projected) {
-                  const waypoints = HelmPreview.projectWaypoints(token, 0, 0, speed, minMove);
-                  if (waypoints?.length > 1) {
-                    for (let wi = 0; wi < waypoints.length; wi++) {
-                      const wp = waypoints[wi];
-                      await token.animate(
-                        { x: wp.x, y: wp.y, rotation: wp.rotation },
-                        { duration: 50, chain: wi > 0 },
-                      );
-                    }
-                    await td.update({ x: projected.x, y: projected.y, rotation: projected.rotation }, { animate: false });
-                  } else {
-                    await td.update({ x: projected.x, y: projected.y, rotation: projected.rotation }, { animate: true });
-                  }
-                }
-              }
-            }
+            await td.actor.update(tUpdates);
+            if (newFuel <= 0) tokensToDelete.push(td.id);
+          } else {
+            // ── Player committed less than minimum movement: auto-complete to minMove ──
+            const committedSq = thrustPct / torpedoPowerMax * (minMove + speed);
+            const deltaSq     = minMove - committedSq;
+            const storedBearing = tSys.helm?.bearing ?? 0;
+            const newFuel = Math.max(0, fuel - 1);
+            tUpdates["system.fuel.value"] = newFuel;
+            await _autoMoveTorpedo(deltaSq, storedBearing);
             await td.actor.update(tUpdates);
             if (newFuel <= 0) tokensToDelete.push(td.id);
           }
@@ -550,32 +532,38 @@ export class ShipCombatState {
           const cSys = td.actor.system;
           const speed = cSys.movement?.speed ?? 0;
           const minMove = Math.ceil(speed / 2);
-          const helmConfirmed = cSys.helm?.confirmed ?? false;
+          const minMovePct    = Math.round(minMove / (minMove + speed) * 100);
+          const thrustPct     = cSys.helm?.thrustPct ?? 0;
+          const storedBearing = cSys.helm?.bearing ?? 0;
 
           const cUpdates = {
             "system.helm.bearing":      0,
-            "system.helm.fuelBurned":   0,
+            "system.helm.thrustPct":    0,
             "system.helm.prevTurnMove": 0,
-            "system.helm.confirmed":    false,
           };
 
-          if (!helmConfirmed && minMove > 0) {
-            const token = td.object;
-            if (token) {
-              const projected = HelmPreview.projectPosition(token, 0, 0, speed, minMove);
-              if (projected) {
-                const waypoints = HelmPreview.projectWaypoints(token, 0, 0, speed, minMove);
-                if (waypoints?.length > 1) {
-                  for (let wi = 0; wi < waypoints.length; wi++) {
-                    const wp = waypoints[wi];
-                    await token.animate(
-                      { x: wp.x, y: wp.y, rotation: wp.rotation },
-                      { duration: 50, chain: wi > 0 },
-                    );
+          if (thrustPct < minMovePct && minMove > 0) {
+            const committedSq = thrustPct / 100 * (minMove + speed);
+            const deltaSq     = minMove - committedSq;
+            if (deltaSq > 0) {
+              const token = td.object;
+              if (token) {
+                const thrustArg = deltaSq * 100 / speed;
+                const projected = HelmPreview.projectPosition(token, storedBearing, thrustArg, speed, 0);
+                if (projected) {
+                  const waypoints = HelmPreview.projectWaypoints(token, storedBearing, thrustArg, speed, 0);
+                  if (waypoints?.length > 1) {
+                    for (let wi = 0; wi < waypoints.length; wi++) {
+                      const wp = waypoints[wi];
+                      await token.animate(
+                        { x: wp.x, y: wp.y, rotation: wp.rotation },
+                        { duration: 50, chain: wi > 0 },
+                      );
+                    }
+                    await td.update({ x: projected.x, y: projected.y, rotation: projected.rotation }, { animate: false });
+                  } else {
+                    await td.update({ x: projected.x, y: projected.y, rotation: projected.rotation }, { animate: true });
                   }
-                  await td.update({ x: projected.x, y: projected.y, rotation: projected.rotation }, { animate: false });
-                } else {
-                  await td.update({ x: projected.x, y: projected.y, rotation: projected.rotation }, { animate: true });
                 }
               }
             }
@@ -700,6 +688,7 @@ export class ShipCombatState {
     const prevResetId = data.resources?.pilot?.helmResetId ?? 0;
     return this.update({
       "resources.pilot.fuelBurned":        0,
+      "resources.pilot.driftBurned":       0,
       "resources.pilot.pilotingSL":         0,
       "resources.pilot.allocSpeed":         0,
       "resources.pilot.allocMano":          0,
@@ -717,13 +706,14 @@ export class ShipCombatState {
     const ordnance    = this.getOrdnanceBayStats();
     const updates = {
       "resources.pilot.fuelBurned":        0,
+      "resources.pilot.driftBurned":       0,
       "resources.pilot.pilotingSL":         0,
       "resources.pilot.allocSpeed":         0,
       "resources.pilot.allocMano":          0,
       "resources.pilot.pilotingMessageId": "",
       "resources.pilot.helmResetId":        prevResetId + 1,
       "resources.pilot.bearing":            0,
-      "resources.pilot.prevTurnMove":       0,
+      "resources.pilot.prevTurnMove":       this.ship?.system?.movement?.speed ?? 0,
       "resources.enginseer.actionChoices":  [],
       "resources.enginseer.extraActions":   0,
       "resources.enginseer.heat":          0,
@@ -904,17 +894,10 @@ export class ShipCombatState {
 
   static async advanceRound() {
     const data = this.getData();
-    const speed        = this.ship?.system?.movement?.speed ?? 6;
-    const fuelBurned   = data.resources?.pilot?.fuelBurned ?? 0;
-    const currentPrev  = data.resources?.pilot?.prevTurnMove ?? 0;
-    const currentMin   = Math.ceil(currentPrev / 2);
-    const fuelMove     = (fuelBurned / 100) * speed;
-    const prevTurnMove = Math.max(currentMin, fuelMove);
 
     await this.update({
       round: (data.round ?? 0) + 1,
       "resources.pilot.bearing": 0,
-      "resources.pilot.prevTurnMove": prevTurnMove,
     });
 
     // ── Stance: derive active stance from snapshot (promotion happens atomically in resetActions) ──
@@ -974,29 +957,6 @@ export class ShipCombatState {
 
     // ── Captain: auto-draw up to 3 cards (respecting hand cap of 5) ──────────
     await this.drawCards({ count: 3 });
-
-    // ── NPC auto-triage: 2 random active conditions step down each round ───────
-    if (canvas?.scene) {
-      for (const td of canvas.scene.tokens) {
-        if (td.actor?.type !== `${MODULE_ID}.npcShip`) continue;
-        const npcConds = td.actor.system?.conditions ?? {};
-        const active = Object.entries(npcConds)
-          .filter(([, c]) => c?.tier)
-          .map(([loc]) => loc);
-        if (active.length === 0) continue;
-        // Shuffle and pick up to 2 locations to step down
-        const shuffled = [...active].sort(() => Math.random() - 0.5);
-        const npcUpdates = {};
-        for (const loc of shuffled.slice(0, 2)) {
-          const cond = npcConds[loc] ?? {};
-          const nextTier = cond.tier === "high" ? "medium"
-            : cond.tier === "medium" ? "low"
-            : null;
-          npcUpdates[`system.conditions.${loc}`] = nextTier ? { ...cond, tier: nextTier } : {};
-        }
-        await td.actor.update(npcUpdates);
-      }
-    }
 
     // ── NPC per-round resource replenishment (25% of max, rounded down) ────────
     if (canvas?.scene) {
@@ -1259,7 +1219,7 @@ export class ShipCombatState {
     let shieldsRemaining = targetShields;
     let hitsAbsorbed    = 0;
     let shieldCostTotal = 0;
-    const hardenedShields = target?.system?.resources?.captain?.hardenedShields ?? false;
+    const hardenedShields = targetActor?.system?.resources?.captain?.hardenedShields ?? false;
     const shieldBypass  = hardenedShields ? false : (traits?.shieldBypass ?? false);
     const shieldBurnVal = traits?.shieldBurn ?? 0;
 
@@ -1330,7 +1290,7 @@ export class ShipCombatState {
         shieldCostTotal,
         hitsThroughShield,
       },
-      hasDamageResults: totalDamage > 0,
+      hasDamageResults: hitsThroughShield > 0,
       damageResults: {
         totalDamage,
         rawDamagePerHit: rawDamage,
@@ -1345,6 +1305,7 @@ export class ShipCombatState {
       rolls:   critResult?.critRolls ?? [],
       speaker: ChatMessage.getSpeaker(),
     });
+    return { totalHits };
   }
 
   /**
@@ -1440,7 +1401,7 @@ export class ShipCombatState {
           shieldCostTotal:   costPerHit * hitsAbsorbed,
           hitsThroughShield: hitsAbsorbed > 0 ? 0 : 1,
         },
-        hasDamageResults: appliedDamage > 0,
+        hasDamageResults: hitsAbsorbed === 0,
         damageResults: {
           totalDamage:     appliedDamage,
           rawDamagePerHit: rawDamage,
@@ -1499,6 +1460,7 @@ ShipCombatState.upgradeLock          = SensorsState.upgradeLock;
 ShipCombatState.getLockTier          = SensorsState.getLockTier;
 ShipCombatState.getEffectiveLockTier = SensorsState.getEffectiveLockTier;
 ShipCombatState.consumeLock          = SensorsState.consumeLock;
+ShipCombatState.removeLock           = SensorsState.removeLock;
 ShipCombatState.resolveBDA           = SensorsState.resolveBDA;
 ShipCombatState.setFireCorrection    = SensorsState.setFireCorrection;
 ShipCombatState.spendAP              = SensorsState.spendAP;

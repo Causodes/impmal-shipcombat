@@ -81,10 +81,14 @@
   height: 1.75rem;
   border-radius: 4px;
   overflow: hidden;
-  /* Green = fully available by default */
-  background: #27ae60;
+  /* Amber = mandatory min-move zone, Green = optional thrust zone */
+  background: linear-gradient(
+    to right,
+    #d4a014 var(--minmove, 0%),
+    #27ae60 var(--minmove, 0%)
+  );
   border: 1px solid var(--color-border-light);
-  /* ::before = committed zone (red), ::after = selected-extra zone (amber) */
+  /* ::before = committed zone (red), ::after = selected-extra zone (orange) */
 }
 .imsc-power-bar::before {
   content: "";

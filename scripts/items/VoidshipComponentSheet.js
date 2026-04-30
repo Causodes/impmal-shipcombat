@@ -123,6 +123,14 @@ export class VoidshipComponentSheet extends warhammer.apps.WarhammerItemSheetV2 
       selected: value === sys.weaponBay,
     }));
 
+    const weaponCategoryChoices = Object.entries(
+      this.item.system.schema.fields.weaponCategory.choices
+    ).map(([value, labelKey]) => ({
+      value,
+      label: game.i18n.localize(labelKey),
+      selected: value === (sys.weaponCategory ?? ""),
+    }));
+
     const isFlankWeapon = sys.weaponPosition === "flank";
 
     // Zone helper arrays for armour and shields
@@ -180,6 +188,7 @@ export class VoidshipComponentSheet extends warhammer.apps.WarhammerItemSheetV2 
       weaponPositionChoices,
       resourceTypeChoices,
       weaponBayChoices,
+      weaponCategoryChoices,
       isFlankWeapon,
       traitsDisplayHtml,
       shieldZones,

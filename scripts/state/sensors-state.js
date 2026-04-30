@@ -75,6 +75,16 @@ export async function consumeLock(targetTokenId) {
 }
 
 /**
+ * Remove (zero out) a sensor lock on a specific target.
+ * Used when the Augur chooses "Break Off, Reallocate".
+ */
+export async function removeLock(targetTokenId) {
+  const data  = this.getData();
+  const locks = (data.resources?.sensors?.locks ?? []).filter(l => l.targetTokenId !== targetTokenId);
+  return this.update({ "resources.sensors.locks": locks });
+}
+
+/**
  * BDA resolution: retain partial lock based on SL thresholds.
  * SL 0  = reveal damage only (lock lost). SL 1+ = Tier 1. SL 2+ = Tier 2. SL 3+ = Tier 3. SL 4+ = Tier 4.
  */
@@ -95,6 +105,7 @@ export async function resolveBDA({ targetTokenId, sl, messageId }) {
     "resources.sensors.bdaCorrectionPending": sl >= 1,  // only true when corrections are available
     "resources.sensors.bdaResultSL":          sl,
     "resources.sensors.bdaOriginalLockTier":  0,
+    "resources.sensors.bdaMessageId":         null,
   };
 
   if (retainedTier > 0) {

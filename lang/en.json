@@ -335,6 +335,18 @@
             "None": "None",
             "Power": "Power"
         },
+        "WeaponCategory": {
+            "None":          "— None —",
+            "Macrocannon":   "Macrocannon",
+            "NovaCannon":    "Nova Cannon",
+            "Railgun":       "Railgun",
+            "PdcProjectile": "PDC (Projectile)",
+            "Lance":         "Lance Battery",
+            "LaserPdc":      "PDC (Laser)",
+            "Melta":         "Melta",
+            "Plasma":        "Plasma",
+            "Missile":       "Missile"
+        },
         "Trait": {
             "ShieldBypass": "Shield Bypass",
             "ShieldBypassDesc": "Hits bypass void shields entirely - hull damage is applied directly without shield absorption.",
@@ -347,7 +359,7 @@
             "ArmourPenetration": "Armour Penetration",
             "ArmourPenetrationDesc": "Reduces the target sector's effective armour by this value when calculating damage per hit.",
             "Devastating": "Devastating",
-            "DevastatingDesc": "Reduces the critical hit damage threshold by this value, making crits trigger more easily.",
+            "DevastatingDesc": "Doubles (11, 22, 33, etc.) that hit deal additional damage equal to this value, still reduced by the target's armour.",
             "Unreliable": "Unreliable",
             "UnreliableDesc": "Roll 1d10 before firing. On a 1, the weapon jams and the entire salvo is lost.",
             "Overcharge": "Overcharge",
@@ -459,7 +471,8 @@
             "PerHit": "per hit",
             "Armour": "armour",
             "Rend": "Rend",
-            "SectorArmour": "sector armour"
+            "SectorArmour": "sector armour",
+            "BlockedByArmour": "Blocked by Armour"
         },
         "Component": {
             "New": "New Component",
@@ -521,6 +534,7 @@
             "TorpedoSalvoSize": "Torpedo Salvo Size",
             "TorpedoCapacity": "Torpedo Capacity",
             "StrikeCraftFlightSize": "Strike Craft Flight Size",
+            "WeaponCategory": "Animation Style",
             "StrikeCraftCapacity": "Strike Craft Capacity"
         },
         "Tooltip": {
@@ -622,7 +636,8 @@
             "SquadronSize": "Flight size (craft per launch)",
             "PayloadCount": "Payload count (weapons per craft)",
             "PayloadDamage": "Warhead damage",
-            "FuelMax": "Fuel / Range (VU)"
+            "FuelMax": "Fuel / Range (VU)",
+            "StepConditionDown": "Step condition down one tier (removes if Low)"
         },
         "Ordnance": {
             "StatusTitle": "Ordnance Deck",
@@ -771,8 +786,8 @@
             "TargetWeakPointDesc": "+SL bonus to armour penetration on the next attack.",
             "FireForEffect": "Fire for Effect",
             "FireForEffectDesc": "On the next attack, the crit threshold is reduced by SL percentage points (minimum 0%). Lighter hits will trigger a full d10 severity roll.",
-            "CeaseFireSwitch": "Cease Fire, Switch Target",
-            "CeaseFireSwitchDesc": "Grants 20% of maximum Auxiliary Power and a free Tier 1 lock on a different contact.",
+            "CeaseFireSwitch": "Break Off, Reallocate",
+            "CeaseFireSwitchDesc": "Grants 20% of maximum Auxiliary Power. Drops the current target's lock to Lock 0.",
             "Pending": "Awaiting Battle Damage Assessment from Augur",
             "LaunchAssessment": "Launch Assessment",
             "PendingSubtitle": "Augur Assessment Pending",

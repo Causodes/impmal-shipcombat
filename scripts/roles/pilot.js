@@ -108,22 +108,26 @@ async function _onConfirmHelm() {
   if (!projected) return;
   HelmPreview.hide();
 
-  const totalFuelAfter   = fuelSlider;
-  const gridSquaresMoved = (totalFuelAfter / 100) * speed;
-
   const waypoints = HelmPreview.projectWaypoints(token, bearing, thrustPct, speed, driftUnits);
 
   emitToGM("confirmMovement", {
     fuelUsed:       fuelSlider,
+    driftUsed:      driftUnits,
+    speed,
     newX:           projected.x,
     newY:           projected.y,
     newRotation:    projected.rotation,
-    gridSquaresMoved,
     waypoints,
   });
 
   const round = sys.round ?? 0;
-  this._helmState = { round, bearing: 0, fuelSlider };
+  this._helmState = {
+    round,
+    helmResetId: sys.resources?.pilot?.helmResetId ?? 0,
+    bearing: 0,
+    fuelSlider,
+    confirmed: true,
+  };
 }
 
 // ── Overcharge action handlers ──────────────────────────────────────────────
@@ -294,6 +298,7 @@ export function buildHelmContext(sys, opts = {}) {
     hasRolledPiloting: !!pilotingMessageId,
     minMove,
     prevTurnMove,
+    minMovePct:      (powerMax > 0 && effSpeed > 0) ? Math.max(0, Math.round(minMove / effSpeed * (10000 / powerMax))) : 0,
     maxBearing:      effMano * 15,
     fuelBurned,
     fuelSlider:      fuelBurned,
@@ -375,6 +380,9 @@ export function helmOnRender(sheet) {
   const bearingDisp   = sheet.element.querySelector("[data-bearing-display]");
   const fuelDisp      = sheet.element.querySelector("[data-fuel-display]");
 
+  // Min-move marker position: written as data-minmove-pct on the power bar by the template
+  const minMovePct = parseInt(powerBarEl?.dataset?.minmovePct ?? "0") || 0;
+
   // Set dynamic power max
   if (powerInput) {
     powerInput.max = String(powerMax);
@@ -386,8 +394,14 @@ export function helmOnRender(sheet) {
     const committed  = fuelBurned  * ratio;
     const extra      = Math.max(0, selectedPct - fuelBurned) * ratio;
     if (powerBarEl) {
+      // Once committed fuel has passed the min-move threshold, hide the amber
+      // zone and the white delimiter line — they are no longer relevant.
+      const effectiveMinmove = committed >= minMovePct ? 0 : minMovePct;
       powerBarEl.style.setProperty("--committed", `${committed}%`);
       powerBarEl.style.setProperty("--extra",     `${extra}%`);
+      powerBarEl.style.setProperty("--minmove",   `${effectiveMinmove}%`);
+      const line = powerBarEl.querySelector(".imsc-power-minmove-line");
+      if (line) line.style.display = effectiveMinmove > 0 ? "" : "none";
     }
     if (fuelDisp) fuelDisp.textContent = `${selectedPct}%`;
   };
@@ -513,7 +527,7 @@ export function helmUpdatePreview(sheet) {
   const fuelSlider   = sheet._helmState?.fuelSlider ?? fuelBurned;
   const bearing      = sheet._helmState?.bearing ?? 0;
 
-  const isFirstCommit = fuelBurned === 0;
+  const isFirstCommit = fuelBurned === 0 && !sheet._helmState?.confirmed;
   const thrustPct     = fuelSlider - fuelBurned;
   const driftUnits    = isFirstCommit ? minMove : 0;
 

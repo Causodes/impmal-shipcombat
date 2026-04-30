@@ -212,6 +212,19 @@
   cursor: pointer;
 }
 
+/* ── Min-move divider line inside the power bar ────────────────────────── */
+.imsc-power-minmove-line {
+  position: absolute;
+  left: var(--minmove, 0%);
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.85);
+  pointer-events: none;
+  z-index: 3;
+  transform: translateX(-1px);
+}
+
 /* ── Ship Power Bar (inside torpedo/SC movement) ───────────────────────── */
 .imsc-torpedo-ship-power {
   display: flex;

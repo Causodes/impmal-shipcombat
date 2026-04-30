@@ -167,6 +167,8 @@ export class ShieldArcOverlay {
       const zoneThresholds = ShipCombatState.getShieldStats().zoneThresholds;
       const showShields = _canSeeShieldValues(ship);
       this._drawForToken(token, ship.system, zoneThresholds, showShields, 4);
+      // Update enemy overlay visibility using the live (dragged) own-ship position.
+      this._updateEnemyOverlayVisibility(token);
     } else if (this._overlays.has(token.id)) {
       // Enemy token  -  only redraw if we have an existing overlay (Lock >= 2)
       const actor = token.document.actor;
@@ -180,18 +182,55 @@ export class ShieldArcOverlay {
       let tier = 2;
       if (ownToken) {
         const gridSize = canvas.grid.size;
-        const cx0 = ownToken.document.x + (ownToken.document.width  * gridSize) / 2;
-        const cy0 = ownToken.document.y + (ownToken.document.height * gridSize) / 2;
+        // Use live PIXI position (token.x) so this stays accurate during drag/animation.
+        const cx0 = ownToken.x + (ownToken.document.width  * gridSize) / 2;
+        const cy0 = ownToken.y + (ownToken.document.height * gridSize) / 2;
         const cW = token.document.width * gridSize;
         const tx = token.document.x + cW / 2;
         const ty = token.document.y + (token.document.height * gridSize) / 2;
-        const distSq = Math.sqrt((tx - cx0) ** 2 + (ty - cy0) ** 2) / gridSize;
+        const dist = Math.sqrt((tx - cx0) ** 2 + (ty - cy0) ** 2) / gridSize;
         const explicitLock = locks.find(l => l.targetTokenId === token.id);
         const explicitTier = explicitLock?.tier ?? 0;
-        const autoTier = (ghRange > 0 && distSq <= ghRange) ? 2 : 0;
+        const autoTier = (ghRange > 0 && dist <= ghRange) ? 2 : 0;
         tier = Math.max(explicitTier, autoTier);
       }
+      if (tier < 2) {
+        this._destroyToken(token.id);
+        return;
+      }
       this._drawForToken(token, actor.system, enemyZT, true, tier);
+    }
+  }
+
+  /**
+   * Update the `container.visible` flag on every enemy overlay using the live
+   * position of the own-ship token.  Called each frame from the own-ship branch
+   * of `_redrawToken` so that autoscan visibility responds during drag/animation
+   * without waiting for a committed `updateToken` event.
+   * @param {Token} ownToken – the own ship's live PIXI token object
+   */
+  static _updateEnemyOverlayVisibility(ownToken) {
+    const ship = ShipCombatState.ship;
+    if (!ship) return;
+    const locks   = ship.system?.resources?.sensors?.locks ?? [];
+    const auspex  = ShipCombatState.getAuspexStats();
+    const ghRange = auspex.autoScanRange ?? 0;
+    const gridSize = canvas.grid.size;
+    const cx0 = ownToken.x + (ownToken.document.width  * gridSize) / 2;
+    const cy0 = ownToken.y + (ownToken.document.height * gridSize) / 2;
+
+    for (const [tokenId, entry] of this._overlays) {
+      const enemyToken = canvas.tokens.placeables.find(t => t.id === tokenId);
+      if (!enemyToken) continue;
+      if (enemyToken.document.actor?.id === ship.id) continue; // skip own ship
+      const cW = enemyToken.document.width  * gridSize;
+      const tx = enemyToken.x + cW / 2;
+      const ty = enemyToken.y + (enemyToken.document.height * gridSize) / 2;
+      const dist = Math.sqrt((tx - cx0) ** 2 + (ty - cy0) ** 2) / gridSize;
+      const explicitLock = locks.find(l => l.targetTokenId === tokenId);
+      const explicitTier = explicitLock?.tier ?? 0;
+      const autoTier = (ghRange > 0 && dist <= ghRange) ? 2 : 0;
+      entry.container.visible = Math.max(explicitTier, autoTier) >= 2;
     }
   }
 
@@ -250,6 +289,9 @@ export class ShieldArcOverlay {
       entry = { container, graphics, bowMarker, texts };
       this._overlays.set(token.id, entry);
     }
+    // Ensure the container is visible — it may have been hidden during a drag
+    // by _updateEnemyOverlayVisibility before refresh() had a chance to run.
+    entry.container.visible = true;
 
     // ── Geometry ─────────────────────────────────────────────────────────────
     const { graphics, texts } = entry;

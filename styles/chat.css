@@ -123,6 +123,11 @@
   font-size: 0.85rem;
 }
 .imsc-fire-damage-header .imsc-dmg-total { color: #e74c3c; }
+.imsc-fire-armour-blocked {
+  color: rgba(255,255,255,0.5);
+  font-size: 0.8rem;
+}
+.imsc-fire-armour-blocked i { color: rgba(255,255,255,0.35); }
 .imsc-fire-damage-detail {
   font-size: 0.7rem;
   opacity: 0.7;

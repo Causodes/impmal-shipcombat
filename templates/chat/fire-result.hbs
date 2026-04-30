@@ -68,6 +68,7 @@
     {{!-- ═══ Damage Resolution ═══ --}}
     {{#if hasDamageResults}}
     <div class="imsc-fire-damage imsc-summary-reveal" style="animation-delay:{{summaryDelay}}ms">
+        {{#if damageResults.totalDamage}}
         <div class="imsc-fire-damage-header">
             <i class="fa-solid fa-explosion"></i>
             <strong>{{damageResults.totalDamage}}</strong> {{localize "IMSC.Fire.HullDamage"}}
@@ -79,6 +80,18 @@
                 <span class="imsc-fire-ap">[AP {{damageResults.ap}}]</span>
             {{/if}}
         </div>
+        {{else}}
+        <div class="imsc-fire-damage-header imsc-fire-armour-blocked">
+            <i class="fa-solid fa-shield"></i>
+            {{localize "IMSC.Fire.BlockedByArmour"}}
+        </div>
+        <div class="imsc-fire-damage-detail">
+            {{damageResults.rawDamagePerHit}} − {{damageResults.effectiveArmour}} {{localize "IMSC.Fire.Armour"}}
+            {{#if damageResults.ap}}
+                <span class="imsc-fire-ap">[AP {{damageResults.ap}}]</span>
+            {{/if}}
+        </div>
+        {{/if}}
         {{#if damageResults.rendTotal}}
         <div class="imsc-fire-rend">
             <i class="fa-solid fa-hammer"></i>
