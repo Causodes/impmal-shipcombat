@@ -61,9 +61,24 @@ describe("critSeverityFromRoll", () => {
 // ── buildCaptainDeck ──────────────────────────────────────────────────────────
 
 describe("buildCaptainDeck – total size", () => {
-  it("produces exactly 23 cards", () => {
+  it("produces exactly 23 cards (6-man)", () => {
     const deck = buildCaptainDeck();
     assertEqual(deck.length, 23, `Expected 23 cards, got ${deck.length}`);
+  });
+
+  it("produces exactly 21 cards when ordnance role excluded (5-man)", () => {
+    const deck = buildCaptainDeck(["ordnance"]);
+    assertEqual(deck.length, 21, `Expected 21 cards (no ordnance boosts), got ${deck.length}`);
+  });
+
+  it("5-man deck contains no ordnance-targeted boost cards", () => {
+    const deck = buildCaptainDeck(["ordnance"]);
+    const ordnanceIds = CAPTAIN_CARDS
+      .filter(c => c.targetRole === "ordnance")
+      .map(c => c.id);
+    for (const id of ordnanceIds) {
+      assert(!deck.includes(id), `Ordnance card '${id}' should not appear in 5-man deck`);
+    }
   });
 });
 

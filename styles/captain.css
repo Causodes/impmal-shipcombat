@@ -2,6 +2,11 @@
 .imsc-leadership-header .list-name {
   flex: 1;
 }
+/* Override warhammer row-content > * { flex: 0 0 100px } so the icon stays compact */
+.imsc-leadership-header > .imsc-full-reset-link {
+  flex: 0 0 auto;
+  overflow: visible;
+}
 
 /* ── Captain: Stance Row (inside imsc-role-status-bar / imsc-role-status-panel) ── */
 /* The sticky header itself is provided by .imsc-role-status-bar in enginseer.css.  */
@@ -164,6 +169,9 @@
   grid-template-columns: 1fr 1fr;
   gap: 4px;
   padding: 4px 6px;
+}
+.imsc-captain-core-actions--combined .list-content {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 

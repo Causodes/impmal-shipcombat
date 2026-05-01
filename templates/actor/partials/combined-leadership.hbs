@@ -1,0 +1,81 @@
+{{!-- 5-man: Combined Command Allocation — Presence roll drives Resolve, Efficiency & Expedience --}}
+<div class="sheet-list">
+    <div class="list-header row-content imsc-leadership-header">
+        <div class="list-name">{{localize "IMSC.Captain.CommandAllocation"}}</div>
+        <a class="imsc-full-reset-link" data-action="rollInitiative"
+           data-tooltip="{{localize 'IMSC.Captain.RollInitiativeBtn'}}">
+            <i class="fa-solid fa-dice-d20"></i>
+        </a>
+    </div>
+    <div class="list-content">
+        <div class="imsc-helm-stats">
+
+            {{!-- Presence (Leadership) roll --}}
+            <div class="imsc-helm-stat" data-tooltip="{{localize 'IMSC.Captain.LeadershipSLTooltip'}}">
+                <span class="imsc-helm-stat-label">{{localize "IMSC.Captain.LeadershipSL"}}</span>
+                {{#if captainCtx.leadershipRolled}}
+                    <span class="imsc-helm-stat-value imsc-sl-badge">{{captainCtx.remainingLeadershipSL}}</span>
+                {{else}}
+                    <button class="imsc-roll-piloting-btn" data-action="rollLeadershipSL">
+                        <i class="fa-solid fa-dice"></i> {{localize "IMSC.Captain.RollLeadership"}}
+                    </button>
+                {{/if}}
+            </div>
+
+            {{!-- Resolve (captain) --}}
+            <div class="imsc-helm-stat" data-tooltip="{{localize 'IMSC.Captain.ResolveTooltip'}}">
+                <span class="imsc-helm-stat-label">{{localize "IMSC.Captain.Resolve"}}</span>
+                <div class="imsc-alloc-row">
+                    <button class="imsc-alloc-btn" data-action="allocLeadershipSL" data-stat="resolve" data-delta="-1"
+                            {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
+                            {{#unless captainCtx.allocResolve}}disabled{{/unless}}>
+                        &minus;
+                    </button>
+                    <span class="imsc-helm-stat-value">{{captainCtx.allocResolve}}</span>
+                    <button class="imsc-alloc-btn" data-action="allocLeadershipSL" data-stat="resolve" data-delta="1"
+                            {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
+                            {{#if (gte captainCtx.allocResolve captainCtx.leadershipSL)}}disabled{{/if}}>
+                        +
+                    </button>
+                </div>
+            </div>
+
+            {{!-- Efficiency (ordnance) --}}
+            <div class="imsc-helm-stat" data-tooltip="{{localize 'IMSC.Ordnance.EfficiencyTooltip'}}">
+                <span class="imsc-helm-stat-label">{{localize "IMSC.Ordnance.Efficiency"}}</span>
+                <div class="imsc-alloc-row">
+                    <button class="imsc-alloc-btn" data-action="allocOrdnanceSL" data-stat="efficiency" data-delta="-1"
+                            {{#unless ordnanceCtx.bosunRolled}}disabled{{/unless}}
+                            {{#unless ordnanceCtx.allocEfficiency}}disabled{{/unless}}>
+                        &minus;
+                    </button>
+                    <span class="imsc-helm-stat-value">{{ordnanceCtx.allocEfficiency}}</span>
+                    <button class="imsc-alloc-btn" data-action="allocOrdnanceSL" data-stat="efficiency" data-delta="1"
+                            {{#unless ordnanceCtx.bosunRolled}}disabled{{/unless}}
+                            {{#if (gte (add ordnanceCtx.allocEfficiency ordnanceCtx.allocExpedience) ordnanceCtx.bosunSL)}}disabled{{/if}}>
+                        +
+                    </button>
+                </div>
+            </div>
+
+            {{!-- Expedience (ordnance) --}}
+            <div class="imsc-helm-stat" data-tooltip="{{localize 'IMSC.Ordnance.ExpedienceTooltip'}}">
+                <span class="imsc-helm-stat-label">{{localize "IMSC.Ordnance.Expedience"}}</span>
+                <div class="imsc-alloc-row">
+                    <button class="imsc-alloc-btn" data-action="allocOrdnanceSL" data-stat="expedience" data-delta="-1"
+                            {{#unless ordnanceCtx.bosunRolled}}disabled{{/unless}}
+                            {{#unless ordnanceCtx.allocExpedience}}disabled{{/unless}}>
+                        &minus;
+                    </button>
+                    <span class="imsc-helm-stat-value">{{ordnanceCtx.allocExpedience}}</span>
+                    <button class="imsc-alloc-btn" data-action="allocOrdnanceSL" data-stat="expedience" data-delta="1"
+                            {{#unless ordnanceCtx.bosunRolled}}disabled{{/unless}}
+                            {{#if (gte (add ordnanceCtx.allocEfficiency ordnanceCtx.allocExpedience) ordnanceCtx.bosunSL)}}disabled{{/if}}>
+                        +
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

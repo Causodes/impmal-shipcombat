@@ -137,8 +137,9 @@ export async function drawCards({ count = DRAWS_PER_ROUND } = {}) {
   }
 
   const toDraw = Math.min(count, headroom);
+  const _excl = (sys.crewSize ?? 6) <= 5 ? ["ordnance"] : [];
   const { drawn, drawPile, discardPile } = _drawFrom(
-    captain.drawPile   ?? buildCaptainDeck(),
+    captain.drawPile   ?? buildCaptainDeck(_excl),
     captain.discardPile ?? [],
     toDraw,
   );
@@ -298,8 +299,9 @@ export async function mulligan({ cardId }) {
   hand.splice(cardIdx, 1);
   const discard = [...(captain.discardPile ?? []), cardId];
 
+  const _excl = (sys.crewSize ?? 6) <= 5 ? ["ordnance"] : [];
   const { drawn, drawPile, discardPile } = _drawFrom(
-    captain.drawPile   ?? buildCaptainDeck(),
+    captain.drawPile   ?? buildCaptainDeck(_excl),
     discard,
     1,
   );
@@ -337,8 +339,9 @@ export async function fullRedraw() {
 
   // Burn both triages
   const discard = [...(captain.discardPile ?? []), ...(captain.hand ?? [])];
+  const _excl = (sys.crewSize ?? 6) <= 5 ? ["ordnance"] : [];
   const { drawn, drawPile, discardPile } = _drawFrom(
-    captain.drawPile ?? buildCaptainDeck(),
+    captain.drawPile ?? buildCaptainDeck(_excl),
     discard,
     HAND_CAP + (captain.handCapBonus ?? 0) + (captain.allocInspire ?? 0),
   );

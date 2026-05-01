@@ -333,11 +333,30 @@ export class TorpedoSheet extends IMActorSheet {
       return closestDist <= radiusPx;
     });
 
+    // Find other torpedoes in blast radius (excluding self)
+    const torpedoTargets = canvas.tokens.placeables.filter(t => {
+      if (t === token) return false;
+      if (t.document.actor?.type !== `${MODULE_ID}.torpedo`) return false;
+      return _closestEdgeDist(cx, cy, t, gs) <= radiusPx;
+    });
+
+    // Find strike craft in blast radius
+    const craftTargets = canvas.tokens.placeables.filter(t => {
+      if (t.document.actor?.type !== `${MODULE_ID}.strikeCraft`) return false;
+      return _closestEdgeDist(cx, cy, t, gs) <= radiusPx;
+    });
+
     // Confirm detonation
-    const shipCount = targets.length;
-    const confirmMsg = shipCount > 0
-      ? `<p>Detonate warhead? ${shipCount} ship(s) in blast radius.</p>`
-      : `<p>No ships in detonation radius. Detonate anyway?</p>`;
+    const shipCount  = targets.length;
+    const torpCount  = torpedoTargets.length;
+    const craftCount = craftTargets.length;
+    let confirmMsg = `<p>Detonate warhead?`;
+    const parts = [];
+    if (shipCount  > 0) parts.push(`${shipCount} ship(s)`);
+    if (torpCount  > 0) parts.push(`${torpCount} torpedo(es)`);
+    if (craftCount > 0) parts.push(`${craftCount} strike craft`);
+    confirmMsg += parts.length > 0 ? ` ${parts.join(", ")} in blast radius.` : ` Nothing in blast radius.`;
+    confirmMsg += `</p>`;
     const ok = await foundry.applications.api.DialogV2.confirm({
       window: { title: "Confirm Detonation" },
       content: confirmMsg,
@@ -387,6 +406,31 @@ export class TorpedoSheet extends IMActorSheet {
         damage,
         hitQuadrant,
         traits: sys.traits,
+      });
+    }
+
+    // Blast other torpedoes (destroyed) and strike craft (hull damage) in radius
+    if (torpedoTargets.length > 0 || craftTargets.length > 0) {
+      const craftDamages = craftTargets.map(t => {
+        const dist = _closestEdgeDist(cx, cy, t, gs);
+        let decayMult;
+        if (dist <= gs) {
+          decayMult = 1;
+        } else {
+          const outerDist = Math.min(dist - gs, radiusPx - gs);
+          const outerRange = Math.max(1, radiusPx - gs);
+          decayMult = 1 - 0.75 * (outerDist / outerRange);
+        }
+        return {
+          tokenId: t.document.id,
+          actorId: t.document.actorId,
+          damage:  Math.max(1, Math.round(baseDmg * warheads * decayMult)),
+        };
+      });
+      emitToGM("blastOrdnance", {
+        torpedoTokenIds: torpedoTargets.map(t => t.document.id),
+        craftDamages,
+        torName: this.actor.name,
       });
     }
 

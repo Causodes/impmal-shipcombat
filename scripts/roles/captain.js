@@ -377,6 +377,13 @@ async function _onRollLeadershipSL() {
   emitToGM("updateResource", { roleId: "captain", key: "allocInspire",     value: 0    });
   emitToGM("updateResource", { roleId: "captain", key: "allocResolve",     value: 0    });
   emitToGM("updateResource", { roleId: "captain", key: "allocInitiative",  value: 0    });
+  // In 5-man mode the Presence roll also seeds the ordnance SL pool (no separate Might roll).
+  if ((sys.crewSize ?? 6) <= 5) {
+    emitToGM("updateResource", { roleId: "ordnance", key: "bosunSL",        value: sl   });
+    emitToGM("updateResource", { roleId: "ordnance", key: "bosunRolled",    value: true });
+    emitToGM("updateResource", { roleId: "ordnance", key: "allocEfficiency", value: 0   });
+    emitToGM("updateResource", { roleId: "ordnance", key: "allocExpedience", value: 0   });
+  }
 }
 
 /**

@@ -1,0 +1,18 @@
+{{!-- tabs/5/enginseer.hbs — Enginseer tab (5-player). Includes voidshield allocation. --}}
+<section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
+
+    {{> "modules/impmal-shipcombat/templates/actor/partials/enginseer-claim-prompt.hbs"}}
+
+    {{#if (or isGM (lookup (lookup roles "enginseer") "isMyRole"))}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/enginseer-captain-boost.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/enginseer-status-bar.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/captain-voidshields.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/enginseer-core-distribution.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/enginseer-heat-management.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/enginseer-fire-suppression.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/enginseer-hull-repair.hbs"}}
+    {{/if}}
+
+    {{> 'modules/impmal-shipcombat/templates/actor/partials/complete-turn.hbs' tabRoleId="enginseer" turnDone=(lookup @root.sys.turnDone "enginseer")}}
+
+</section>

@@ -29,6 +29,7 @@ export function setupSocket() {
     "setFireCorrection",
     "spendAP",
     "torpedoDamage",
+    "blastOrdnance",
     "strikeCraftAttack",
     "triageCondition",
     "drawCards",
@@ -271,6 +272,10 @@ async function _handleAction(action, payload = {}) {
 
     case "torpedoDamage":
       await ShipCombatState.torpedoDamage(payload);
+      break;
+
+    case "blastOrdnance":
+      await ShipCombatState.blastOrdnance(payload);
       break;
 
     case "strikeCraftAttack": {

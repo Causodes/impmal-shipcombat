@@ -811,7 +811,8 @@ export class ShipCombatState {
     updates["conditions.coreSystems"]    = { ...condClear };
     updates["conditions.weaponsSensors"] = { ...condClear };
     // ── Captain: re-initialize deck and triage ──
-    const captainDeck = buildCaptainDeck();
+    const _excl5man = (data.crewSize ?? 6) <= 5 ? ["ordnance"] : [];
+    const captainDeck = buildCaptainDeck(_excl5man);
     const captainHand = captainDeck.splice(0, 3);
     updates["resources.captain.stance"]               = "none";
     updates["resources.captain.pendingStance"]        = "";
@@ -985,7 +986,8 @@ export class ShipCombatState {
     const data = this.getData();
     const max = this.getReactorStats().coreOutput;
     const shieldCfg = this.getShieldStats();
-    const captainDeck = buildCaptainDeck();
+    const _excl5man = (data.crewSize ?? 6) <= 5 ? ["ordnance"] : [];
+    const captainDeck = buildCaptainDeck(_excl5man);
     const captainHand = captainDeck.splice(0, 3);
     const updates = {
       active: true, round: 1, internalFire: 0,
@@ -1466,6 +1468,7 @@ ShipCombatState.setOrdnanceRtb            = OrdnanceState.setOrdnanceRtb;
 ShipCombatState.setOrdnanceTurnDone       = OrdnanceState.setOrdnanceTurnDone;
 ShipCombatState.designateHostileTorpedo   = OrdnanceState.designateHostileTorpedo;
 ShipCombatState.torpedoPowerBoost         = OrdnanceState.torpedoPowerBoost;
+ShipCombatState.blastOrdnance             = OrdnanceState.blastOrdnance;
 
 // Crits
 ShipCombatState.rollCrit = CritState.rollCrit;

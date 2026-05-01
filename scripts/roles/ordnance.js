@@ -77,6 +77,12 @@ function _getDeployedOrdnance(shipActor) {
       img: td.texture?.src ?? td.actor?.img ?? "",
       type: td.actor?.type === `${MODULE_ID}.torpedo` ? "torpedo" : "strikeCraft",
       turnComplete: td.actor?.system?.turnComplete ?? false,
+      // Launch-turn torpedoes spawned this round: turnComplete=true but no movement yet.
+      // Disable the "mark done" toggle so the Gunner can't accidentally unlock it.
+      isLaunchTurn: (td.actor?.type === `${MODULE_ID}.torpedo`)
+        && (td.actor?.system?.turnComplete ?? false)
+        && (td.actor?.system?.helm?.thrustPct ?? 0) === 0
+        && (td.actor?.system?.helm?.prevTurnMove ?? 0) === 0,
       rtb: td.actor?.system?.rtb ?? false,
       hull: td.actor?.system?.hull ?? { value: 0, max: 0 },
       fuel: td.actor?.system?.fuel ?? { value: 0, max: 0 },

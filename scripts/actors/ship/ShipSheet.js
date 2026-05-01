@@ -145,9 +145,11 @@ export class ShipSheet extends IMActorSheet {
     overview:     { template: `modules/${MODULE_ID}/templates/actor/tabs/ship-overview.hbs`,              scrollable: [""] },
     captain:      { template: `modules/${MODULE_ID}/templates/actor/tabs/6/captain.hbs`,             scrollable: [""] },
     captain5man:  { template: `modules/${MODULE_ID}/templates/actor/tabs/5/captain.hbs`,             scrollable: [""] },
+    enginseer5man: { template: `modules/${MODULE_ID}/templates/actor/tabs/5/enginseer.hbs`,            scrollable: [""] },
     enginseer:    { template: `modules/${MODULE_ID}/templates/actor/tabs/6/enginseer.hbs`,           scrollable: [""] },
     pilot:        { template: `modules/${MODULE_ID}/templates/actor/tabs/6/pilot.hbs`,               scrollable: [""] },
     sensors:      { template: `modules/${MODULE_ID}/templates/actor/tabs/6/sensors.hbs`,             scrollable: [""] },
+    gunner5man:   { template: `modules/${MODULE_ID}/templates/actor/tabs/5/gunner.hbs`,              scrollable: [""] },
     gunner:       { template: `modules/${MODULE_ID}/templates/actor/tabs/6/gunner.hbs`,              scrollable: [""] },
     ordnance:     { template: `modules/${MODULE_ID}/templates/actor/tabs/6/ordnance.hbs`,            scrollable: [""] },
     config:       { template: `modules/${MODULE_ID}/templates/actor/tabs/ship-config.hbs`,                scrollable: [""] },
@@ -159,9 +161,11 @@ export class ShipSheet extends IMActorSheet {
     overview:    { id: "overview",    group: "primary", label: "IMSC.Tab.Overview"    },
     captain:     { id: "captain",     group: "primary", label: "IMSC.Role.Captain"    },
     captain5man: { id: "captain5man", group: "primary", label: "IMSC.Role.Captain"    },
+    enginseer5man: { id: "enginseer5man", group: "primary", label: "IMSC.Role.Enginseer" },
     enginseer:   { id: "enginseer",   group: "primary", label: "IMSC.Role.Enginseer"  },
     pilot:       { id: "pilot",       group: "primary", label: "IMSC.Role.Pilot"      },
     sensors:     { id: "sensors",     group: "primary", label: "IMSC.Role.Sensors"    },
+    gunner5man:  { id: "gunner5man",  group: "primary", label: "IMSC.Role.Gunner"     },
     gunner:      { id: "gunner",      group: "primary", label: "IMSC.Role.Gunner"     },
     ordnance:    { id: "ordnance",    group: "primary", label: "IMSC.Role.Ordnance"   },
     config:      { id: "config",      group: "primary", label: "IMSC.Tab.Config"      },
@@ -194,8 +198,14 @@ export class ShipSheet extends IMActorSheet {
       if (useCombinedCaptain) {
         all.delete("captain");
         all.add("captain5man");
+        all.delete("enginseer");
+        all.add("enginseer5man");
+        all.delete("gunner");
+        all.add("gunner5man");
       } else {
         all.delete("captain5man");
+        all.delete("enginseer5man");
+        all.delete("gunner5man");
       }
       return all;
     }
@@ -207,7 +217,10 @@ export class ShipSheet extends IMActorSheet {
     if (canObserve) allowed.add("overview");
     if (isOwner) allowed.add("config");
     // Captain player gets the combined tab when ordnance is merged in.
-    const effectivePart = (myRole === "captain" && useCombinedCaptain) ? "captain5man" : myRole;
+    const effectivePart = (myRole === "captain" && useCombinedCaptain) ? "captain5man"
+      : (myRole === "enginseer" && useCombinedCaptain) ? "enginseer5man"
+      : (myRole === "gunner"    && useCombinedCaptain) ? "gunner5man"
+      : myRole;
     if (effectivePart && !disabled.has(effectivePart)) allowed.add(effectivePart);
     return allowed;
   }

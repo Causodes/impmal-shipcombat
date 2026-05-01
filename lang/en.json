@@ -611,7 +611,7 @@
             "OverdriveActive": "ACTIVE",
             "OverchargeSelected": "Overcharge Action Selected",
             "OverchargeAlreadyUsed": "Overcharge Already Used This Turn",
-            "AuxPowerTitle": "Auxiliary Power",
+            "AuxPowerTitle": "Navigation Deck",
             "ApToThrust": "AP → Thrust",
             "ApThrustTooltip": "Spend 1 Auxiliary Power to raise this turn's Power Max by the engine's Power Per AP rating.",
             "ApThrustBonus": "AP Thrust Bonus"
@@ -691,8 +691,12 @@
             "RoleHasPayload": "This role already has an active payload.",
             "DeployedOrdnance": "Deployed Ordnance",
             "NoneDeployed": "No ordnance deployed",
+            "NoneDeployedTorpedoes": "No torpedoes deployed",
+            "NoneDeployedCraft": "No strike craft deployed",
+            "DeployedTorpedoes": "Deployed Torpedoes",
             "PanTo": "Pan to token",
             "MarkDone": "Mark turn complete",
+            "LaunchTurnLocked": "Torpedo launched this round — drifts automatically on round advance",
             "Recall": "Recall (RTB)",
             "NoCrewActor": "No crew actor assigned to the Ordnance Master role.",
             "CoreActionUsed": "Core action already used this turn.",
@@ -996,8 +1000,9 @@
                     "standDown": "Clears the current combat stance, returning the ship to None."
                 }
             },
-            "StatusTitle": "Command Station",
-            "CommandDeck": "Command Deck",
+            "StatusTitle": "Command Bridge",
+            "CommandAllocation": "Command Allocation",
+            "DeployedStrikeCraft": "Deployed Strike Craft",
             "StanceLabel": "Combat Stance",
             "LeadershipSL": "Presence SL",
             "LeadershipAllocation": "Leadership Allocation",

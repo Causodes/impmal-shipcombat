@@ -1,7 +1,7 @@
 {{!-- Command Deck: merged captain + ordnance status bar for the 5-player Supreme Commander tab --}}
 <div class="sheet-list imsc-role-status-bar">
     <div class="list-header row-content">
-        <div class="list-name">{{localize "IMSC.Captain.CommandDeck"}}</div>
+        <div class="list-name">{{localize "IMSC.Captain.StatusTitle"}}</div>
 
         {{#with (lookup roles "captain")}}
         {{> "modules/impmal-shipcombat/templates/actor/partials/core-status-banner.hbs"

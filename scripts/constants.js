@@ -502,9 +502,10 @@ export const CAPTAIN_CARDS = [
  * Cards with copies > 1 appear that many times. Uses Fisher-Yates shuffle.
  * @returns {string[]}
  */
-export function buildCaptainDeck() {
+export function buildCaptainDeck(excludeRoles = []) {
   const deck = [];
   for (const card of CAPTAIN_CARDS) {
+    if (excludeRoles.includes(card.targetRole ?? "")) continue;
     for (let i = 0; i < (card.copies ?? 1); i++) deck.push(card.id);
   }
   for (let i = deck.length - 1; i > 0; i--) {

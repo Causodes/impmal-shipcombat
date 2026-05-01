@@ -1,0 +1,50 @@
+{{!-- tabs/5/captain.hbs — Supreme Commander tab (≤ 5 players) --}}
+{{!-- Handles both Captain and Ordnance Master roles.              --}}
+<section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
+
+    {{> "modules/impmal-shipcombat/templates/actor/partials/captain-claim-prompt.hbs"}}
+
+    {{#if (or isGM (lookup (lookup roles "captain") "isMyRole"))}}
+
+    {{!-- Command Deck: merged stance/triage/core-status + ordnance readiness (no payloads) --}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/command-deck-bar.hbs"}}
+    {{!-- Command Allocation: Presence roll feeds Resolve, Initiative, Efficiency, Expedience --}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/combined-leadership.hbs"}}
+
+    {{!-- ══════ CONDITION SECTION ══════ --}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/captain-conditions.hbs"}}
+
+    {{!-- ══════ ORDNANCE SECTIONS ══════ --}}
+    {{!-- Main Actions: 3×3 grid — loadPayload excluded in 5-man --}}
+    <div class="sheet-list imsc-ordnance-actions">
+        <div class="list-header row-content">
+            <div class="list-name">{{localize "IMSC.Ordnance.MainAction"}}</div>
+        </div>
+        <div class="list-content">
+            <div class="imsc-ordnance-action-grid">
+                {{#each ordnanceCtx.actions}}
+                {{#unless (imscEq id "loadPayload")}}
+                <button class="imsc-ordnance-action-btn" data-action="ordnanceMasterAction" data-action-id="{{id}}"
+                        {{#unless canAfford}}disabled{{/unless}}
+                        data-tooltip="{{descLocalized}}">
+                    <i class="{{icon}}"></i>
+                    <span>{{labelLocalized}}</span>
+                    <small>{{effectiveCrew}} crew / {{effectiveDuration}}T</small>
+                </button>
+                {{/unless}}
+                {{/each}}
+            </div>
+        </div>
+    </div>
+
+    {{> "modules/impmal-shipcombat/templates/actor/partials/combined-core-actions.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/deployed-strike-craft.hbs"}}
+
+    {{!-- ══════ ORDERS SECTIONS ══════ --}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/captain-hand.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/captain-active-orders.hbs"}}
+
+    {{> 'modules/impmal-shipcombat/templates/actor/partials/complete-turn.hbs' tabRoleId="ordnance" turnDone=(lookup @root.sys.turnDone "ordnance")}}
+    {{/if}}
+
+</section>

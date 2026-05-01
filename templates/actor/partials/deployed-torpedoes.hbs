@@ -1,0 +1,33 @@
+{{!-- Ordnance: Deployed Torpedoes (5-man Supreme Commander tab) --}}
+<div class="sheet-list imsc-deployed-ordnance">
+    <div class="list-header row-content">
+        <div class="list-name">{{localize "IMSC.Ordnance.DeployedTorpedoes"}} ({{ordnanceCtx.deployedTorpedoCount}})</div>
+    </div>
+    <div class="list-content">
+        {{#unless ordnanceCtx.deployedTorpedoCount}}
+        <div class="imsc-deployed-empty">
+            {{localize "IMSC.Ordnance.NoneDeployedTorpedoes"}}
+        </div>
+        {{/unless}}
+
+        {{#each ordnanceCtx.deployedTorpedoes}}
+        <div class="imsc-deployed-row imsc-deployed--torpedo {{#if turnComplete}}imsc-deployed--done{{/if}}"
+             data-token-id="{{tokenId}}">
+            <img src="{{img}}" class="imsc-deployed-icon" />
+            <span class="imsc-deployed-name">{{name}}</span>
+            <span class="imsc-deployed-type"><i class="fa-solid fa-rocket"></i></span>
+            <div class="imsc-deployed-controls">
+                <button data-action="panToOrdnance" data-token-id="{{tokenId}}"
+                        data-tooltip="{{localize 'IMSC.Ordnance.PanTo'}}">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+                <button data-action="markOrdnanceDone" data-token-id="{{tokenId}}"
+                        class="{{#if turnComplete}}active{{/if}}"
+                        {{#if isLaunchTurn}}disabled data-tooltip="{{localize 'IMSC.Ordnance.LaunchTurnLocked'}}"{{else}}data-tooltip="{{localize 'IMSC.Ordnance.MarkDone'}}"{{/if}}>
+                    <i class="fa-solid fa-check"></i>
+                </button>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</div>

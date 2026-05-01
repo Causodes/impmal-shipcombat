@@ -139,3 +139,40 @@ export async function torpedoPowerBoost(tokenId) {
   if (!td?.actor) return;
   await td.actor.update({ "system.powerBoostActive": true });
 }
+
+/**
+ * Blast ordnance caught in a torpedo's detonation radius.
+ * Destroys torpedoes immediately; applies hull damage to strike craft (deletes if hull maxed).
+ * GM-only.
+ */
+export async function blastOrdnance({ torpedoTokenIds, craftDamages, torName } = {}) {
+  if (!game.user.isGM || !canvas?.scene) return;
+
+  // Destroy torpedoes caught in the blast
+  const torpsToDelete = (torpedoTokenIds ?? []).filter(id => canvas.scene.tokens.get(id));
+  if (torpsToDelete.length > 0) {
+    await canvas.scene.deleteEmbeddedDocuments("Token", torpsToDelete);
+    await ChatMessage.create({
+      content: `<b>${torName ?? "Torpedo"}</b> detonation destroyed ${torpsToDelete.length} torpedo(es) in the blast radius.`,
+      type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0,
+    });
+  }
+
+  // Apply hull damage to strike craft in the blast
+  const craftDestroyed = [];
+  for (const { tokenId, damage } of (craftDamages ?? [])) {
+    const td = canvas.scene.tokens.get(tokenId);
+    if (!td?.actor) continue;
+    const hull = td.actor.system.hull ?? { value: 0, max: 1 };
+    const newValue = Math.min(hull.max, (hull.value ?? 0) + damage);
+    await td.actor.update({ "system.hull.value": newValue });
+    if (newValue >= hull.max) craftDestroyed.push(tokenId);
+  }
+  if (craftDestroyed.length > 0) {
+    await canvas.scene.deleteEmbeddedDocuments("Token", craftDestroyed);
+    await ChatMessage.create({
+      content: `<b>${torName ?? "Torpedo"}</b> detonation destroyed ${craftDestroyed.length} strike craft flight(s).`,
+      type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0,
+    });
+  }
+}
