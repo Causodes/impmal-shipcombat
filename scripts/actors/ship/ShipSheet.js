@@ -131,6 +131,9 @@ export class ShipSheet extends IMActorSheet {
       openOrdnanceActor: ShipSheet._onOpenOrdnanceActor,
       removeOrdnanceActor: ShipSheet._onRemoveOrdnanceActor,
       debugSetCondition: ShipSheet._onDebugSetCondition,
+      addToInventory:       ShipSheet._onAddToInventory,
+      unassignWeapon:       ShipSheet._onUnassignWeapon,
+      unassignEquipment:    ShipSheet._onUnassignEquipment,
     },
     position: { width: 720, height: 820 },
     defaultTab: "overview",
@@ -165,36 +168,50 @@ export class ShipSheet extends IMActorSheet {
 
   // ── Per-user tab/part filtering ─────────────────────────────────────────
 
+  /**
+   * Returns the set of role IDs that are inactive for the current crew size.
+   * Removal order as crew drops from 6 → 3: ordnance, captain, gunner.
+   */
+  _getDisabledRoles() {
+    const crewSize = this.actor.system.crewSize ?? 6;
+    const disabled = new Set();
+    if (crewSize <= 5) disabled.add("ordnance");
+    if (crewSize <= 4) disabled.add("captain");
+    if (crewSize <= 3) disabled.add("gunner");
+    return disabled;
+  }
+
   _allowedParts() {
-    if (game.user.isGM) return new Set(Object.keys(ShipSheet.PARTS));
+    const disabled = this._getDisabledRoles();
+    if (game.user.isGM) {
+      const all = new Set(Object.keys(ShipSheet.PARTS));
+      for (const r of disabled) all.delete(r);
+      return all;
+    }
     const myRole = this._resolveRoleForUser(game.user);
     const level = this.actor.getUserLevel(game.user) ?? 0;
     const isOwner = level >= CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
     const canObserve = level >= CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER;
     const allowed = new Set(["header", "tabs"]);
     if (canObserve) allowed.add("overview");
-    if (isOwner) {
-      allowed.add("config");
-    }
-    if (myRole) allowed.add(myRole);
+    if (isOwner) allowed.add("config");
+    if (myRole && !disabled.has(myRole)) allowed.add(myRole);
     return allowed;
   }
 
   _configureRenderOptions(options) {
     super._configureRenderOptions(options);
-    if (game.user.isGM) return;
     const allowed = this._allowedParts();
     options.parts = (options.parts ?? Object.keys(ShipSheet.PARTS))
       .filter(p => allowed.has(p));
   }
 
   /**
-   * Filter tab list so non-GM users only see tabs for parts they can access.
-   * warhammer-lib's _prepareTabs returns a flat { tabId: { id, group, active, ... } } object.
+   * Filter tab list so users only see tabs for parts they can access,
+   * and so all users (including GM) hide tabs for disabled roles.
    */
   _prepareTabs(options) {
     const tabs = super._prepareTabs(options);
-    if (game.user.isGM) return tabs;
     const allowed = this._allowedParts();
     for (const key of Object.keys(tabs)) {
       if (!allowed.has(key)) delete tabs[key];
@@ -211,7 +228,10 @@ export class ShipSheet extends IMActorSheet {
     const myRole  = this._resolveRoleForUser(game.user);
     const stagedCoresMap = sys.resources?.enginseer?.stagedCores ?? {};
 
-    const rolesArray = await Promise.all(ROLE_IDS.map(async roleId => {
+    const disabledRoles = this._getDisabledRoles();
+    const crewSize = sys.crewSize ?? 6;
+
+    const rolesArray = await Promise.all(ROLE_IDS.filter(id => !disabledRoles.has(id)).map(async roleId => {
       const role         = ROLES[roleId];
       const assignEntry  = Object.entries(sys.roles ?? {}).find(([, r]) => r === roleId);
       const assignedUid  = assignEntry?.[0] ?? null;
@@ -290,9 +310,10 @@ export class ShipSheet extends IMActorSheet {
     const totalCoreCount        = powerCoresAvailable + stagedCoreCount + stagedShieldCoreCount + stagedAuxCoreCount + committedAuxCoreCount + shieldCommittedCount + assignedCoreCount;
 
     const components = this.actor.items.filter(i => i.type === `${MODULE_ID}.component`);
-    const weaponComponents = components.filter(c => c.system.slot === "weapon");
-    const ordnanceComponents = components.filter(c => ["torpedo", "strikeCraft"].includes(c.system.slot));
-    const equipmentComponents = components.filter(c => c.system.slot !== "weapon" && !["torpedo", "strikeCraft"].includes(c.system.slot));
+    const equippedComponents = components.filter(c => c.system.equipped !== false);
+    const weaponComponents = equippedComponents.filter(c => c.system.slot === "weapon");
+    const ordnanceComponents = equippedComponents.filter(c => ["torpedo", "strikeCraft"].includes(c.system.slot));
+    const equipmentComponents = equippedComponents.filter(c => c.system.slot !== "weapon" && !["torpedo", "strikeCraft"].includes(c.system.slot));
 
     const ownerLevel = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
     const observerLevel = CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER;
@@ -334,13 +355,28 @@ export class ShipSheet extends IMActorSheet {
           return pos === "flank" ? (item.system?.weaponBay ?? "port") : pos;
         },
       ).filter(s => s.items.length > 0 || s.slotCount > 0),
-      weaponSectionsAll: buildSectionedItems(
-        WEAPON_SECTIONS, weaponComponents, sys.weaponSlots,
-        item => {
-          const pos = item.system?.weaponPosition ?? "prow";
-          return pos === "flank" ? (item.system?.weaponBay ?? "port") : pos;
-        },
-      ),
+      weaponSectionsAll: (() => {
+        const unequipped = components.filter(c => c.system.slot === "weapon" && c.system.equipped === false);
+        return buildSectionedItems(
+          WEAPON_SECTIONS, weaponComponents, sys.weaponSlots,
+          item => {
+            const pos = item.system?.weaponPosition ?? "prow";
+            return pos === "flank" ? (item.system?.weaponBay ?? "port") : pos;
+          },
+        ).map(s => ({
+          ...s,
+          slotFull: s.slotCount > 0 && s.items.length >= s.slotCount,
+          inventory: unequipped
+            .filter(c => {
+              const pos = c.system.weaponPosition ?? "prow";
+              if (s.id === "prow")     return pos === "prow";
+              if (s.id === "dorsal")   return pos === "dorsal";
+              // port and starboard both accept flank weapons
+              return pos === "flank";
+            })
+            .map(c => ({ id: c.id, name: c.name })),
+        }));
+      })(),
       equipmentSections: buildSectionedItems(EQUIPMENT_SECTIONS, equipmentComponents, sys.equipmentSlots)
         .filter(s => s.items.length > 0 || s.slotCount > 0),
       ordnanceActors: sys.ordnanceActors ?? { torpedo: [], strikeCraft: [] },
@@ -377,7 +413,7 @@ export class ShipSheet extends IMActorSheet {
 
       })(),
       helm: buildHelmContext(sys, {
-        engineComponent: this.actor.items.find(i => i.type === `${MODULE_ID}.component` && i.system.slot === "engine"),
+        engineComponent: components.find(i => i.system.slot === "engine" && i.system.equipped !== false),
         reactorStats: ShipCombatState.getReactorStats(this.actor),
       }),
       engineerCtx: buildEngineerContext(sys, {
@@ -403,6 +439,56 @@ export class ShipSheet extends IMActorSheet {
       }),
       isEngineerOrGM: game.user.isGM || myRole === "enginseer",
       shipClassifications: SHIP_CLASSIFICATIONS,
+      componentInventoryBySlot: (() => {
+        const groups = [];
+        const weaponItems = components.filter(c => c.system.slot === "weapon");
+        if (weaponItems.length) {
+          const WEAPON_POS_GROUPS = [
+            { pos: "prow",   label: game.i18n.localize("IMSC.Label.WeaponBow") },
+            { pos: "dorsal", label: game.i18n.localize("IMSC.Label.WeaponDorsal") },
+            { pos: "flank",  label: game.i18n.localize("IMSC.Label.WeaponFlank") },
+          ];
+          const assigned = new Set();
+          for (const { pos, label } of WEAPON_POS_GROUPS) {
+            const items = weaponItems
+              .filter(c => c.system.weaponPosition === pos)
+              .map(c => { assigned.add(c.id); return { id: c.id, uuid: c.uuid, name: c.name, img: c.img, equipped: c.system.equipped !== false }; });
+            if (items.length) groups.push({ slotId: `weapon-${pos}`, slotLabel: label, items });
+          }
+          const unassigned = weaponItems
+            .filter(c => !assigned.has(c.id))
+            .map(c => ({ id: c.id, uuid: c.uuid, name: c.name, img: c.img, equipped: c.system.equipped !== false }));
+          if (unassigned.length) groups.push({ slotId: "weapon-unassigned", slotLabel: game.i18n.localize("IMSC.Label.Unassigned"), items: unassigned });
+        }
+        for (const s of EQUIPMENT_SECTIONS) {
+          const items = components
+            .filter(c => c.system.slot === s.id)
+            .map(c => ({ id: c.id, uuid: c.uuid, name: c.name, img: c.img, equipped: c.system.equipped !== false }));
+          if (items.length) groups.push({ slotId: s.id, slotLabel: game.i18n.localize(s.label), items });
+        }
+        return groups;
+      })(),
+      equipmentDropdowns: EQUIPMENT_SECTIONS.map(def => {
+        const allOfType   = components.filter(c => c.system.slot === def.id);
+        const installed   = allOfType.find(c => c.system.equipped !== false);
+        return {
+          id:            def.id,
+          label:         game.i18n.localize(def.label),
+          installedId:   installed?.id ?? "",
+          installedName: installed?.name ?? "",
+          installedImg:  installed?.img ?? "",
+          options:       allOfType.map(c => ({ id: c.id, name: c.name, img: c.img, selected: c.id === (installed?.id ?? "") })),
+          hasAny:        allOfType.length > 0,
+        };
+      }).filter(d => d.hasAny),
+      weaponInventory: components.filter(c => c.system.slot === "weapon" && c.system.equipped === false),
+      crewSize,
+      crewSizeOptions: [
+        { value: 6, label: game.i18n.localize("IMSC.CrewSize.6"), selected: crewSize === 6 },
+        { value: 5, label: game.i18n.localize("IMSC.CrewSize.5"), selected: crewSize === 5 },
+        { value: 4, label: game.i18n.localize("IMSC.CrewSize.4"), selected: crewSize === 4 },
+        { value: 3, label: game.i18n.localize("IMSC.CrewSize.3"), selected: crewSize === 3 },
+      ],
       // GM-only: debug condition forcing
       debugLocations: game.user.isGM ? CRIT_LOCATIONS.map(loc => {
         const existing = sys.conditions?.[loc.id] ?? {};
@@ -529,6 +615,31 @@ export class ShipSheet extends IMActorSheet {
     return this.actor.update({ [`system.conditions.${locId}`]: { ...existing, tier } });
   }
 
+  static async _onAddToInventory(event, target) {
+    if (!this.actor?.isOwner) return;
+    await this.actor.createEmbeddedDocuments("Item", [{
+      type: `${MODULE_ID}.component`,
+      name: game.i18n.localize("IMSC.Component.New"),
+      system: { slot: "weapon", equipped: false },
+    }]);
+  }
+
+  static async _onUnassignWeapon(event, target) {
+    if (!this.actor?.isOwner) return;
+    const row = target.closest("[data-id]");
+    const id = row?.dataset?.id;
+    if (!id) return;
+    await this.actor.updateEmbeddedDocuments("Item", [{ _id: id, "system.equipped": false }]);
+  }
+
+  static async _onUnassignEquipment(event, target) {
+    if (!this.actor?.isOwner) return;
+    const row = target.closest("[data-id]");
+    const id = row?.dataset?.id;
+    if (!id) return;
+    await this.actor.updateEmbeddedDocuments("Item", [{ _id: id, "system.equipped": false }]);
+  }
+
   // ── Post-render wiring ──────────────────────────────────────────────────
 
   _prepareSubmitData(event, form, formData) {
@@ -558,6 +669,35 @@ export class ShipSheet extends IMActorSheet {
         const path = ev.target.dataset.slotCount;
         const value = Math.max(0, Number(ev.target.value) || 0);
         this.actor.update({ [path]: value });
+      });
+    });
+
+    // ── Equipment slot assignment (select dropdown) ──────────────────────
+    this.element.querySelectorAll("[data-equip-slot]").forEach(sel => {
+      sel.addEventListener("change", ev => {
+        const slotId = sel.dataset.equipSlot;
+        const newId  = sel.value;
+        const allOfType = this.actor.items.filter(
+          i => i.type === `${MODULE_ID}.component` && i.system.slot === slotId
+        );
+        const updates = allOfType.map(c => ({ _id: c.id, "system.equipped": c.id === newId }));
+        if (updates.length) this.actor.updateEmbeddedDocuments("Item", updates);
+      });
+    });
+
+    // ── Weapon position assignment (select dropdown) ──────────────────────
+    this.element.querySelectorAll("[data-weapon-assign]").forEach(sel => {
+      sel.addEventListener("change", ev => {
+        const pos    = sel.dataset.weaponAssign;
+        const itemId = sel.value;
+        if (!itemId) return;
+        const isFlank = pos === "port" || pos === "starboard";
+        this.actor.updateEmbeddedDocuments("Item", [{
+          _id: itemId,
+          "system.equipped":        true,
+          "system.weaponPosition":  isFlank ? "flank" : pos,
+          "system.weaponBay":       isFlank ? pos : "port",
+        }]).then(() => { if (sel.isConnected) sel.value = ""; });
       });
     });
 

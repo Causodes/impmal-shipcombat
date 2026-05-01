@@ -139,7 +139,9 @@
             "OrdnanceStandardDesc": "Requisition munitions, launch ordnance, or allocate payloads.",
             "OrdnanceOvercharged": "Ordnance Master Overcharged",
             "OrdnanceOverchargedDesc": "Core-powered ordnance action: Priority Loading, Rapid Deployment, or Battle Stations.",
-            "Release": "Release"
+            "Release": "Release",
+            "AddComponent": "Add Component",
+            "RemoveFromSlot": "Remove from slot"
         },
         "Warning": {
             "NoPowerCores": "No Power Cores available. The Enginseer must have cores in reserve.",
@@ -200,6 +202,12 @@
             "Craft": "Craft",
             "Configuration": "Configuration"
         },
+        "CrewSize": {
+            "6": "6 — All Stations",
+            "5": "5 — No Ordnance Master",
+            "4": "4 — No Ordnance or Captain",
+            "3": "3 — Core Crew Only"
+        },
         "Effects": {
             "Temporary": "Temporary Effects",
             "Passive": "Passive Effects",
@@ -215,6 +223,19 @@
             "OrdnanceSlots": "Ordnance Slots",
             "TorpedoActors": "Torpedoes",
             "StrikeCraftActors": "Strike Craft",
+            "CrewSize": "Crew Size",
+            "ActiveRoles": "Active Roles",
+            "WeaponSlots": "Weapon Battery Slots",
+            "ComponentInventory": "Component Inventory",
+            "Uninstalled": "Uninstalled",
+            "NoComponents": "No components in inventory",
+            "NoWeapons": "No weapons in inventory",
+            "AddFromInventory": "Add from inventory",
+            "None": "None",
+            "Change": "Change",
+            "WeaponBow": "Weapons — Bow",
+            "WeaponDorsal": "Weapons — Dorsal",
+            "WeaponFlank": "Weapons — Flank",
             "PowerCores": "Power Cores",
             "BridgeCrew": "Bridge Crew",
             "InstalledComponents": "Installed Components",

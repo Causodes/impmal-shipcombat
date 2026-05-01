@@ -22,8 +22,9 @@ export class ShipModel extends warhammer.models.BaseWarhammerActorModel {
     const schema = super.defineSchema();
 
     // ── Combat meta ─────────────────────────────────────────────────────────
-    schema.active   = new fields.BooleanField({ initial: false });
-    schema.round    = new fields.NumberField({ initial: 0, min: 0, integer: true });
+    schema.active    = new fields.BooleanField({ initial: false });
+    schema.round     = new fields.NumberField({ initial: 0, min: 0, integer: true });
+    schema.crewSize  = new fields.NumberField({ initial: 6, min: 3, max: 6, integer: true });
 
     // ── Bridge crew assignments { [userId]: roleId } ─────────────────────
     schema.roles         = new fields.ObjectField({ initial: {} });

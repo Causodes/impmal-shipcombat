@@ -78,35 +78,45 @@
     </div>
 
     {{!-- Installed Components --}}
-    {{#if shipSlotSummary.hasAny}}
     <div class="sheet-list imsc-ov-components">
         <div class="list-header row-content">
             <div class="list-name">{{localize "IMSC.Label.InstalledComponents"}}</div>
         </div>
         <div class="list-content imsc-ov-comp-body">
 
-        {{!-- Weapon Batteries (2x2 position grid) --}}
-        {{#if shipSlotSummary.weaponGrid}}
+        {{!-- Weapon Batteries --}}
         <div class="imsc-ov-comp-section">
             <div class="imsc-ov-weapon-section-label">{{localize "IMSC.Slot.Weapon"}}</div>
             <div class="imsc-ov-weapon-grid">
-                {{#each shipSlotSummary.weaponGrid}}
+                {{#each weaponSectionsAll}}
+                {{#if slotCount}}
                 <div class="imsc-ov-weapon-cell">
-                    <div class="imsc-ov-weapon-pos">{{label}}{{#if slotCount}}<span class="imsc-ov-weapon-slots">{{items.length}}/{{slotCount}}</span>{{/if}}</div>
-                    {{#if items.length}}
+                    <div class="imsc-ov-weapon-pos">{{labelLocalized}}{{#if slotCount}}<span class="imsc-ov-weapon-slots">{{items.length}}&thinsp;/&thinsp;{{slotCount}}</span>{{/if}}</div>
                     {{#each items}}
-                    <a class="imsc-ov-comp-chip" data-action="openItem" data-id="{{id}}" data-uuid="{{uuid}}" data-tooltip="{{name}}">
-                        <img src="{{img}}"><span>{{name}}</span>
-                    </a>
+                    <div class="imsc-ov-comp-row" data-id="{{id}}" data-uuid="{{uuid}}">
+                        <a class="imsc-ov-comp-chip" data-action="openItem" data-id="{{id}}" data-tooltip="{{name}}">
+                            <img src="{{img}}"><span>{{name}}</span>
+                        </a>
+                        {{#if @root.isOwner}}
+                        <a data-action="unassignWeapon" class="imsc-ov-unassign" data-tooltip="{{localize 'IMSC.Action.RemoveFromSlot'}}"><i class="fa-solid fa-xmark"></i></a>
+                        {{/if}}
+                    </div>
                     {{/each}}
-                    {{else}}
-                    <span class="imsc-ov-empty">&mdash;</span>
+                    {{#if @root.isOwner}}
+                    {{#unless slotFull}}
+                    <select data-weapon-assign="{{id}}" class="imsc-ov-weapon-add" {{#unless inventory.length}}disabled{{/unless}}>
+                        <option value="">{{#if inventory.length}}— {{localize "IMSC.Label.AddFromInventory"}} —{{else}}{{localize "IMSC.Label.NoWeapons"}}{{/if}}</option>
+                        {{#each inventory}}
+                        <option value="{{id}}">{{name}}</option>
+                        {{/each}}
+                    </select>
+                    {{/unless}}
                     {{/if}}
                 </div>
+                {{/if}}
                 {{/each}}
             </div>
         </div>
-        {{/if}}
 
         {{!-- Torpedo & Strike Craft actor chips --}}
         {{#if shipSlotSummary.ordnance.length}}
@@ -126,20 +136,35 @@
         </div>
         {{/if}}
 
-        {{!-- Equipment (shields, armour, engine, etc.) --}}
-        {{#if shipSlotSummary.equipment.length}}
+        {{!-- Equipment Slots --}}
+        {{#if equipmentDropdowns.length}}
         <div class="imsc-ov-comp-section">
-            <div class="imsc-ov-comp-grid">
-                {{#each shipSlotSummary.equipment}}
-                <div class="imsc-ov-slot-row">
-                    <span class="imsc-ov-slot-label">{{label}}</span>
-                    <span class="imsc-ov-slot-items">
-                        {{#each items}}
-                        <a class="imsc-ov-comp-chip" data-action="openItem" data-id="{{id}}" data-uuid="{{uuid}}" data-tooltip="{{name}}">
-                            <img src="{{img}}"><span>{{name}}</span>
+            <div class="imsc-ov-weapon-section-label">{{localize "IMSC.Label.Equipment"}}</div>
+            <div class="imsc-ov-weapon-grid">
+                {{#each equipmentDropdowns}}
+                <div class="imsc-ov-weapon-cell">
+                    <div class="imsc-ov-weapon-pos">{{label}}</div>
+                    {{#if installedId}}
+                    <div class="imsc-ov-comp-row" data-id="{{installedId}}">
+                        <a class="imsc-ov-comp-chip" data-action="openItem" data-id="{{installedId}}" data-tooltip="{{installedName}}">
+                            {{#if installedImg}}<img src="{{installedImg}}">{{/if}}<span>{{installedName}}</span>
                         </a>
+                        {{#if @root.isOwner}}
+                        <a data-action="unassignEquipment" class="imsc-ov-unassign" data-tooltip="{{localize 'IMSC.Action.RemoveFromSlot'}}"><i class="fa-solid fa-xmark"></i></a>
+                        {{/if}}
+                    </div>
+                    {{else}}
+                    {{#if @root.isOwner}}
+                    <select data-equip-slot="{{id}}" class="imsc-ov-weapon-add">
+                        <option value="">— {{localize "IMSC.Label.None"}} —</option>
+                        {{#each options}}
+                        <option value="{{id}}" data-img="{{img}}">{{name}}</option>
                         {{/each}}
-                    </span>
+                    </select>
+                    {{else}}
+                    <span class="imsc-ov-empty">&mdash;</span>
+                    {{/if}}
+                    {{/if}}
                 </div>
                 {{/each}}
             </div>
@@ -148,6 +173,5 @@
 
         </div>
     </div>
-    {{/if}}
 
 </section>

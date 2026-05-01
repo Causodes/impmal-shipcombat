@@ -26,7 +26,8 @@ export class VoidshipComponentModel extends warhammer.models.BaseWarhammerItemMo
     // ── Header fields (shared by all slots) ───────────────────────────
     schema.quantity     = new fields.NumberField({ initial: 1, min: 0, integer: true });
     schema.cost         = new fields.NumberField({ initial: 0, min: 0, integer: true });
-    schema.slots        = new fields.NumberField({ initial: 1, min: 1, integer: true });
+    schema.slotCount    = new fields.NumberField({ initial: 1, min: 1, integer: true });
+    schema.equipped     = new fields.BooleanField({ initial: true });   // false = in inventory, not installed
     schema.availability = new fields.StringField({ initial: "" });
 
     // ── Notes (player + GM) ──────────────────────────────────────────

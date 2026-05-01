@@ -1066,7 +1066,7 @@ export class ShipCombatState {
   static getReactorStats(shipActor) {
     const ship = shipActor ?? this.ship;
     if (!ship) return { coreOutput: 0, shieldStrengthPerCore: 5, heatCapacity: 10, auxPowerCapacity: 40, reserveMultiplier: 1 };
-    const reactor = ship.items.find(i => i.type === `${MODULE_ID}.component` && i.system.slot === "reactor");
+    const reactor = ship.items.find(i => i.type === `${MODULE_ID}.component` && i.system.slot === "reactor" && i.system.equipped !== false);
     return {
       coreOutput:            reactor?.system?.rating ?? 0,
       shieldStrengthPerCore: reactor?.system?.shieldStrengthPerCore ?? 5,
@@ -1079,7 +1079,7 @@ export class ShipCombatState {
   static getOrdnanceBayStats(shipActor) {
     const ship = shipActor ?? this.ship;
     if (!ship) return { ammoCapacity: 20, chargeCapacity: 20, manpower: 0, torpedoCapacity: 4, strikeCraftCapacity: 6 };
-    const bay = ship.items.find(i => i.type === `${MODULE_ID}.component` && i.system.slot === "weaponsBay");
+    const bay = ship.items.find(i => i.type === `${MODULE_ID}.component` && i.system.slot === "weaponsBay" && i.system.equipped !== false);
     return {
       ammoCapacity:          bay?.system?.bayAmmoCapacity ?? 20,
       chargeCapacity:        bay?.system?.bayChargeCapacity ?? 20,
@@ -1094,7 +1094,7 @@ export class ShipCombatState {
     const ship = shipActor ?? this.ship;
     const _default = { maxVoidFlux: 20, zoneThresholds: { bow: 8, stern: 8, port: 8, starboard: 8 } };
     if (!ship) return _default;
-    const shield = ship.items.find(i => i.type === `${MODULE_ID}.component` && i.system.slot === "shields");
+    const shield = ship.items.find(i => i.type === `${MODULE_ID}.component` && i.system.slot === "shields" && i.system.equipped !== false);
     if (!shield) return _default;
     const zt = shield.system.zoneThresholds;
     return {
@@ -1112,7 +1112,7 @@ export class ShipCombatState {
     const ship = shipActor ?? this.ship;
     if (!ship) return { rating: 0, bandSize: 0, autoScanRange: 0, maxRange: 0 };
     const auspex = ship.items.find(
-      i => i.type === `${MODULE_ID}.component` && i.system.slot === "auspex"
+      i => i.type === `${MODULE_ID}.component` && i.system.slot === "auspex" && i.system.equipped !== false
     );
     const sys = ship.system ?? {};
     const scanRange = (auspex?.system?.autoScanRange ?? 0) || (auspex?.system?.guaranteedHitRange ?? 0) || (sys.autoScanRange ?? 0);
