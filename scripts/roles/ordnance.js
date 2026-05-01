@@ -502,22 +502,26 @@ async function _onAllocOrdnanceSL(event, target) {
   const delta = Number(target.dataset.delta);
 
   if (Number.isNaN(delta) || !["efficiency", "expedience"].includes(stat)) return;
-  if (!sys.resources?.ordnance?.bosunRolled) return;
 
-  const bosunSL = sys.resources?.ordnance?.bosunSL ?? 0;
   const allocEfficiency = sys.resources?.ordnance?.allocEfficiency ?? 0;
   const allocExpedience = sys.resources?.ordnance?.allocExpedience ?? 0;
-
   let newEfficiency = allocEfficiency;
   let newExpedience = allocExpedience;
+  if (stat === "efficiency") newEfficiency = Math.max(0, allocEfficiency + delta);
+  else newExpedience = Math.max(0, allocExpedience + delta);
 
-  if (stat === "efficiency") {
-    newEfficiency = Math.max(0, allocEfficiency + delta);
+  if ((sys.crewSize ?? 6) <= 5) {
+    // 5-man: Efficiency/Expedience draw from the shared Leadership pool
+    const captain = sys.resources?.captain ?? {};
+    if (!captain.leadershipRolled) return;
+    const available = Math.max(0, (captain.leadershipSL ?? 0) - (captain.allocResolve ?? 0));
+    if (newEfficiency + newExpedience > available) return;
   } else {
-    newExpedience = Math.max(0, allocExpedience + delta);
+    // 6-man: dedicated bosun roll pool
+    if (!sys.resources?.ordnance?.bosunRolled) return;
+    const bosunSL = sys.resources?.ordnance?.bosunSL ?? 0;
+    if (newEfficiency + newExpedience > bosunSL) return;
   }
-
-  if (newEfficiency + newExpedience > bosunSL) return;
 
   if (stat === "efficiency") {
     emitToGM("updateResource", { roleId: "ordnance", key: "allocEfficiency", value: newEfficiency });
@@ -547,7 +551,8 @@ async function _onOrdnanceMasterAction(event, target) {
     return;
   }
 
-  emitToGM("updateResource", { roleId: "ordnance", key: "manpower", value: manpower - crewCost });
+  emitToGM("updateResource", { roleId: "ordnance", key: "manpower",    value: manpower - crewCost });
+  emitToGM("updateResource", { roleId: "ordnance", key: "actionUsed", value: true });
 
   const commitments = [...(sys.resources?.ordnance?.commitments ?? [])];
   commitments.push({ action: actionId, crewCount: crewCost, turnsRemaining: duration, addedRound: sys.round ?? 0 });

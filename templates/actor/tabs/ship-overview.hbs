@@ -30,8 +30,8 @@
                         {{/if}}
                     </div>
                     <div class="imsc-crew-col-role">{{labelLocalized}}</div>
-                    <div class="imsc-crew-col-action {{#if actionAvailable}}imsc-yes{{else}}imsc-no{{/if}}">
-                        {{#if actionAvailable}}{{localize "IMSC.Value.Yes"}}{{else}}{{localize "IMSC.Value.No"}}{{/if}}
+                    <div class="imsc-crew-col-action {{#if turnDone}}imsc-yes{{else}}imsc-no{{/if}}">
+                        {{#if turnDone}}{{localize "IMSC.Value.Yes"}}{{else}}{{localize "IMSC.Value.No"}}{{/if}}
                     </div>
                     <div class="imsc-crew-col-skill">
                         {{mainSkill.label}}{{#if mainSkill.hasValue}} {{mainSkill.value}}{{/if}}
@@ -51,8 +51,8 @@
                         {{/if}}
                     </div>
                     <div class="imsc-crew-col-role">{{labelLocalized}}</div>
-                    <div class="imsc-crew-col-action {{#if actionAvailable}}imsc-yes{{else}}imsc-no{{/if}}">
-                        {{#if actionAvailable}}{{localize "IMSC.Value.Yes"}}{{else}}{{localize "IMSC.Value.No"}}{{/if}}
+                    <div class="imsc-crew-col-action {{#if turnDone}}imsc-yes{{else}}imsc-no{{/if}}">
+                        {{#if turnDone}}{{localize "IMSC.Value.Yes"}}{{else}}{{localize "IMSC.Value.No"}}{{/if}}
                     </div>
                     <div class="imsc-crew-col-skill imsc-muted">&mdash;</div>
                 </div>
@@ -97,12 +97,12 @@
                         <a class="imsc-ov-comp-chip" data-action="openItem" data-id="{{id}}" data-tooltip="{{name}}">
                             <img src="{{img}}"><span>{{name}}</span>
                         </a>
-                        {{#if @root.isOwner}}
+                        {{#if @root.canEditComponents}}
                         <a data-action="unassignWeapon" class="imsc-ov-unassign" data-tooltip="{{localize 'IMSC.Action.RemoveFromSlot'}}"><i class="fa-solid fa-xmark"></i></a>
                         {{/if}}
                     </div>
                     {{/each}}
-                    {{#if @root.isOwner}}
+                    {{#if @root.canEditComponents}}
                     {{#unless slotFull}}
                     <select data-weapon-assign="{{id}}" class="imsc-ov-weapon-add" {{#unless inventory.length}}disabled{{/unless}}>
                         <option value="">{{#if inventory.length}}— {{localize "IMSC.Label.AddFromInventory"}} —{{else}}{{localize "IMSC.Label.NoWeapons"}}{{/if}}</option>
@@ -149,12 +149,12 @@
                         <a class="imsc-ov-comp-chip" data-action="openItem" data-id="{{installedId}}" data-tooltip="{{installedName}}">
                             {{#if installedImg}}<img src="{{installedImg}}">{{/if}}<span>{{installedName}}</span>
                         </a>
-                        {{#if @root.isOwner}}
+                        {{#if @root.canEditComponents}}
                         <a data-action="unassignEquipment" class="imsc-ov-unassign" data-tooltip="{{localize 'IMSC.Action.RemoveFromSlot'}}"><i class="fa-solid fa-xmark"></i></a>
                         {{/if}}
                     </div>
                     {{else}}
-                    {{#if @root.isOwner}}
+                    {{#if @root.canEditComponents}}
                     <select data-equip-slot="{{id}}" class="imsc-ov-weapon-add">
                         <option value="">— {{localize "IMSC.Label.None"}} —</option>
                         {{#each options}}

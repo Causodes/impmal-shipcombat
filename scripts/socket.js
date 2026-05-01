@@ -8,6 +8,7 @@ export function setupSocket() {
   for (const action of [
     "assignRole",
     "markOvercharge", "toggleTurnDone", "updateResource",
+    "assignWeapon", "unassignComponent", "assignEquipment",
     "startCombat", "endCombat", "advanceRound",
     "confirmMovement", "resetHelmState", "fullReset",
     "emergencyVent", "reduceInternalFire", "setInternalFire",
@@ -66,6 +67,18 @@ async function _handleAction(action, payload = {}) {
 
     case "updateResource":
       await ShipCombatState.updateResource(payload.roleId, payload.key, payload.value);
+      break;
+
+    case "assignWeapon":
+      await ShipCombatState.assignWeapon(payload);
+      break;
+
+    case "unassignComponent":
+      await ShipCombatState.unassignComponent(payload);
+      break;
+
+    case "assignEquipment":
+      await ShipCombatState.assignEquipment(payload);
       break;
 
     case "startCombat":

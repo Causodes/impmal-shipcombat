@@ -352,6 +352,7 @@ export class ShipSheet extends IMActorSheet {
       isGM: game.user.isGM,
       isOwner: userLevel >= ownerLevel,
       canObserve: userLevel >= observerLevel,
+      canEditComponents: userLevel >= observerLevel || game.user.isGM,
       myUserId: userId,
       myRole,
       myRoleData,
@@ -653,19 +654,17 @@ export class ShipSheet extends IMActorSheet {
   }
 
   static async _onUnassignWeapon(event, target) {
-    if (!this.actor?.isOwner) return;
     const row = target.closest("[data-id]");
     const id = row?.dataset?.id;
     if (!id) return;
-    await this.actor.updateEmbeddedDocuments("Item", [{ _id: id, "system.equipped": false }]);
+    emitToGM("unassignComponent", { itemId: id });
   }
 
   static async _onUnassignEquipment(event, target) {
-    if (!this.actor?.isOwner) return;
     const row = target.closest("[data-id]");
     const id = row?.dataset?.id;
     if (!id) return;
-    await this.actor.updateEmbeddedDocuments("Item", [{ _id: id, "system.equipped": false }]);
+    emitToGM("unassignComponent", { itemId: id });
   }
 
   // ── Post-render wiring ──────────────────────────────────────────────────
@@ -705,11 +704,7 @@ export class ShipSheet extends IMActorSheet {
       sel.addEventListener("change", ev => {
         const slotId = sel.dataset.equipSlot;
         const newId  = sel.value;
-        const allOfType = this.actor.items.filter(
-          i => i.type === `${MODULE_ID}.component` && i.system.slot === slotId
-        );
-        const updates = allOfType.map(c => ({ _id: c.id, "system.equipped": c.id === newId }));
-        if (updates.length) this.actor.updateEmbeddedDocuments("Item", updates);
+        emitToGM("assignEquipment", { slotId, newItemId: newId });
       });
     });
 
@@ -720,12 +715,12 @@ export class ShipSheet extends IMActorSheet {
         const itemId = sel.value;
         if (!itemId) return;
         const isFlank = pos === "port" || pos === "starboard";
-        this.actor.updateEmbeddedDocuments("Item", [{
-          _id: itemId,
-          "system.equipped":        true,
-          "system.weaponPosition":  isFlank ? "flank" : pos,
-          "system.weaponBay":       isFlank ? pos : "port",
-        }]).then(() => { if (sel.isConnected) sel.value = ""; });
+        emitToGM("assignWeapon", {
+          itemId,
+          weaponPosition: isFlank ? "flank" : pos,
+          weaponBay:      isFlank ? pos : "port",
+        });
+        if (sel.isConnected) sel.value = "";
       });
     });
 

@@ -22,55 +22,67 @@
                 {{/if}}
             </div>
 
-            {{!-- Resolve (captain) --}}
+            {{!-- Resolve --}}
             <div class="imsc-helm-stat" data-tooltip="{{localize 'IMSC.Captain.ResolveTooltip'}}">
                 <span class="imsc-helm-stat-label">{{localize "IMSC.Captain.Resolve"}}</span>
                 <div class="imsc-alloc-row">
                     <button class="imsc-alloc-btn" data-action="allocLeadershipSL" data-stat="resolve" data-delta="-1"
                             {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
+                            {{#if captainCtx.hasPlayedCards}}disabled{{/if}}
+                            {{#if ordnanceCtx.actionUsed}}disabled{{/if}}
                             {{#unless captainCtx.allocResolve}}disabled{{/unless}}>
                         &minus;
                     </button>
                     <span class="imsc-helm-stat-value">{{captainCtx.allocResolve}}</span>
                     <button class="imsc-alloc-btn" data-action="allocLeadershipSL" data-stat="resolve" data-delta="1"
                             {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
-                            {{#if (gte captainCtx.allocResolve captainCtx.leadershipSL)}}disabled{{/if}}>
+                            {{#if captainCtx.hasPlayedCards}}disabled{{/if}}
+                            {{#if ordnanceCtx.actionUsed}}disabled{{/if}}
+                            {{#if (gte (add (add captainCtx.allocResolve ordnanceCtx.allocEfficiency) ordnanceCtx.allocExpedience) captainCtx.leadershipSL)}}disabled{{/if}}>
                         +
                     </button>
                 </div>
             </div>
 
-            {{!-- Efficiency (ordnance) --}}
+            {{!-- Efficiency --}}
             <div class="imsc-helm-stat" data-tooltip="{{localize 'IMSC.Ordnance.EfficiencyTooltip'}}">
                 <span class="imsc-helm-stat-label">{{localize "IMSC.Ordnance.Efficiency"}}</span>
                 <div class="imsc-alloc-row">
                     <button class="imsc-alloc-btn" data-action="allocOrdnanceSL" data-stat="efficiency" data-delta="-1"
-                            {{#unless ordnanceCtx.bosunRolled}}disabled{{/unless}}
+                            {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
+                            {{#if captainCtx.hasPlayedCards}}disabled{{/if}}
+                            {{#if ordnanceCtx.actionUsed}}disabled{{/if}}
                             {{#unless ordnanceCtx.allocEfficiency}}disabled{{/unless}}>
                         &minus;
                     </button>
                     <span class="imsc-helm-stat-value">{{ordnanceCtx.allocEfficiency}}</span>
                     <button class="imsc-alloc-btn" data-action="allocOrdnanceSL" data-stat="efficiency" data-delta="1"
-                            {{#unless ordnanceCtx.bosunRolled}}disabled{{/unless}}
-                            {{#if (gte (add ordnanceCtx.allocEfficiency ordnanceCtx.allocExpedience) ordnanceCtx.bosunSL)}}disabled{{/if}}>
+                            {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
+                            {{#if captainCtx.hasPlayedCards}}disabled{{/if}}
+                            {{#if ordnanceCtx.actionUsed}}disabled{{/if}}
+                            {{#if (gte (add (add captainCtx.allocResolve ordnanceCtx.allocEfficiency) ordnanceCtx.allocExpedience) captainCtx.leadershipSL)}}disabled{{/if}}>
                         +
                     </button>
                 </div>
             </div>
 
-            {{!-- Expedience (ordnance) --}}
+            {{!-- Expedience --}}
             <div class="imsc-helm-stat" data-tooltip="{{localize 'IMSC.Ordnance.ExpedienceTooltip'}}">
                 <span class="imsc-helm-stat-label">{{localize "IMSC.Ordnance.Expedience"}}</span>
                 <div class="imsc-alloc-row">
                     <button class="imsc-alloc-btn" data-action="allocOrdnanceSL" data-stat="expedience" data-delta="-1"
-                            {{#unless ordnanceCtx.bosunRolled}}disabled{{/unless}}
+                            {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
+                            {{#if captainCtx.hasPlayedCards}}disabled{{/if}}
+                            {{#if ordnanceCtx.actionUsed}}disabled{{/if}}
                             {{#unless ordnanceCtx.allocExpedience}}disabled{{/unless}}>
                         &minus;
                     </button>
                     <span class="imsc-helm-stat-value">{{ordnanceCtx.allocExpedience}}</span>
                     <button class="imsc-alloc-btn" data-action="allocOrdnanceSL" data-stat="expedience" data-delta="1"
-                            {{#unless ordnanceCtx.bosunRolled}}disabled{{/unless}}
-                            {{#if (gte (add ordnanceCtx.allocEfficiency ordnanceCtx.allocExpedience) ordnanceCtx.bosunSL)}}disabled{{/if}}>
+                            {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
+                            {{#if captainCtx.hasPlayedCards}}disabled{{/if}}
+                            {{#if ordnanceCtx.actionUsed}}disabled{{/if}}
+                            {{#if (gte (add (add captainCtx.allocResolve ordnanceCtx.allocEfficiency) ordnanceCtx.allocExpedience) captainCtx.leadershipSL)}}disabled{{/if}}>
                         +
                     </button>
                 </div>

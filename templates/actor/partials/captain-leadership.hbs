@@ -24,12 +24,14 @@
                 <div class="imsc-alloc-row">
                     <button class="imsc-alloc-btn" data-action="allocLeadershipSL" data-stat="inspire" data-delta="-1"
                             {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
+                            {{#if captainCtx.hasPlayedCards}}disabled{{/if}}
                             {{#unless captainCtx.allocInspire}}disabled{{/unless}}>
                         &minus;
                     </button>
                     <span class="imsc-helm-stat-value">{{captainCtx.allocInspire}}</span>
                     <button class="imsc-alloc-btn" data-action="allocLeadershipSL" data-stat="inspire" data-delta="1"
                             {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
+                            {{#if captainCtx.hasPlayedCards}}disabled{{/if}}
                             {{#if (gte (add (add captainCtx.allocInspire captainCtx.allocResolve) captainCtx.allocInitiative) captainCtx.leadershipSL)}}disabled{{/if}}>
                         +
                     </button>
@@ -40,12 +42,14 @@
                 <div class="imsc-alloc-row">
                     <button class="imsc-alloc-btn" data-action="allocLeadershipSL" data-stat="resolve" data-delta="-1"
                             {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
+                            {{#if captainCtx.hasPlayedCards}}disabled{{/if}}
                             {{#unless captainCtx.allocResolve}}disabled{{/unless}}>
                         &minus;
                     </button>
                     <span class="imsc-helm-stat-value">{{captainCtx.allocResolve}}</span>
                     <button class="imsc-alloc-btn" data-action="allocLeadershipSL" data-stat="resolve" data-delta="1"
                             {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
+                            {{#if captainCtx.hasPlayedCards}}disabled{{/if}}
                             {{#if (gte (add (add captainCtx.allocInspire captainCtx.allocResolve) captainCtx.allocInitiative) captainCtx.leadershipSL)}}disabled{{/if}}>
                         +
                     </button>
@@ -56,12 +60,14 @@
                 <div class="imsc-alloc-row">
                     <button class="imsc-alloc-btn" data-action="allocLeadershipSL" data-stat="initiative" data-delta="-1"
                             {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
+                            {{#if captainCtx.hasPlayedCards}}disabled{{/if}}
                             {{#unless captainCtx.allocInitiative}}disabled{{/unless}}>
                         &minus;
                     </button>
                     <span class="imsc-helm-stat-value">{{captainCtx.allocInitiative}}</span>
                     <button class="imsc-alloc-btn" data-action="allocLeadershipSL" data-stat="initiative" data-delta="1"
                             {{#unless captainCtx.leadershipRolled}}disabled{{/unless}}
+                            {{#if captainCtx.hasPlayedCards}}disabled{{/if}}
                             {{#if (gte (add (add captainCtx.allocInspire captainCtx.allocResolve) captainCtx.allocInitiative) captainCtx.leadershipSL)}}disabled{{/if}}>
                         +
                     </button>

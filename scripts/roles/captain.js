@@ -209,7 +209,8 @@ export function buildCaptainContext(sys, opts = {}) {
     allocInspire:           captain.allocInspire      ?? 0,
     allocResolve:           captain.allocResolve      ?? 0,
     allocInitiative:        captain.allocInitiative   ?? 0,
-    remainingLeadershipSL:  (captain.leadershipSL ?? 0) - (captain.allocInspire ?? 0) - (captain.allocResolve ?? 0) - (captain.allocInitiative ?? 0),
+    remainingLeadershipSL:  (captain.leadershipSL ?? 0) - (captain.allocInspire ?? 0) - (captain.allocResolve ?? 0) - (captain.allocInitiative ?? 0)
+      - ((sys.crewSize ?? 6) <= 5 ? ((sys.resources?.ordnance?.allocEfficiency ?? 0) + (sys.resources?.ordnance?.allocExpedience ?? 0)) : 0),
     allocLocked:            captain.leadershipRolled  ?? false,
     // Played cards this round
     playedCards,

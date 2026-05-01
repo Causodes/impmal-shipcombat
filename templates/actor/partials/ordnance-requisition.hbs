@@ -20,12 +20,14 @@
                 <div class="imsc-alloc-row">
                     <button class="imsc-alloc-btn" data-action="allocOrdnanceSL" data-stat="efficiency" data-delta="-1"
                             {{#unless ordnanceCtx.bosunRolled}}disabled{{/unless}}
+                            {{#if ordnanceCtx.actionUsed}}disabled{{/if}}
                             {{#unless ordnanceCtx.allocEfficiency}}disabled{{/unless}}>
                         &minus;
                     </button>
                     <span class="imsc-helm-stat-value">{{ordnanceCtx.allocEfficiency}}</span>
                     <button class="imsc-alloc-btn" data-action="allocOrdnanceSL" data-stat="efficiency" data-delta="1"
                             {{#unless ordnanceCtx.bosunRolled}}disabled{{/unless}}
+                            {{#if ordnanceCtx.actionUsed}}disabled{{/if}}
                             {{#if (gte (add ordnanceCtx.allocEfficiency ordnanceCtx.allocExpedience) ordnanceCtx.bosunSL)}}disabled{{/if}}>
                         +
                     </button>
@@ -36,12 +38,14 @@
                 <div class="imsc-alloc-row">
                     <button class="imsc-alloc-btn" data-action="allocOrdnanceSL" data-stat="expedience" data-delta="-1"
                             {{#unless ordnanceCtx.bosunRolled}}disabled{{/unless}}
+                            {{#if ordnanceCtx.actionUsed}}disabled{{/if}}
                             {{#unless ordnanceCtx.allocExpedience}}disabled{{/unless}}>
                         &minus;
                     </button>
                     <span class="imsc-helm-stat-value">{{ordnanceCtx.allocExpedience}}</span>
                     <button class="imsc-alloc-btn" data-action="allocOrdnanceSL" data-stat="expedience" data-delta="1"
                             {{#unless ordnanceCtx.bosunRolled}}disabled{{/unless}}
+                            {{#if ordnanceCtx.actionUsed}}disabled{{/if}}
                             {{#if (gte (add ordnanceCtx.allocEfficiency ordnanceCtx.allocExpedience) ordnanceCtx.bosunSL)}}disabled{{/if}}>
                         +
                     </button>
