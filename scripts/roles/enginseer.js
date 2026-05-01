@@ -31,7 +31,7 @@ import { MODULE_ID } from "../constants.js";
 
 function _getHeatCapacity(shipActor) {
   const reactor = shipActor?.items?.find(i => i.type === `${MODULE_ID}.component` && i.system.slot === "reactor");
-  return reactor?.system?.heatCapacity ?? 10;
+  return reactor?.system?.heatCapacity ?? 0;
 }
 
 // Heat tier breakpoints for overclock difficulty
@@ -359,11 +359,11 @@ export function buildEngineerContext(sys, opts = {}) {
   const repairPlasmaStaged = Math.max(1, Math.min(auxiliaryPower, sys.resources?.enginseer?.repairPlasmaStaged ?? 1));
 
   const { reactorStats, shieldStats } = opts;
-  const shieldStrengthPerCore = reactorStats?.shieldStrengthPerCore ?? 5;
-  const maxVoidFlux           = shieldStats?.maxVoidFlux ?? 20;
-  const heatMax               = reactorStats?.heatCapacity ?? 10;
-  const auxPowerCapacity      = reactorStats?.auxPowerCapacity ?? 40;
-  const reserveMultiplier     = reactorStats?.reserveMultiplier ?? 1;
+  const shieldStrengthPerCore = reactorStats?.shieldStrengthPerCore ?? 0;
+  const maxVoidFlux           = shieldStats?.maxVoidFlux ?? 0;
+  const heatMax               = reactorStats?.heatCapacity ?? 0;
+  const auxPowerCapacity      = reactorStats?.auxPowerCapacity ?? 0;
+  const reserveMultiplier     = reactorStats?.reserveMultiplier ?? 0;
 
   // Projected shield pool next turn: staged (not yet dispatched) + committed (dispatched this turn)
   const projectedShieldPool = Math.min(
@@ -379,8 +379,8 @@ export function buildEngineerContext(sys, opts = {}) {
   return {
     heat,
     heatMax,
-    heatPct:           Math.round((heat / heatMax) * 100),
-    heatColor:         heatColor(Math.round((heat / heatMax) * 100)),
+    heatPct:           heatMax > 0 ? Math.round((heat / heatMax) * 100) : 0,
+    heatColor:         heatColor(heatMax > 0 ? Math.round((heat / heatMax) * 100) : 0),
     auxiliaryPower,
     auxPowerCapacity,
     plasmaPct:         auxPowerCapacity > 0 ? Math.round((auxiliaryPower / auxPowerCapacity) * 100) : 0,

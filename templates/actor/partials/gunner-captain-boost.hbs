@@ -1,0 +1,9 @@
+{{!-- Gunner: Captain Boost Banner --}}
+{{#if gunnerCtx.captainBoosts.length}}
+<div class="imsc-captain-boost-bar">
+    <span class="imsc-captain-boost-bar-label"><i class="fa-solid fa-flag"></i> {{localize "IMSC.Captain.ActiveOrdersShort"}}:</span>
+    {{#each gunnerCtx.captainBoosts}}
+    <span class="imsc-captain-boost-chip">{{label}}</span>
+    {{/each}}
+</div>
+{{/if}}

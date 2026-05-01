@@ -1,0 +1,37 @@
+{{!-- Gunner: Status Bar (ammo + heat + power) --}}
+<div class="sheet-list imsc-role-status-bar">
+    <div class="list-header row-content">
+        <div class="list-name">{{localize "IMSC.Gunner.StatusTitle"}}</div>
+        {{#with (lookup roles "gunner")}}
+        {{> "modules/impmal-shipcombat/templates/actor/partials/payload-status-badge.hbs"
+            payloadId=payloadId payloadLabel=payloadLabel payloadDesc=payloadDesc}}
+        {{> "modules/impmal-shipcombat/templates/actor/partials/core-status-banner.hbs"
+            coreCount=coreCount coreActionsPlayedLabels=@root.gunnerCtx.coreActionsPlayedLabels hasCoreStaged=hasCoreStaged}}
+        {{/with}}
+    </div>
+    <div class="list-content">
+        <div class="imsc-role-status-panel">
+            <div class="imsc-resource-bar-row">
+                <span class="imsc-resource-bar-label">{{localize "IMSC.Gunner.Ammo"}}</span>
+                <div class="imsc-resource-bar-track imsc-resource-bar-track--plasma">
+                    <div class="imsc-resource-bar-fill imsc-bar-ammo" style="width: {{gunnerCtx.ammoPct}}%"></div>
+                </div>
+                <span class="imsc-resource-bar-value" style="color: #e67e22">{{gunnerCtx.ammo}}/{{gunnerCtx.ammoMax}}</span>
+            </div>
+            <div class="imsc-resource-bar-row">
+                <span class="imsc-resource-bar-label">{{localize "IMSC.Gunner.Heat"}}</span>
+                <div class="imsc-resource-bar-track imsc-resource-bar-track--heat">
+                    <div class="imsc-resource-bar-fill-cover" style="width: calc(100% - {{gunnerCtx.heatPct}}%)"></div>
+                </div>
+                <span class="imsc-resource-bar-value" style="color: {{gunnerCtx.heatColor}}">{{gunnerCtx.heat}}/{{gunnerCtx.heatMax}}</span>
+            </div>
+            <div class="imsc-resource-bar-row">
+                <span class="imsc-resource-bar-label">{{localize "IMSC.Sensors.PowerTrack"}}</span>
+                <div class="imsc-resource-bar-track imsc-resource-bar-track--plasma">
+                    <div class="imsc-resource-bar-fill imsc-bar-charge" style="width: {{gunnerCtx.powerPct}}%"></div>
+                </div>
+                <span class="imsc-resource-bar-value" style="color: #7ec8e3">{{gunnerCtx.power}}/{{gunnerCtx.powerMax}}</span>
+            </div>
+        </div>
+    </div>
+</div>

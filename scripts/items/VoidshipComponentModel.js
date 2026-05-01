@@ -189,6 +189,21 @@ export class VoidshipComponentModel extends warhammer.models.BaseWarhammerItemMo
   }
 
   /**
+   * Maps a weapon-category name to the resourceType stored on the component.
+   * @param {string} weaponTypeName  e.g. "macroCannon", "plasmaCannon"
+   * @returns {string}  one of "ammo" | "heat" | "power" | "none"
+   */
+  static resourceForType(weaponTypeName) {
+    const map = {
+      macroCannon:  "ammo",
+      plasmaCannon: "heat",
+      lanceBattery: "power",
+      pointDefense: "none",
+    };
+    return map[weaponTypeName] ?? "ammo";
+  }
+
+  /**
    * Comma-joined plain-text summary of active weapon traits for display in
    * list rows (e.g. "Shield Bypass (10), Unlimited Rate of Fire").
    */

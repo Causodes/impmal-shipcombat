@@ -1,0 +1,28 @@
+{{!-- Enginseer: Status Bar (heat + aux power) --}}
+<div class="sheet-list imsc-role-status-bar">
+    <div class="list-header row-content">
+        <div class="list-name">{{localize "IMSC.Enginseer.StatusTitle"}}</div>
+        {{#with (lookup roles "enginseer")}}
+        {{> "modules/impmal-shipcombat/templates/actor/partials/payload-status-badge.hbs"
+            payloadId=payloadId payloadLabel=payloadLabel payloadDesc=payloadDesc}}
+        {{/with}}
+    </div>
+    <div class="list-content">
+        <div class="imsc-role-status-panel">
+            <div class="imsc-resource-bar-row">
+                <span class="imsc-resource-bar-label">{{localize "IMSC.Resource.Heat"}}</span>
+                <div class="imsc-resource-bar-track imsc-resource-bar-track--heat">
+                    <div class="imsc-resource-bar-fill-cover" style="width: calc(100% - {{engineerCtx.heatPct}}%)"></div>
+                </div>
+                <span class="imsc-resource-bar-value" style="color: {{engineerCtx.heatColor}}">{{engineerCtx.heat}}/{{engineerCtx.heatMax}}</span>
+            </div>
+            <div class="imsc-resource-bar-row">
+                <span class="imsc-resource-bar-label">{{localize "IMSC.Enginseer.CoreBank"}}</span>
+                <div class="imsc-resource-bar-track imsc-resource-bar-track--plasma">
+                    <div class="imsc-resource-bar-fill" style="width: {{engineerCtx.plasmaPct}}%"></div>
+                </div>
+                <span class="imsc-resource-bar-value imsc-resource-bar-value--plasma">{{engineerCtx.auxiliaryPower}}/{{engineerCtx.auxPowerCapacity}}</span>
+            </div>
+        </div>
+    </div>
+</div>

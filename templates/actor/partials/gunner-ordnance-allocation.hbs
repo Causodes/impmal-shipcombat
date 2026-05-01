@@ -1,0 +1,50 @@
+{{!-- Gunner: Ordnance SL Allocation (roll + accuracy/penetration/firepower) --}}
+<div class="sheet-list">
+    <div class="list-header row-content">
+        <div class="list-name">{{localize "IMSC.Gunner.OrdnanceAllocation"}}</div>
+    </div>
+    <div class="list-content">
+        <div class="imsc-helm-stats">
+            <div class="imsc-helm-stat" data-tooltip="{{localize 'IMSC.Gunner.OrdnanceSLTooltip'}}">
+                <span class="imsc-helm-stat-label">{{localize "IMSC.Gunner.OrdnanceSL"}}</span>
+                {{#if gunnerCtx.ordnanceRolled}}
+                    <span class="imsc-helm-stat-value imsc-sl-badge">{{gunnerCtx.remainingSL}}</span>
+                {{else}}
+                    <button class="imsc-roll-piloting-btn" data-action="rollOrdnance">
+                        <i class="fa-solid fa-dice"></i> {{localize "IMSC.Gunner.RollOrdnance"}}
+                    </button>
+                {{/if}}
+            </div>
+            <div class="imsc-helm-stat" data-tooltip="{{localize 'IMSC.Gunner.AccuracyTooltip'}}">
+                <span class="imsc-helm-stat-label">{{localize "IMSC.Gunner.Accuracy"}}</span>
+                <div class="imsc-alloc-row">
+                    <button class="imsc-alloc-btn" data-action="allocGunnerSL" data-stat="accuracy" data-delta="-1"
+                            {{#if gunnerCtx.allocLocked}}disabled{{/if}}>&minus;</button>
+                    <span class="imsc-helm-stat-value">{{gunnerCtx.allocAccuracy}}</span>
+                    <button class="imsc-alloc-btn" data-action="allocGunnerSL" data-stat="accuracy" data-delta="1"
+                            {{#if gunnerCtx.allocLocked}}disabled{{/if}}>+</button>
+                </div>
+            </div>
+            <div class="imsc-helm-stat" data-tooltip="{{localize 'IMSC.Gunner.PenetrationTooltip'}}">
+                <span class="imsc-helm-stat-label">{{localize "IMSC.Gunner.Penetration"}}</span>
+                <div class="imsc-alloc-row">
+                    <button class="imsc-alloc-btn" data-action="allocGunnerSL" data-stat="penetration" data-delta="-1"
+                            {{#if gunnerCtx.allocLocked}}disabled{{/if}}>&minus;</button>
+                    <span class="imsc-helm-stat-value">{{gunnerCtx.allocPenetration}}</span>
+                    <button class="imsc-alloc-btn" data-action="allocGunnerSL" data-stat="penetration" data-delta="1"
+                            {{#if gunnerCtx.allocLocked}}disabled{{/if}}>+</button>
+                </div>
+            </div>
+            <div class="imsc-helm-stat" data-tooltip="{{localize 'IMSC.Gunner.FirepowerTooltip'}}">
+                <span class="imsc-helm-stat-label">{{localize "IMSC.Gunner.Firepower"}}</span>
+                <div class="imsc-alloc-row">
+                    <button class="imsc-alloc-btn" data-action="allocGunnerSL" data-stat="firepower" data-delta="-1"
+                            {{#if gunnerCtx.allocLocked}}disabled{{/if}}>&minus;</button>
+                    <span class="imsc-helm-stat-value">{{gunnerCtx.allocFirepower}}</span>
+                    <button class="imsc-alloc-btn" data-action="allocGunnerSL" data-stat="firepower" data-delta="1"
+                            {{#if gunnerCtx.allocLocked}}disabled{{/if}}>+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

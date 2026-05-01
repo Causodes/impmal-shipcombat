@@ -5,9 +5,9 @@
 const { describe, it, assertEqual, assert } = globalThis._test;
 
 const {
-  MODULE_ID, ROLES, ROLE_ACTIONS, DOCTRINES,
-  PORTENT_CARDS, PORTENT_MAP, MACRO_FIRE_TIERS, LANCE_CHARGE_TIERS,
-  POWER_CORES_MAX, DEFAULT_COMBAT_STATE,
+  MODULE_ID, ROLES, ROLE_ACTIONS,
+  MACRO_FIRE_TIERS, LANCE_CHARGE_TIERS,
+  DEFAULT_COMBAT_STATE,
 } = await import("../scripts/constants.js");
 
 describe("constants.js – MODULE_ID", () => {
@@ -49,24 +49,6 @@ describe("constants.js – ROLE_ACTIONS", () => {
   });
 });
 
-describe("constants.js – DOCTRINES", () => {
-  it("has at least 5 doctrines plus 'none'", () => {
-    assert(DOCTRINES.length >= 6, `Expected >= 6 doctrines, got ${DOCTRINES.length}`);
-  });
-
-  it("first doctrine is 'none'", () => {
-    assertEqual(DOCTRINES[0].id, "none");
-  });
-
-  it("each has id, label, description", () => {
-    for (const d of DOCTRINES) {
-      assert(typeof d.id === "string", "id");
-      assert(typeof d.label === "string", "label");
-      assert(typeof d.description === "string", "description");
-    }
-  });
-});
-
 describe("constants.js – MACRO_FIRE_TIERS", () => {
   it("has 5 tiers", () => {
     assertEqual(MACRO_FIRE_TIERS.length, 5);
@@ -100,20 +82,6 @@ describe("constants.js – LANCE_CHARGE_TIERS", () => {
   });
 });
 
-describe("constants.js – PORTENT_CARDS", () => {
-  it("has 10 unique cards", () => {
-    assertEqual(PORTENT_CARDS.length, 10);
-    const ids = new Set(PORTENT_CARDS.map(c => c.id));
-    assertEqual(ids.size, 10, "All IDs unique");
-  });
-
-  it("PORTENT_MAP has matching entries", () => {
-    for (const card of PORTENT_CARDS) {
-      assertEqual(PORTENT_MAP[card.id], card);
-    }
-  });
-});
-
 describe("constants.js – DEFAULT_COMBAT_STATE", () => {
   it("starts inactive", () => {
     assertEqual(DEFAULT_COMBAT_STATE.active, false);
@@ -127,7 +95,7 @@ describe("constants.js – DEFAULT_COMBAT_STATE", () => {
     assertEqual(DEFAULT_COMBAT_STATE.resources.enginseer.heat, 0);
   });
 
-  it("enginseer starts with POWER_CORES_MAX cores", () => {
-    assertEqual(DEFAULT_COMBAT_STATE.resources.enginseer.powerCores, POWER_CORES_MAX);
+  it("enginseer powerCores starts at 0 (reactor component not yet installed)", () => {
+    assertEqual(DEFAULT_COMBAT_STATE.resources.enginseer.powerCores, 0);
   });
 });

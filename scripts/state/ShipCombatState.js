@@ -11,7 +11,7 @@
  * the same public API  -  callers still use ShipCombatState.fireWeapon(), etc.
  */
 
-import { MODULE_ID, DEFAULT_COMBAT_STATE, POWER_CORES_MAX, LOCK_DECAY_ROUNDS, AP_RESERVE_MULTIPLIER_DEFAULT, buildCaptainDeck } from "../constants.js";
+import { MODULE_ID, DEFAULT_COMBAT_STATE, LOCK_DECAY_ROUNDS, buildCaptainDeck } from "../constants.js";
 
 // ── Domain imports ──────────────────────────────────────────────────────────
 import * as GunnerState    from "./gunner-state.js";
@@ -148,9 +148,7 @@ export class ShipCombatState {
     const reactor   = this.getReactorStats();
     const shieldCfg = this.getShieldStats();
 
-    const systemMax = this.ship?.system?.powerCoresMax;
-    const max = reactor.coreOutput > 0 ? reactor.coreOutput
-      : (systemMax > 0 ? systemMax : POWER_CORES_MAX);
+    const max = reactor.coreOutput;
 
     // ── Shield commitment → pool conversion ──
     const committed = data.shieldPool?.committed ?? 0;
@@ -158,10 +156,10 @@ export class ShipCombatState {
 
     // ── Auxiliary Power: generated from unspent cores × multiplier ──
     const coresAvailable = data.resources?.enginseer?.powerCores ?? 0;
-    const reserveMult    = reactor.reserveMultiplier ?? AP_RESERVE_MULTIPLIER_DEFAULT;
+    const reserveMult    = reactor.reserveMultiplier;
     const prevAP         = data.resources?.enginseer?.auxiliaryPower ?? 0;
     const apGain         = coresAvailable * reserveMult;
-    const auxPowerCap    = reactor.auxPowerCapacity ?? 40;
+    const auxPowerCap    = reactor.auxPowerCapacity;
 
     const updates = {
       "resources.enginseer.actionChoices": [],
@@ -196,8 +194,8 @@ export class ShipCombatState {
     const committedAuxCores = data.resources?.enginseer?.committedAuxCores ?? 0;
     if (committedAuxCores > 0) {
       const reactorStats = this.getReactorStats();
-      const reserveMult = reactorStats?.reserveMultiplier ?? 1;
-      const auxCap = reactorStats?.auxPowerCapacity ?? 40;
+      const reserveMult = reactorStats.reserveMultiplier;
+      const auxCap      = reactorStats.auxPowerCapacity;
       const currentAux = data.resources?.enginseer?.auxiliaryPower ?? 0;
       updates["resources.enginseer.auxiliaryPower"] = Math.min(auxCap, currentAux + committedAuxCores * reserveMult);
       updates["resources.enginseer.committedAuxCores"] = 0;
@@ -385,8 +383,8 @@ export class ShipCombatState {
       }
       if (actionId === "generatePower") {
         const reactorStats = this.getReactorStats();
-        const auxCap   = reactorStats?.auxPowerCapacity ?? 40;
-        const currentAux = data.resources?.enginseer?.auxiliaryPower ?? 0;
+        const auxCap       = reactorStats.auxPowerCapacity;
+        const currentAux   = data.resources?.enginseer?.auxiliaryPower ?? 0;
         // AP Shutdown (Core Systems High): AP cannot increase
         if (data.conditions?.coreSystems?.tier !== "high") {
           updates["resources.enginseer.auxiliaryPower"] = Math.min(auxCap, (updates["resources.enginseer.auxiliaryPower"] ?? currentAux) + 5);
@@ -767,10 +765,7 @@ export class ShipCombatState {
     updates["resources.enginseer.stagedAuxCores"] = 0;
     updates["resources.enginseer.committedAuxCores"] = 0;
     // ── Reset power cores to max ──
-    const systemMax = this.ship?.system?.powerCoresMax;
-    const reactorOut = reactor.coreOutput > 0 ? reactor.coreOutput
-      : (systemMax > 0 ? systemMax : POWER_CORES_MAX);
-    updates["resources.enginseer.powerCores"] = reactorOut;
+    updates["resources.enginseer.powerCores"] = reactor.coreOutput;
     // ── Clear overchargeUsed / turnDone / assignedCores ──
     for (const roleId of Object.keys(data.turnDone ?? {})) {
       updates[`turnDone.${roleId}`] = false;
@@ -988,7 +983,7 @@ export class ShipCombatState {
       return;
     }
     const data = this.getData();
-    const max = this.ship.system?.powerCoresMax ?? POWER_CORES_MAX;
+    const max = this.getReactorStats().coreOutput;
     const shieldCfg = this.getShieldStats();
     const captainDeck = buildCaptainDeck();
     const captainHand = captainDeck.splice(0, 3);
@@ -1065,14 +1060,14 @@ export class ShipCombatState {
 
   static getReactorStats(shipActor) {
     const ship = shipActor ?? this.ship;
-    if (!ship) return { coreOutput: 0, shieldStrengthPerCore: 5, heatCapacity: 10, auxPowerCapacity: 40, reserveMultiplier: 1 };
+    if (!ship) return { coreOutput: 0, shieldStrengthPerCore: 0, heatCapacity: 0, auxPowerCapacity: 0, reserveMultiplier: 0 };
     const reactor = ship.items.find(i => i.type === `${MODULE_ID}.component` && i.system.slot === "reactor" && i.system.equipped !== false);
     return {
       coreOutput:            reactor?.system?.rating ?? 0,
-      shieldStrengthPerCore: reactor?.system?.shieldStrengthPerCore ?? 5,
-      heatCapacity:          reactor?.system?.heatCapacity ?? 10,
-      auxPowerCapacity:      reactor?.system?.bankCapacity ?? 40,
-      reserveMultiplier:     reactor?.system?.reserveMultiplier ?? 1,
+      shieldStrengthPerCore: reactor?.system?.shieldStrengthPerCore ?? 0,
+      heatCapacity:          reactor?.system?.heatCapacity ?? 0,
+      auxPowerCapacity:      reactor?.system?.bankCapacity ?? 0,
+      reserveMultiplier:     reactor?.system?.reserveMultiplier ?? 0,
     };
   }
 

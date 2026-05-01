@@ -1,0 +1,41 @@
+{{!-- Captain: Status Bar (stance + aux power) --}}
+<div class="sheet-list imsc-role-status-bar">
+    <div class="list-header row-content">
+        <div class="list-name">{{#if statusTitle}}{{statusTitle}}{{else}}{{localize "IMSC.Captain.StatusTitle"}}{{/if}}</div>
+        {{#with (lookup roles "captain")}}
+        {{> "modules/impmal-shipcombat/templates/actor/partials/payload-status-badge.hbs"
+            payloadId=payloadId payloadLabel=payloadLabel payloadDesc=payloadDesc}}
+        {{> "modules/impmal-shipcombat/templates/actor/partials/core-status-banner.hbs"
+            coreCount=coreCount hasCoreStaged=hasCoreStaged}}
+        {{/with}}
+    </div>
+    <div class="list-content">
+        <div class="imsc-role-status-panel">
+            {{!-- Stance row --}}
+            <div class="imsc-resource-bar-row imsc-stance-row imsc-stance--{{captainCtx.stance}} {{#if captainCtx.hasPendingStance}}imsc-stance--pending{{/if}}">
+                <span class="imsc-resource-bar-label">
+                    <i class="fa-solid fa-flag"></i> {{localize "IMSC.Captain.StanceLabel"}}
+                </span>
+                <span class="imsc-stance-value"{{#if captainCtx.stanceDesc}} data-tooltip="{{captainCtx.stanceDesc}}"{{/if}}>{{captainCtx.stanceLabel}}</span>
+                {{#if captainCtx.hasPendingStance}}
+                <span class="imsc-stance-pending-hint">
+                    <i class="fa-solid fa-arrow-right-long"></i> {{captainCtx.pendingLabel}}
+                </span>
+                {{/if}}
+                <div class="imsc-triage-counter"
+                     data-tooltip="{{captainCtx.triageCount}}/{{captainCtx.triageMax}}: {{localize 'IMSC.Captain.TriageTooltip'}}">
+                    <i class="fa-solid fa-wrench"></i>
+                    {{captainCtx.triageCount}}/{{captainCtx.triageMax}}
+                </div>
+            </div>
+            {{!-- Auxiliary Power bar (read-only) --}}
+            <div class="imsc-resource-bar-row">
+                <span class="imsc-resource-bar-label">{{localize "IMSC.Enginseer.CoreBank"}}</span>
+                <div class="imsc-resource-bar-track imsc-resource-bar-track--plasma">
+                    <div class="imsc-resource-bar-fill" style="width: {{captainCtx.auxPowerPct}}%"></div>
+                </div>
+                <span class="imsc-resource-bar-value imsc-resource-bar-value--plasma">{{captainCtx.auxiliaryPower}}/{{captainCtx.auxPowerCapacity}}</span>
+            </div>
+        </div>
+    </div>
+</div>

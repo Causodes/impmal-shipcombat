@@ -1,0 +1,19 @@
+{{!-- Ordnance: Main Actions (crew commitment grid) --}}
+<div class="sheet-list imsc-ordnance-actions">
+    <div class="list-header row-content">
+        <div class="list-name">{{localize "IMSC.Ordnance.MainAction"}}</div>
+    </div>
+    <div class="list-content">
+        <div class="imsc-ordnance-action-grid imsc-action-grid-2col">
+            {{#each ordnanceCtx.actions}}
+            <button class="imsc-ordnance-action-btn" data-action="ordnanceMasterAction" data-action-id="{{id}}"
+                    {{#unless canAfford}}disabled{{/unless}}
+                    data-tooltip="{{descLocalized}}">
+                <i class="{{icon}}"></i>
+                <span>{{labelLocalized}}</span>
+                <small>{{effectiveCrew}} crew / {{effectiveDuration}}T</small>
+            </button>
+            {{/each}}
+        </div>
+    </div>
+</div>

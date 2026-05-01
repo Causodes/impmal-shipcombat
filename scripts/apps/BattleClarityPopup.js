@@ -77,6 +77,34 @@ export class BattleClarityPopup extends foundry.applications.api.HandlebarsAppli
     };
   }
 
+  _onRender(context, options) {
+    super._onRender?.(context, options);
+
+    // ── Live lock-tier refresh ─────────────────────────────────────────────
+    // Re-render when the ship actor updates (lock tiers stored in system data)
+    // or when tokens move (changes distances / visibility).
+    if (!this._liveHooks) {
+      const _rerender = foundry.utils.debounce(() => {
+        if (this.rendered) this.render();
+      }, 100);
+      this._liveHooks = [
+        Hooks.on("updateActor",  _rerender),
+        Hooks.on("updateToken",  _rerender),
+      ];
+      this._rerenderFn = _rerender;
+    }
+  }
+
+  _onClose(options) {
+    if (this._liveHooks) {
+      Hooks.off("updateActor", this._rerenderFn);
+      Hooks.off("updateToken", this._rerenderFn);
+      this._liveHooks = null;
+      this._rerenderFn = null;
+    }
+    super._onClose?.(options);
+  }
+
   static async _onConfirmDesignate(event, element) {
     const tokenId = element.dataset.tokenId;
     if (!tokenId) return;

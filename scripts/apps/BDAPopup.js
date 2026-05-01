@@ -205,7 +205,7 @@ export class BDAPopup extends foundry.applications.api.HandlebarsApplicationMixi
     if (correctionId === "ceaseFireSwitch") {
       // Grant 20% of max AP and drop the lock on the target to Lock 0
       const reactor = this.ship?.items?.find(i => i.type === `${MODULE_ID}.component` && i.system?.slot === "reactor");
-      const maxAP = reactor?.system?.bankCapacity ?? 40;
+      const maxAP = reactor?.system?.bankCapacity ?? 0;
       const currentAP = this.ship?.system?.resources?.enginseer?.auxiliaryPower ?? 0;
       const grant = Math.floor(maxAP * 0.2);
       emitToGM("updateResource", { roleId: "enginseer", key: "auxiliaryPower", value: Math.min(maxAP, currentAP + grant) });

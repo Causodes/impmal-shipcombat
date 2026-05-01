@@ -4,7 +4,7 @@
 
 const { describe, it, assertEqual, assert } = globalThis._test;
 
-const { DEFAULT_COMBAT_STATE, LOCK_DECAY_ROUNDS, AP_MAX } = await import("../scripts/constants.js");
+const { DEFAULT_COMBAT_STATE, LOCK_DECAY_ROUNDS } = await import("../scripts/constants.js");
 const { THEME, pixi } = await import("../scripts/theme.js");
 
 describe("Sensors – Default state", () => {
@@ -56,10 +56,11 @@ describe("Sensors – Focused Scan logic (AP-based)", () => {
     assertEqual(computeFocusedScanGain(-2), 0);
   });
 
-  it("AP capped at AP_MAX", () => {
+  it("AP capped at reactor bankCapacity (Math.min behaviour)", () => {
+    const cap = 40;   // representative value from a configured reactor component
     const current = 38;
     const gain = 5;
-    assertEqual(Math.min(AP_MAX, current + gain), AP_MAX);
+    assertEqual(Math.min(cap, current + gain), cap);
   });
 });
 

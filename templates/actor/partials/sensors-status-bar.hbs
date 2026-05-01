@@ -1,0 +1,23 @@
+{{!-- Sensors: Status Bar (power track) --}}
+<div class="sheet-list imsc-role-status-bar">
+    <div class="list-header row-content">
+        <div class="list-name">{{localize "IMSC.Sensors.StatusTitle"}}</div>
+        {{#with (lookup roles "sensors")}}
+        {{> "modules/impmal-shipcombat/templates/actor/partials/payload-status-badge.hbs"
+            payloadId=payloadId payloadLabel=payloadLabel payloadDesc=payloadDesc}}
+        {{> "modules/impmal-shipcombat/templates/actor/partials/core-status-banner.hbs"
+            coreCount=coreCount coreActionsPlayedLabels=@root.sensorsCtx.coreActionsPlayedLabels hasCoreStaged=hasCoreStaged}}
+        {{/with}}
+    </div>
+    <div class="list-content">
+        <div class="imsc-role-status-panel">
+            <div class="imsc-resource-bar-row">
+                <span class="imsc-resource-bar-label">{{localize "IMSC.Sensors.PowerTrack"}}</span>
+                <div class="imsc-resource-bar-track imsc-resource-bar-track--plasma">
+                    <div class="imsc-resource-bar-fill imsc-bar-data" style="width: {{sensorsCtx.powerPct}}%"></div>
+                </div>
+                <span class="imsc-resource-bar-value" style="color: #7ec8e3">{{sensorsCtx.power}}/{{sensorsCtx.powerMax}}</span>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,217 @@
+{{!-- Gunner: Weapon Batteries --}}
+{{#each weaponSections}}
+<div class="sheet-list imsc-weapon-battery-section">
+    <div class="list-header row-content">
+        <div class="list-name">{{this.labelLocalized}}</div>
+    </div>
+    <div class="list-content">
+        {{#if this.items.length}}
+            {{#each this.items}}
+            <div class="imsc-battery-card" data-uuid="{{this.uuid}}" data-id="{{this.id}}" data-weapon-arc="{{this.id}}" data-weapon-type="{{this.system.resourceType}}">
+
+                {{!-- ─── Header (shared) ─── --}}
+                <div class="imsc-battery-header">
+                    <img src="{{this.img}}" class="imsc-battery-icon">
+                    <span class="imsc-battery-name">{{this.name}}</span>
+                    <a class="list-control imsc-pin-arc" data-pin-weapon="{{this.id}}"
+                       data-tooltip="{{localize 'IMSC.Gunner.PinArc'}}"><i class="fa-solid fa-thumbtack"></i></a>
+                </div>
+
+                {{!-- ─── Traits (shared) ─── --}}
+                {{#if this.traitTags.length}}
+                <div class="imsc-battery-traits">
+                    {{#each this.traitTags}}
+                    <span class="imsc-trait-tag imsc-trait--{{this.key}}" data-tooltip="{{this.tooltip}}" data-tooltip-direction="DOWN">
+                        {{this.label}}{{#if this.value}} ({{this.value}}){{/if}}
+                    </span>
+                    {{/each}}
+                </div>
+                {{/if}}
+
+                {{!-- ─── Misconfigured warning ─── --}}
+                {{#if this.isMisconfigured}}
+                <div class="imsc-battery-warning">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    {{localize "IMSC.Warning.WeaponNotConfiguredShort"}}
+                </div>
+                {{/if}}
+
+                {{!-- ═══════════════════════════════════════════════ --}}
+                {{!-- MACRO CANNON  -  interactive tier picker          --}}
+                {{!-- ═══════════════════════════════════════════════ --}}
+                {{#if (imscEq this.system.resourceType "ammo")}}
+                <div class="imsc-battery-body imsc-battery--macro">
+                    <div class="imsc-battery-stats-row">
+                        <div class="imsc-battery-stat">
+                            <span class="imsc-battery-stat-label">{{localize "IMSC.Label.Damage"}}</span>
+                            <span class="imsc-battery-stat-value">{{this.system.damage}}</span>
+                        </div>
+                        <div class="imsc-battery-stat">
+                            <span class="imsc-battery-stat-label">{{localize "IMSC.Label.Range"}}</span>
+                            <span class="imsc-battery-stat-value">{{this.system.range}}</span>
+                        </div>
+                        <div class="imsc-battery-stat" data-macro-stat-display="ammo">
+                            <span class="imsc-battery-stat-label">{{localize "IMSC.Gunner.ReadyRounds"}}</span>
+                            <span class="imsc-battery-stat-value imsc-macro-stat-ammo" style="color:#e67e22">-</span>
+                        </div>
+                        <div class="imsc-battery-stat" data-macro-stat-display="hit">
+                            <span class="imsc-battery-stat-label">{{localize "IMSC.Gunner.HitMod"}}</span>
+                            <span class="imsc-battery-stat-value imsc-macro-stat-hit">-</span>
+                        </div>
+                        <div class="imsc-battery-stat" data-macro-stat-display="salvo">
+                            <span class="imsc-battery-stat-label">{{localize "IMSC.Gunner.Salvo"}}</span>
+                            <span class="imsc-battery-stat-value imsc-macro-stat-salvo">-</span>
+                        </div>
+                    </div>
+                    <div class="imsc-macro-tier-picker" data-weapon-id="{{this.id}}">
+                        {{#each this.fireTiers}}
+                        <div class="imsc-macro-tier-pip {{#unless this.canAfford}}imsc-tier-dimmed{{/unless}} {{#if this.isExclusive}}imsc-tier-exclusive{{/if}}"
+                             data-tier-id="{{this.id}}"
+                             data-tier-ammo="{{this.ammo}}"
+                             data-tier-hit="{{this.hitMod}}"
+                             data-tier-salvo="{{this.salvoSize}}"
+                             data-can-afford="{{this.canAfford}}"
+                             {{#if this.desc}}data-tooltip="{{this.desc}}" data-tooltip-direction="DOWN"{{/if}}>
+                            <span class="imsc-macro-pip-label">{{this.label}}</span>
+                            <div class="imsc-macro-pip-detail">
+                                <span class="imsc-macro-pip-ammo">{{this.ammo}} rds</span>
+                            </div>
+                        </div>
+                        {{/each}}
+                    </div>
+                    <div class="imsc-battery-actions">
+                        <button class="imsc-battery-fire-btn imsc-fire--macro" data-action="fireWeapon"
+                                data-weapon-id="{{this.id}}" data-fire-mode="" disabled>
+                            <i class="fa-solid fa-crosshairs"></i>
+                            <span class="imsc-macro-fire-label">{{localize "IMSC.Gunner.SelectFireMode"}}</span>
+                        </button>
+                    </div>
+                </div>
+                {{/if}}
+
+                {{!-- ═══════════════════════════════════════════════ --}}
+                {{!-- PLASMA CANNON  -  unlimited fire, heat per shot  --}}
+                {{!-- ═══════════════════════════════════════════════ --}}
+                {{#if (imscEq this.system.resourceType "heat")}}
+                <div class="imsc-battery-body imsc-battery--plasma">
+                    <div class="imsc-battery-stats-row">
+                        <div class="imsc-battery-stat">
+                            <span class="imsc-battery-stat-label">{{localize "IMSC.Label.Damage"}}</span>
+                            <span class="imsc-battery-stat-value imsc-plasma-dmg">{{this.plasma.totalDamage}}</span>
+                            {{#if this.plasma.dmgBonus}}
+                            <span class="imsc-fp-note">+{{this.plasma.dmgBonus}} FP</span>
+                            {{/if}}
+                        </div>
+                        <div class="imsc-battery-stat">
+                            <span class="imsc-battery-stat-label">{{localize "IMSC.Label.Range"}}</span>
+                            <span class="imsc-battery-stat-value">{{this.system.range}}</span>
+                        </div>
+                        <div class="imsc-battery-stat">
+                            <span class="imsc-battery-stat-label">{{localize "IMSC.Gunner.HeatPerShot"}}</span>
+                            <span class="imsc-battery-stat-value imsc-val-heat">+{{this.plasma.heatPerShot}}</span>
+                        </div>
+                        <div class="imsc-battery-stat">
+                            <span class="imsc-battery-stat-label">{{localize "IMSC.Gunner.HeatPerVolley"}}</span>
+                            <span class="imsc-battery-stat-value imsc-val-heat">+{{this.plasma.heatPerVolley}}</span>
+                        </div>
+                        <div class="imsc-battery-stat">
+                            <span class="imsc-battery-stat-label">{{localize "IMSC.Gunner.Salvo"}}</span>
+                            <span class="imsc-battery-stat-value">{{this.plasma.salvoSize}}</span>
+                        </div>
+                    </div>
+                    <div class="imsc-plasma-shots">
+                        <span class="imsc-plasma-remaining">
+                            <i class="fa-solid fa-fire"></i>
+                            {{this.plasma.shotsRemaining}} {{localize "IMSC.Gunner.ShotsRemaining"}}
+                        </span>
+                    </div>
+                    <div class="imsc-battery-actions">
+                        {{#if this.plasma.canFire}}
+                        <button class="imsc-battery-fire-btn imsc-fire--plasma" data-action="fireWeapon" data-fire-mode="plasmaShot" data-weapon-id="{{this.id}}">
+                            <i class="fa-solid fa-fire"></i> {{localize "IMSC.Gunner.PlasmaShot"}}
+                        </button>
+                        {{else}}
+                        <span class="imsc-fire-blocked"><i class="fa-solid fa-temperature-full"></i> {{localize "IMSC.Warning.HeatMaxedShort"}}</span>
+                        {{/if}}
+                    </div>
+                </div>
+                {{/if}}
+
+                {{!-- ═══════════════════════════════════════════════ --}}
+                {{!-- LANCE BATTERY  -  charge meter, damage tiers     --}}
+                {{!-- ═══════════════════════════════════════════════ --}}
+                {{#if (imscEq this.system.resourceType "power")}}
+                <div class="imsc-battery-body imsc-battery--lance">
+                    <div class="imsc-battery-stats-row">
+                        <div class="imsc-battery-stat">
+                            <span class="imsc-battery-stat-label">{{localize "IMSC.Label.Damage"}}</span>
+                            <span class="imsc-battery-stat-value">{{this.system.damage}}</span>
+                        </div>
+                        <div class="imsc-battery-stat">
+                            <span class="imsc-battery-stat-label">{{localize "IMSC.Label.Range"}}</span>
+                            <span class="imsc-battery-stat-value">{{this.system.range}}</span>
+                        </div>
+                    </div>
+                    <div class="imsc-lance-charge-meter">
+                        <span class="imsc-lance-charge-label">{{localize "IMSC.Sensors.PowerTrack"}}</span>
+                        <div class="imsc-lance-pips">
+                            {{#each this.lance.tiers}}
+                            <div class="imsc-lance-tier-group {{#if this.isActive}}imsc-lance-tier-active{{/if}}">
+                                <span class="imsc-lance-tier-label">{{this.label}}</span>
+                                <span class="imsc-lance-tier-dmg">×{{this.multiplier}}</span>
+                                <span class="imsc-lance-tier-ap">{{this.min}} AP</span>
+                            </div>
+                            {{/each}}
+                        </div>
+                        <span class="imsc-lance-charge-value">{{this.lance.power}}/{{this.lance.powerMax}}</span>
+                    </div>
+                    <div class="imsc-battery-actions">
+                        {{#if this.lance.canFire}}
+                        <button class="imsc-battery-fire-btn imsc-fire--lance" data-action="fireWeapon" data-fire-mode="lanceFire" data-weapon-id="{{this.id}}">
+                            <i class="fa-solid fa-bolt-lightning"></i>
+                            {{#if this.lance.activeTierLabel}}
+                                {{this.lance.activeTierLabel}} ({{this.lance.activeDamage}} dmg)
+                            {{else}}
+                                {{localize "IMSC.Gunner.LanceFire"}}
+                            {{/if}}
+                        </button>
+                        {{else}}
+                        <span class="imsc-fire-blocked"><i class="fa-solid fa-battery-empty"></i> {{localize "IMSC.Warning.InsufficientAP"}}</span>
+                        {{/if}}
+                    </div>
+                </div>
+                {{/if}}
+
+                {{!-- ═══════════════════════════════════════════════ --}}
+                {{!-- POINT DEFENSE  -  simple fire                    --}}
+                {{!-- ═══════════════════════════════════════════════ --}}
+                {{#if (imscEq this.system.resourceType "none")}}
+                <div class="imsc-battery-body imsc-battery--pd">
+                    <div class="imsc-battery-stats-row">
+                        <div class="imsc-battery-stat">
+                            <span class="imsc-battery-stat-label">{{localize "IMSC.Label.Damage"}}</span>
+                            <span class="imsc-battery-stat-value">{{this.system.damage}}</span>
+                        </div>
+                        <div class="imsc-battery-stat">
+                            <span class="imsc-battery-stat-label">{{localize "IMSC.Label.Range"}}</span>
+                            <span class="imsc-battery-stat-value">{{this.system.range}}</span>
+                        </div>
+                    </div>
+                    <div class="imsc-battery-actions">
+                        <button class="imsc-battery-fire-btn imsc-fire--pd" data-action="fireWeapon" data-fire-mode="pointDefense" data-weapon-id="{{this.id}}">
+                            <i class="fa-solid fa-shield-halved"></i> {{localize "IMSC.Gunner.Fire"}}
+                        </button>
+                    </div>
+                </div>
+                {{/if}}
+
+            </div>
+            {{/each}}
+        {{else}}
+            <div class="list-row">
+                <div class="row-content"><span class="imsc-empty-slot">{{localize "IMSC.Label.Empty"}}</span></div>
+            </div>
+        {{/if}}
+    </div>
+</div>
+{{/each}}

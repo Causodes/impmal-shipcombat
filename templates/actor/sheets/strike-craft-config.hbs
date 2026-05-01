@@ -1,0 +1,106 @@
+<section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
+<div class="imsc-torpedo-sheet imsc-strikecraft-sheet">
+
+    {{!-- Flight (hull) --}}
+    <div class="imsc-torpedo-bar">
+        <label>Flight</label>
+        <div class="imsc-torpedo-bar-track">
+            <div class="imsc-torpedo-bar-fill hull" style="width: {{hullPct}}%"></div>
+            <span class="imsc-torpedo-bar-text">
+                <input type="number" name="system.hull.value" value="{{sys.hull.value}}" class="imsc-torpedo-inline" />
+                /
+                <input type="number" name="system.hull.max" value="{{sys.hull.max}}" class="imsc-torpedo-inline" />
+            </span>
+        </div>
+    </div>
+
+    {{!-- Fuel --}}
+    <div class="imsc-torpedo-bar">
+        <label>Fuel</label>
+        <div class="imsc-torpedo-bar-track">
+            <div class="imsc-torpedo-bar-fill fuel" style="width: {{fuelPct}}%"></div>
+            <span class="imsc-torpedo-bar-text">
+                <input type="number" name="system.fuel.value" value="{{sys.fuel.value}}" class="imsc-torpedo-inline" />
+                /
+                <input type="number" name="system.fuel.max" value="{{sys.fuel.max}}" class="imsc-torpedo-inline" />
+            </span>
+        </div>
+    </div>
+
+    {{!-- Ammunition --}}
+    <div class="imsc-torpedo-bar">
+        <label>Ammo</label>
+        <div class="imsc-torpedo-bar-track">
+            <div class="imsc-torpedo-bar-fill ammo" style="width: {{ammoPct}}%"></div>
+            <span class="imsc-torpedo-bar-text">
+                <input type="number" name="system.ammo.value" value="{{sys.ammo.value}}" class="imsc-torpedo-inline" />
+                /
+                <input type="number" name="system.ammo.max" value="{{sys.ammo.max}}" class="imsc-torpedo-inline" />
+            </span>
+        </div>
+    </div>
+
+    {{!-- Movement stats --}}
+    <div class="imsc-torpedo-stats">
+        <div class="imsc-torpedo-stat">
+            <label>SPD</label>
+            <input type="number" name="system.movement.speed" value="{{sys.movement.speed}}" />
+        </div>
+        <div class="imsc-torpedo-stat">
+            <label>MAN</label>
+            <input type="number" name="system.movement.maneuverability" value="{{sys.movement.maneuverability}}" />
+        </div>
+    </div>
+
+    {{!-- Auspex stats --}}
+    <div class="imsc-torpedo-stats">
+        <div class="imsc-torpedo-stat">
+            <label data-tooltip="{{localize 'IMSC.Component.AutoScanRange'}}" data-tooltip-direction="UP">ASR</label>
+            <input type="number" name="system.autoScanRange" value="{{sys.autoScanRange}}" />
+        </div>
+        <div class="imsc-torpedo-stat">
+            <label data-tooltip="{{localize 'IMSC.Component.BandSize'}}" data-tooltip-direction="UP">BND</label>
+            <input type="number" name="system.auspexBandSize" value="{{sys.auspexBandSize}}" />
+        </div>
+        <div class="imsc-torpedo-stat">
+            <label data-tooltip="{{localize 'IMSC.Component.Rating'}}" data-tooltip-direction="UP">RTG</label>
+            <input type="number" name="system.auspexRating" value="{{sys.auspexRating}}" />
+        </div>
+    </div>
+
+    {{!-- Payload --}}
+    <div class="imsc-torpedo-traits">
+        <h4>Payload</h4>
+        <div class="imsc-torpedo-trait-grid">
+            <div class="imsc-torpedo-trait">
+                <label>DMG</label>
+                <input type="number" name="system.payloadDamage" value="{{sys.payloadDamage}}" />
+            </div>
+            <div class="imsc-torpedo-trait">
+                <label>RADIUS</label>
+                <input type="number" name="system.payloadRadius" value="{{sys.payloadRadius}}" />
+            </div>
+            <div class="imsc-torpedo-trait">
+                <label>ANGLE</label>
+                <input type="number" name="system.payloadAngle" value="{{sys.payloadAngle}}" />
+            </div>
+            <div class="imsc-torpedo-trait">
+                <label>SALVO</label>
+                <input type="number" name="system.payloadCount" value="{{sys.payloadCount}}" />
+            </div>
+        </div>
+    </div>
+
+    {{> "modules/impmal-shipcombat/templates/actor/partials/vessel-weapon-traits.hbs" title="Weapon Traits"}}
+
+    {{!-- Craft Type --}}
+    <div class="imsc-torpedo-traits">
+        <h4>Craft Type</h4>
+        <select name="system.craftType">
+            <option value="fighter" {{#if (eq sys.craftType "fighter")}}selected{{/if}}>{{localize "IMSC.CraftType.Fighter"}}</option>
+            <option value="bomber" {{#if (eq sys.craftType "bomber")}}selected{{/if}}>{{localize "IMSC.CraftType.Bomber"}}</option>
+        </select>
+    </div>
+
+</div>
+</section>

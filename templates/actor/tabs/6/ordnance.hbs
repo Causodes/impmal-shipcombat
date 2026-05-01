@@ -1,0 +1,15 @@
+{{!-- tabs/6/ordnance.hbs — Ordnance Master's station tab (6-player) --}}
+<section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
+
+    {{> "modules/impmal-shipcombat/templates/actor/partials/ordnance-claim-prompt.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/ordnance-captain-boost.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/ordnance-status-bar.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/ordnance-requisition.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/ordnance-main-actions.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/ordnance-payload.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/ordnance-core-actions.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/ordnance-deployed.hbs"}}
+
+    {{> 'modules/impmal-shipcombat/templates/actor/partials/complete-turn.hbs' tabRoleId="ordnance" turnDone=(lookup @root.sys.turnDone "ordnance")}}
+
+</section>

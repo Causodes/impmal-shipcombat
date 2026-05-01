@@ -16,7 +16,6 @@ describe("registerSettings()", () => {
     try {
       registerSettings();
 
-      assert(_registered.some(s => s.key === "powerCoresMax"), "powerCoresMax registered");
       assert(_registered.some(s => s.key === "contactDesignation"), "contactDesignation registered");
       assert(_registered.some(s => s.key === "sweepGatedPositions"), "sweepGatedPositions registered");
 

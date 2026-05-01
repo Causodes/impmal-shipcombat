@@ -77,7 +77,7 @@ export async function triageCondition({ locId }) {
     return;
   }
 
-  const apMax = this.getReactorStats?.()?.auxPowerCapacity ?? 40;
+  const apMax = this.getReactorStats().auxPowerCapacity;
   const TRIAGE_AP_COST = Math.max(1, Math.ceil(apMax * 0.1));
   const currentAP = sys.resources?.enginseer?.auxiliaryPower ?? 0;
   if (currentAP < TRIAGE_AP_COST) {
@@ -213,7 +213,7 @@ export async function playCard({ cardId, sector }) {
     // Emergency Reserves: replenish AP by 50%
     case "emergencyReserves": {
       const ap    = sys.resources?.enginseer?.auxiliaryPower ?? 0;
-      const apMax = this.getReactorStats?.()?.auxPowerCapacity ?? 40;
+      const apMax = this.getReactorStats().auxPowerCapacity;
       updates["resources.enginseer.auxiliaryPower"] = Math.min(apMax, ap + Math.ceil(apMax / 2));
       break;
     }

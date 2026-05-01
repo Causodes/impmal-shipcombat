@@ -1,0 +1,17 @@
+{{!-- Sensors: BDA Button --}}
+{{#if (or sensorsCtx.bdaAvailable sensorsCtx.bdaCorrectionPending)}}
+<div class="sheet-list imsc-bda-section {{#if sensorsCtx.bdaCorrectionPending}}imsc-bda-section--correction{{else}}imsc-bda-section--available{{/if}}">
+    <div class="list-content">
+        <button class="imsc-bda-roll-btn" data-action="openBDAPopup"
+                data-tooltip="{{localize 'IMSC.BDA.OpenPopupTooltip'}}">
+            <i class="fa-solid fa-satellite-dish"></i>
+            {{#if sensorsCtx.bdaCorrectionPending}}
+                {{localize "IMSC.BDA.CorrectionTitle"}}
+                <span class="imsc-bda-sl-badge">SL {{sensorsCtx.bdaResultSL}}</span>
+            {{else}}
+                {{localize "IMSC.BDA.Title"}}
+            {{/if}}
+        </button>
+    </div>
+</div>
+{{/if}}

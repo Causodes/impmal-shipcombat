@@ -1,0 +1,43 @@
+{{!-- Enginseer: Fire Suppression --}}
+<div class="sheet-list imsc-role-section">
+
+    {{#unless engineerCtx.fireSelected}}
+    <div class="imsc-section-overlay{{#if (imscOr (imscNot engineerCtx.hasBankedCores) (imscEq engineerCtx.actionsRemaining 0))}} imsc-section-overlay--taken{{/if}}">
+        {{#if (imscNot engineerCtx.hasBankedCores)}}
+            <div class="imsc-overlay-lock-indicator">
+                <i class="fa-solid fa-lock fa-lg"></i>
+                <span>{{localize "IMSC.Enginseer.RequiresBankedCore"}}</span>
+            </div>
+        {{else if (imscEq engineerCtx.actionsRemaining 0)}}
+            <div class="imsc-overlay-lock-indicator">
+                <i class="fa-solid fa-ban fa-lg"></i>
+                <span>{{localize "IMSC.Enginseer.ActionTakenDesc"}}</span>
+            </div>
+        {{else}}
+        <button class="imsc-section-overlay-btn" data-action="selectAction" data-action-type="fire">
+            {{localize "IMSC.Enginseer.FireSuppression"}}
+        </button>
+        {{/if}}
+    </div>
+    {{/unless}}
+
+    <div class="list-header row-content">
+        <div class="list-name">{{localize "IMSC.Enginseer.FireSuppression"}}</div>
+    </div>
+    <div class="list-content">
+        <div class="imsc-eng-action-row">
+            <p class="imsc-eng-action-desc">{{localize "IMSC.Enginseer.SuppressFireDesc"}}</p>
+            <div class="imsc-eng-action-ctrl">
+                <button class="imsc-alloc-btn" data-action="adjustFireCores" data-delta="-1"
+                        {{#if (imscOr (imscNot engineerCtx.hasInternalFire) (imscNot engineerCtx.hasBankedCores))}}disabled{{/if}}>&minus;</button>
+                <span class="imsc-core-alloc-count">{{engineerCtx.fireCoresStaged}}</span>
+                <button class="imsc-alloc-btn" data-action="adjustFireCores" data-delta="1"
+                        {{#if (imscOr (imscNot engineerCtx.hasInternalFire) (imscNot engineerCtx.hasBankedCores))}}disabled{{/if}}>+</button>
+            </div>
+            <button type="button" class="imsc-eng-confirm" data-action="suppressFire"
+                    {{#if (imscOr (imscNot engineerCtx.hasInternalFire) (imscNot engineerCtx.hasBankedCores))}}disabled{{/if}}>
+                {{localize "IMSC.Enginseer.Execute"}}
+            </button>
+        </div>
+    </div>
+</div>

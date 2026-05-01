@@ -131,10 +131,6 @@ export class ShipModel extends warhammer.models.BaseWarhammerActorModel {
     schema.shipRole       = new fields.StringField({ initial: "" });
     schema.patron         = new fields.StringField({ initial: "" }); // UUID of linked Patron actor
 
-    // ── Enginseer reactor config ─────────────────────────────────────────────
-    // Per-ship maximum Power Cores the Enginseer starts each round with.
-    // Overrides the world setting when explicitly configured.
-    schema.powerCoresMax = new fields.NumberField({ initial: 0, min: 0, max: 8, integer: true });
 
     // ── Movement (configured by engine or manually) ──────────────────────
     schema.movement = new fields.SchemaField({

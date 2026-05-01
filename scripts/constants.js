@@ -130,8 +130,6 @@ export const LOCK_DECAY_ROUNDS = {
 
 // ─── Defaults ─────────────────────────────────────────────────────────────────
 
-export const POWER_CORES_MAX = 4;
-
 export const SHIP_CLASSIFICATIONS = [
   { value: "",              label: "" },
   { value: "fighter",       label: "Fighter" },
@@ -157,7 +155,7 @@ export const DEFAULT_COMBAT_STATE = {
   reactions: {},
   roles: {},
   resources: {
-    enginseer: { heat: 0, powerCores: POWER_CORES_MAX, auxiliaryPower: 0, actionChoices: [], extraActions: 0, stagedCores: {}, stagedShieldCores: 0, stagedAuxCores: 0, committedAuxCores: 0, heatCoresStaged: 1, fireCoresStaged: 1, payload: "" },
+    enginseer: { heat: 0, powerCores: 0, auxiliaryPower: 0, actionChoices: [], extraActions: 0, stagedCores: {}, stagedShieldCores: 0, stagedAuxCores: 0, committedAuxCores: 0, heatCoresStaged: 1, fireCoresStaged: 1, payload: "" },
     pilot:     { fuelBurned: 0, bearing: 0, payload: "", coreCount: 0, coreActionsPlayed: [] },
     sensors:   { actionUsed: false, coreActionUsed: false, bdaAvailable: false, bdaCorrectionPending: false, bdaResultSL: 0, bdaTargetTokenId: null, bdaMessageId: null, locks: [], effects: [], fireCorrection: null, payload: "", coreCount: 0, coreActionsPlayed: [] },
     gunner:    { ammo: 0, power: 0, ordnanceSL: 0, allocAccuracy: 0, allocPenetration: 0, allocFirepower: 0, slLocked: false, ordnanceRolled: false, arcOverlayActive: false, payload: "", coreCount: 0, coreActionsPlayed: [] },
@@ -167,13 +165,6 @@ export const DEFAULT_COMBAT_STATE = {
   turnDone: {},
   overchargeUsed: {},
 };
-
-// ─── Auxiliary Power ─────────────────────────────────────────────────────────
-// Generated from unspent Power Cores at end of turn × reactor reserveMultiplier.
-// Consumed by Augur (lock upgrades, core actions) and Enginseer (hull repair, fire suppression).
-
-export const AP_MAX = 40;
-export const AP_RESERVE_MULTIPLIER_DEFAULT = 3;
 
 // ─── Augur Lock Costs (AP-based) ─────────────────────────────────────────────
 

@@ -46,14 +46,14 @@ export class TorpedoSheet extends IMActorSheet {
   };
 
   static PARTS = {
-    header:  { template: `modules/${MODULE_ID}/templates/actor/torpedo-header.hbs`, classes: ["vehicle-header"] },
+    header:  { template: `modules/${MODULE_ID}/templates/actor/sheets/torpedo-header.hbs`, classes: ["vehicle-header"] },
     tabs:    { template: "templates/generic/tab-navigation.hbs" },
     warhead: {
-      template: `modules/${MODULE_ID}/templates/actor/torpedo-warhead.hbs`,
+      template: `modules/${MODULE_ID}/templates/actor/sheets/torpedo-warhead.hbs`,
       scrollable: [""],
     },
     config: {
-      template: `modules/${MODULE_ID}/templates/actor/torpedo-config.hbs`,
+      template: `modules/${MODULE_ID}/templates/actor/sheets/torpedo-config.hbs`,
       scrollable: [""],
     },
   };
@@ -214,11 +214,14 @@ export class TorpedoSheet extends IMActorSheet {
       const ratio     = 100 / powerMax;
       const committed = thrustPct * ratio;
       const extra     = Math.max(0, selectedPct - thrustPct) * ratio;
-      const minmove   = (minMovePct / powerMax) * 100;
+      // Hide delimiter once slider passes min-move, redisplay if it moves back.
+      const effectiveMinmove = selectedPct >= minMovePct ? 0 : (minMovePct / powerMax) * 100;
       if (powerBarEl) {
         powerBarEl.style.setProperty("--committed", `${committed}%`);
         powerBarEl.style.setProperty("--extra",     `${extra}%`);
-        powerBarEl.style.setProperty("--minmove",   `${minmove}%`);
+        powerBarEl.style.setProperty("--minmove",   `${effectiveMinmove}%`);
+        const line = powerBarEl.querySelector(".imsc-power-minmove-line");
+        if (line) line.style.display = effectiveMinmove > 0 ? "" : "none";
       }
       if (fuelDisplay) fuelDisplay.textContent = `${selectedPct}%`;
     };

@@ -79,7 +79,7 @@ describe("theme.js – THEME palette completeness", () => {
   });
 
   it("has all 4 weapon type colors", () => {
-    const types = ["macroCannon", "plasmaCannon", "lanceBattery", "pointDefense"];
+    const types = ["ammo", "heat", "power", "none"];
     for (const t of types) {
       assertEqual(Array.isArray(THEME.weaponTypes[t]), true, `Missing weapon type: ${t}`);
     }

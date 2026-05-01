@@ -118,7 +118,7 @@ export function buildOrdnanceContext(sys, opts = {}) {
 
   // Auxiliary Power (shared with Enginseer, displayed on Ordnance Master bar)
   const auxPower    = sys.resources?.enginseer?.auxiliaryPower ?? 0;
-  const auxPowerMax = opts.reactorStats?.auxPowerCapacity ?? 40;
+  const auxPowerMax = opts.reactorStats?.auxPowerCapacity ?? 0;
   const auxPowerPct = auxPowerMax > 0 ? Math.min(100, Math.round((auxPower / auxPowerMax) * 100)) : 0;
 
   // Both percentages are relative to the ORIGINAL component max so they tile without overlap

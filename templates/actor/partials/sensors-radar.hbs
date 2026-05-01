@@ -1,0 +1,31 @@
+{{!-- Sensors: Auspex Radar --}}
+<div class="sheet-list imsc-radar-section">
+    <div class="list-header row-content">
+        <div class="list-name">{{localize "IMSC.Sensors.AuspexRadar"}}</div>
+    </div>
+    <div class="list-content">
+        <div class="imsc-radar-toolbar">
+            <button class="imsc-bearing-toggle-btn {{#if sensorsCtx.isTrueBearing}}active{{/if}}" data-action="toggleBearing"
+                    data-tooltip="{{localize 'IMSC.Sensors.BearingToggle'}}">
+                <i class="fa-solid fa-compass-drafting"></i>
+                {{#if sensorsCtx.isTrueBearing}}TRUE{{else}}REL{{/if}}
+            </button>
+            <button class="imsc-bearing-toggle-btn imsc-popout-btn" data-action="popOutRadar"
+                    data-tooltip="{{localize 'IMSC.Sensors.PopOutRadar'}}">
+                <i class="fa-solid fa-up-right-from-square"></i>
+            </button>
+        </div>
+        <div class="imsc-radar-wrap">
+            <canvas data-auspex-radar></canvas>
+            {{!-- Popup injected by AuspexRadar.js on blip click --}}
+        </div>
+        <div class="imsc-radar-toolbar-bottom">
+            <div class="imsc-radar-zoom-wrap" data-tooltip="Radar scale (scroll wheel on radar also works)">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="range" class="imsc-radar-zoom" min="5" max="{{sensorsCtx.maxScanRange}}" step="1"
+                       value="{{sensorsCtx.radarScale}}" />
+                <span class="imsc-radar-zoom-label">{{sensorsCtx.radarScale}}</span>
+            </div>
+        </div>
+    </div>
+</div>

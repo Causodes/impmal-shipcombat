@@ -1,0 +1,116 @@
+{{!-- Enginseer: Core Distribution (overclock/dispatch/allocation/vent) --}}
+<div class="sheet-list imsc-role-section">
+
+    {{#unless engineerCtx.coresSelected}}
+    <div class="imsc-section-overlay{{#if (imscOr engineerCtx.ventLocked (imscEq engineerCtx.actionsRemaining 0))}} imsc-section-overlay--taken{{/if}}">
+        {{#if engineerCtx.ventLocked}}
+            <div class="imsc-overlay-lock-indicator">
+                <i class="fa-solid fa-lock fa-lg"></i>
+                <span>{{localize "IMSC.Enginseer.VentLockedDesc"}}</span>
+            </div>
+        {{else if (imscEq engineerCtx.actionsRemaining 0)}}
+            <div class="imsc-overlay-lock-indicator">
+                <i class="fa-solid fa-ban fa-lg"></i>
+                <span>{{localize "IMSC.Enginseer.ActionTakenDesc"}}</span>
+            </div>
+        {{else}}
+        <button class="imsc-section-overlay-btn" data-action="selectAction" data-action-type="cores">
+            {{localize "IMSC.Enginseer.CoreDistribution"}}
+        </button>
+        {{/if}}
+    </div>
+    {{/unless}}
+
+    <div class="list-header row-content">
+        <div class="list-name">
+            {{localize "IMSC.Enginseer.CoreDistribution"}}
+            {{#if engineerCtx.ventLocked}}
+            <span class="imsc-muted">  -  {{localize "IMSC.Enginseer.VentLocked"}}</span>
+            {{/if}}
+        </div>
+    </div>
+    <div class="list-content imsc-helm-panel">
+
+        <div>
+            <p class="imsc-helm-section-label" style="text-align:center; margin:0 0 0.2rem">{{localize "IMSC.Label.PowerCores"}}</p>
+            <div class="imsc-core-pips" style="justify-content:center">
+                {{#each powerCorePips}}
+                    <div class="imsc-core-pip imsc-core-pip--{{state}}" data-pip-state="{{state}}"></div>
+                {{/each}}
+            </div>
+        </div>
+        {{#if engineerCtx.coresExhausted}}
+            <div style="text-align:center"><span class="imsc-muted" style="font-size:0.7rem">{{localize "IMSC.Enginseer.CoreExhausted"}}</span></div>
+        {{/if}}
+
+        <div class="imsc-core-action-row">
+            <button class="imsc-eng-btn imsc-overclock-btn" data-action="overclock"
+                    {{#unless engineerCtx.canOverclock}}disabled{{/unless}}
+                    data-tooltip="{{localize 'IMSC.Tooltip.Overclock'}} ({{engineerCtx.overclockTier}} {{engineerCtx.overclockModifier}})">
+                {{localize "IMSC.Action.Overclock"}}
+            </button>
+            <button class="imsc-eng-btn imsc-dispatch-btn" data-action="dispatchCores"
+                    {{#unless engineerCtx.hasStaged}}disabled{{/unless}}
+                    data-tooltip="{{localize 'IMSC.Tooltip.DispatchCores'}}">
+                {{localize "IMSC.Enginseer.DispatchCores"}}
+            </button>
+        </div>
+
+        <div class="imsc-core-alloc-table">
+            <div class="imsc-core-alloc-row imsc-core-alloc-row--shield">
+                <span class="imsc-core-alloc-name">{{localize "IMSC.Enginseer.ShieldCommitment"}}</span>
+                <span class="imsc-core-alloc-detail imsc-muted">{{localize "IMSC.Enginseer.ProjectedShieldPool"}}: <strong class="imsc-shieldpool-active">{{engineerCtx.projectedShieldPool}}</strong> / {{engineerCtx.maxVoidFlux}}</span>
+                <div class="imsc-core-alloc-ctrl">
+                    <span class="imsc-core-flux-label imsc-muted">{{engineerCtx.shieldStrengthPerCore}} {{localize "IMSC.Enginseer.FluxPerCore"}}</span>
+                    <button class="imsc-alloc-btn" data-action="uncommitShieldCore">&minus;</button>
+                    <span class="imsc-core-alloc-count">{{engineerCtx.stagedShieldCores}}</span>
+                    <button class="imsc-alloc-btn" data-action="commitShieldCore">+</button>
+                </div>
+            </div>
+            <div class="imsc-core-alloc-row imsc-core-alloc-row--aux">
+                <span class="imsc-core-alloc-name">{{localize "IMSC.Enginseer.AuxPowerAlloc"}}</span>
+                <span class="imsc-core-alloc-detail imsc-muted">{{localize "IMSC.Enginseer.ProjectedAuxPower"}}: <strong>+{{engineerCtx.projectedAuxGain}}</strong></span>
+                <div class="imsc-core-alloc-ctrl">
+                    <span class="imsc-core-flux-label imsc-muted">{{engineerCtx.reserveMultiplier}} {{localize "IMSC.Enginseer.AuxPerCore"}}</span>
+                    <button class="imsc-alloc-btn" data-action="uncommitAuxCore">&minus;</button>
+                    <span class="imsc-core-alloc-count">{{engineerCtx.stagedAuxCores}}</span>
+                    <button class="imsc-alloc-btn" data-action="commitAuxCore">+</button>
+                </div>
+            </div>
+            {{#each roles}}
+            {{#unless (imscEq id "enginseer")}}
+            <div class="imsc-core-alloc-row">
+                <span class="imsc-core-alloc-name">{{labelLocalized}}</span>
+                <span class="imsc-core-alloc-detail imsc-muted">{{#if assignedActor}}{{assignedActor.name}}{{else}}&mdash;{{/if}}</span>
+                <div class="imsc-core-alloc-ctrl">
+                    {{#if hasCoreAssigned}}
+                        <span class="imsc-core-btn--assigned"><i class="fa-solid fa-check"></i></span>
+                    {{else}}
+                        <a class="imsc-core-btn {{#if hasCoreStaged}}imsc-core-btn--staged{{/if}}"
+                           data-action="toggleCore" data-role-id="{{id}}"
+                           data-tooltip="{{localize 'IMSC.Tooltip.ToggleCore'}}">
+                            <i class="fa-solid fa-bolt"></i>
+                        </a>
+                    {{/if}}
+                </div>
+            </div>
+            {{/unless}}
+            {{/each}}
+        </div>
+
+        <div style="text-align:center; margin-top:0.25rem">
+            {{#if engineerCtx.ventPending}}
+            <button class="imsc-eng-btn imsc-action-danger imsc-action-vent-fired" disabled style="max-width:20rem; margin:0 auto">
+                {{localize "IMSC.Enginseer.VentFired"}}
+            </button>
+            {{else}}
+            <button class="imsc-eng-btn imsc-action-danger" data-action="emergencyVent"
+                    data-tooltip="{{localize 'IMSC.Enginseer.EmergencyVentDesc'}}" style="max-width:20rem; margin:0 auto"
+                    {{#unless engineerCtx.heat}}disabled{{/unless}}>
+                {{localize "IMSC.Enginseer.EmergencyVent"}}
+            </button>
+            {{/if}}
+        </div>
+
+    </div>
+</div>

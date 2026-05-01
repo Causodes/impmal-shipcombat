@@ -102,7 +102,7 @@ function _buoyDiscount(sys, baseCost) {
 
 function _getAuxPowerCapacity(shipActor) {
   const reactor = shipActor?.items?.find(i => i.type === `${MODULE_ID}.component` && i.system.slot === "reactor");
-  return reactor?.system?.bankCapacity ?? 40;
+  return reactor?.system?.bankCapacity ?? 0;
 }
 
 // ── Action handlers (static, `this` = sheet instance) ────────────────────────
@@ -262,7 +262,7 @@ export function buildSensorsContext(sys, opts = {}) {
   const bdaTargetTokenId   = sys.resources?.sensors?.bdaTargetTokenId ?? null;
   const fireCorrection = sys.resources?.sensors?.fireCorrection ?? null;
 
-  const apMax = reactorStats?.auxPowerCapacity ?? 40;
+  const apMax = reactorStats?.auxPowerCapacity ?? 0;
   const apPct = apMax > 0 ? Math.min(100, Math.round((ap / apMax) * 100)) : 0;
 
   // Build lock-action list with affordability + tier prereq status

@@ -61,16 +61,16 @@ describe("critSeverityFromRoll", () => {
 // ── buildCaptainDeck ──────────────────────────────────────────────────────────
 
 describe("buildCaptainDeck – total size", () => {
-  it("produces exactly 22 cards", () => {
+  it("produces exactly 23 cards", () => {
     const deck = buildCaptainDeck();
-    assertEqual(deck.length, 22, `Expected 22 cards, got ${deck.length}`);
+    assertEqual(deck.length, 23, `Expected 23 cards, got ${deck.length}`);
   });
 });
 
 describe("buildCaptainDeck – card counts", () => {
   const expectedCopies = {
     emergencyReserves: 2,
-    evasiveRoll:       2,
+    hardenShields:     2,
     standDown:         2,
   };
 

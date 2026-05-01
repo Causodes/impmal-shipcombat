@@ -36,12 +36,12 @@ function _getOrdnanceBayCaps(shipActor) {
 
 function _getHeatCapacity(shipActor) {
   const reactor = shipActor?.items?.find(i => i.type === `${MODULE_ID}.component` && i.system.slot === "reactor");
-  return reactor?.system?.heatCapacity ?? 10;
+  return reactor?.system?.heatCapacity ?? 0;
 }
 
 function _getAuxPowerCapacity(shipActor) {
   const reactor = shipActor?.items?.find(i => i.type === `${MODULE_ID}.component` && i.system.slot === "reactor");
-  return reactor?.system?.bankCapacity ?? 40;
+  return reactor?.system?.bankCapacity ?? 0;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -407,9 +407,9 @@ export function buildGunnerContext(sys, opts = {}) {
   const gunner = sys.resources?.gunner ?? {};
 
   const { reactorStats, ordnanceBayStats } = opts;
-  const heatMax   = reactorStats?.heatCapacity ?? 10;
-  const ammoMax   = ordnanceBayStats?.ammoCapacity ?? 20;
-  const powerMax = reactorStats?.auxPowerCapacity ?? 40;
+  const heatMax   = reactorStats?.heatCapacity ?? 0;
+  const ammoMax   = ordnanceBayStats?.ammoCapacity ?? 0;
+  const powerMax = reactorStats?.auxPowerCapacity ?? 0;
 
   const ordnanceSL      = gunner.ordnanceSL ?? 0;
   const allocAccuracy   = gunner.allocAccuracy ?? 0;

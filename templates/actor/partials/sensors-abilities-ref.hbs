@@ -1,0 +1,53 @@
+{{!-- Sensors: Augur Abilities Reference Table --}}
+<div class="sheet-list imsc-augur-abilities-section">
+    <div class="list-header row-content">
+        <div class="list-name">{{localize "IMSC.Sensors.AbilitiesReference"}}</div>
+    </div>
+    <div class="list-content">
+        <table class="imsc-augur-abilities-table">
+            <thead>
+                <tr>
+                    <th class="imsc-abl-name">{{localize "IMSC.Sensors.Ability"}}</th>
+                    <th class="imsc-abl-cost">{{localize "IMSC.Sensors.Cost"}}</th>
+                    <th class="imsc-abl-desc">{{localize "IMSC.Sensors.Description"}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="imsc-abl-category-row"><td colspan="3">{{localize "IMSC.Sensors.LockUpgrades"}}</td></tr>
+                <tr>
+                    <td class="imsc-abl-name"><i class="fa-solid fa-satellite-dish {{sensorsCtx.lockTier0.tierClass}}"></i> {{sensorsCtx.lockTier0.labelLocalized}}</td>
+                    <td class="imsc-abl-cost">{{sensorsCtx.lockTier0.cost}} AP</td>
+                    <td class="imsc-abl-desc">
+                        {{sensorsCtx.lockTier0.descLocalized}}
+                    </td>
+                </tr>
+                {{#each sensorsCtx.lockActions}}
+                <tr>
+                    <td class="imsc-abl-name"><i class="fa-solid fa-satellite-dish {{tierClass}}"></i> {{labelLocalized}}</td>
+                    <td class="imsc-abl-cost">{{cost}} AP</td>
+                    <td class="imsc-abl-desc">
+                        {{descLocalized}}
+                        <div class="imsc-abl-meta">{{localize "IMSC.Sensors.DecayRounds" rounds=decayRounds}} {{localize "IMSC.Sensors.GunnerConsumesLock"}}</div>
+                    </td>
+                </tr>
+                {{/each}}
+                <tr class="imsc-abl-category-row"><td colspan="3">{{localize "IMSC.Sensors.UtilityActions"}}</td></tr>
+                {{#each sensorsCtx.utilityActions}}
+                <tr>
+                    <td class="imsc-abl-name"><i class="fa-solid fa-wrench"></i> {{labelLocalized}}</td>
+                    <td class="imsc-abl-cost">{{cost}} AP</td>
+                    <td class="imsc-abl-desc">{{descLocalized}}</td>
+                </tr>
+                {{/each}}
+                <tr class="imsc-abl-category-row"><td colspan="3">{{localize "IMSC.Sensors.CoreAbilities"}}</td></tr>
+                {{#each sensorsCtx.coreActions}}
+                <tr>
+                    <td class="imsc-abl-name"><i class="fa-solid fa-bolt"></i> {{labelLocalized}}</td>
+                    <td class="imsc-abl-cost">{{ap}} AP</td>
+                    <td class="imsc-abl-desc">{{descLocalized}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>

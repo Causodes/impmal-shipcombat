@@ -1760,7 +1760,7 @@ class AuspexPopOut extends Application {
     return foundry.utils.mergeObject(super.defaultOptions, {
       id:        "imsc-auspex-popout",
       title:     "Auspex Radar",
-      template:  `modules/${MODULE_ID}/templates/actor/auspex-popout.hbs`,
+      template:  `modules/${MODULE_ID}/templates/actor/partials/sensors-radar-popout.hbs`,
       width:     620,
       height:    660,
       resizable: true,

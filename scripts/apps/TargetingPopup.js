@@ -464,6 +464,22 @@ export class TargetingPopup extends foundry.applications.api.HandlebarsApplicati
   _onRender(context, options) {
     super._onRender?.(context, options);
 
+    // ── Live accuracy refresh ────────────────────────────────────────────────
+    // Re-render when the ship actor (state, SL allocation, stance, etc.) or any
+    // token (position / rotation change affects zone and hit quadrant) changes.
+    // Store hook IDs so we can deregister on close.
+    if (!this._liveHooks) {
+      const _rerender = foundry.utils.debounce(() => {
+        if (this.rendered) this.render();
+      }, 100);
+      this._liveHooks = [
+        Hooks.on("updateActor",  _rerender),
+        Hooks.on("updateToken",  _rerender),
+        Hooks.on("refreshToken", _rerender),
+      ];
+      this._rerenderFn = _rerender;
+    }
+
     // Wire up fire buttons
     this.element.querySelectorAll("[data-action='confirmFire']").forEach(btn => {
       btn.addEventListener("click", ev => {
@@ -558,9 +574,16 @@ export class TargetingPopup extends foundry.applications.api.HandlebarsApplicati
     this._arrowContainer = null;
   }
 
-  /** Clean up arrow on close. */
+  /** Clean up arrow and live hooks on close. */
   _onClose(options) {
     this._hideArrow();
+    if (this._liveHooks) {
+      Hooks.off("updateActor",  this._rerenderFn);
+      Hooks.off("updateToken",  this._rerenderFn);
+      Hooks.off("refreshToken", this._rerenderFn);
+      this._liveHooks = null;
+      this._rerenderFn = null;
+    }
     super._onClose?.(options);
   }
 

@@ -21,8 +21,8 @@ describe("VoidshipComponentModel – resourceForType", () => {
     assertEqual(VoidshipComponentModel.resourceForType("lanceBattery"), "power");
   });
 
-  it("pointDefense → shots", () => {
-    assertEqual(VoidshipComponentModel.resourceForType("pointDefense"), "shots");
+  it("pointDefense → none", () => {
+    assertEqual(VoidshipComponentModel.resourceForType("pointDefense"), "none");
   });
 
   it("unknown type falls back to ammo", () => {
@@ -90,9 +90,9 @@ describe("VoidshipComponentModel – Schema shape", () => {
     assert(typeof schema === "object", "Schema should be object");
   });
 
-  it("schema has weaponType field", () => {
+  it("schema has resourceType field", () => {
     const schema = VoidshipComponentModel.defineSchema();
-    assert(schema.weaponType !== undefined, "Should have weaponType");
+    assert(schema.resourceType !== undefined, "Should have resourceType");
   });
 
   it("schema has slot field", () => {

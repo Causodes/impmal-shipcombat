@@ -85,12 +85,12 @@ export class NpcShipSheet extends IMActorSheet {
   };
 
   static PARTS = {
-    header:   { template: `modules/${MODULE_ID}/templates/actor/npc-ship-header.hbs`,    classes: ["vehicle-header"], scrollable: [""] },
+    header:   { template: `modules/${MODULE_ID}/templates/actor/partials/npc-ship-header.hbs`,    classes: ["vehicle-header"], scrollable: [""] },
     tabs:     { template: "templates/generic/tab-navigation.hbs" },
-    main:     { template: `modules/${MODULE_ID}/templates/actor/npc-ship-body.hbs`,      scrollable: [""] },
-    movement: { template: `modules/${MODULE_ID}/templates/actor/npc-ship-movement.hbs`,  scrollable: [""] },
-    gunner:   { template: `modules/${MODULE_ID}/templates/actor/npc-ship-gunner.hbs`,    scrollable: [""] },
-    ordnance: { template: `modules/${MODULE_ID}/templates/actor/npc-ship-ordnance.hbs`,  scrollable: [""] },
+    main:     { template: `modules/${MODULE_ID}/templates/actor/tabs/npc/npc-ship-body.hbs`,      scrollable: [""] },
+    movement: { template: `modules/${MODULE_ID}/templates/actor/tabs/npc/npc-ship-movement.hbs`,  scrollable: [""] },
+    gunner:   { template: `modules/${MODULE_ID}/templates/actor/tabs/npc/npc-ship-gunner.hbs`,    scrollable: [""] },
+    ordnance: { template: `modules/${MODULE_ID}/templates/actor/tabs/npc/npc-ship-ordnance.hbs`,  scrollable: [""] },
     // effects tab suppressed  -  kept for future use
     // effects:  { template: `modules/${MODULE_ID}/templates/actor/npc-ship-effects.hbs`,   scrollable: [""] },
   };

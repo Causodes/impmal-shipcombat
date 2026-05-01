@@ -1,0 +1,23 @@
+{{!-- Pilot: Status Bar (aux power) --}}
+<div class="sheet-list imsc-role-status-bar">
+    <div class="list-header row-content">
+        <div class="list-name">{{localize "IMSC.Helm.AuxPowerTitle"}}</div>
+        {{#with (lookup roles "pilot")}}
+        {{> "modules/impmal-shipcombat/templates/actor/partials/payload-status-badge.hbs"
+            payloadId=payloadId payloadLabel=payloadLabel payloadDesc=payloadDesc}}
+        {{> "modules/impmal-shipcombat/templates/actor/partials/core-status-banner.hbs"
+            coreCount=coreCount coreActionsPlayedLabels=@root.helm.coreActionsPlayedLabels hasCoreStaged=hasCoreStaged}}
+        {{/with}}
+    </div>
+    <div class="list-content">
+        <div class="imsc-role-status-panel">
+            <div class="imsc-resource-bar-row">
+                <span class="imsc-resource-bar-label">{{localize "IMSC.Enginseer.CoreBank"}}</span>
+                <div class="imsc-resource-bar-track imsc-resource-bar-track--plasma">
+                    <div class="imsc-resource-bar-fill" style="width: {{helm.auxPowerPct}}%"></div>
+                </div>
+                <span class="imsc-resource-bar-value imsc-resource-bar-value--plasma">{{helm.auxiliaryPower}}/{{helm.auxPowerCapacity}}</span>
+            </div>
+        </div>
+    </div>
+</div>

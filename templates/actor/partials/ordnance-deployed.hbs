@@ -1,0 +1,60 @@
+{{!-- Ordnance: Deployed Ordnance Panel --}}
+<div class="sheet-list imsc-deployed-ordnance">
+    <div class="list-header row-content">
+        <div class="list-name">{{localize "IMSC.Ordnance.DeployedOrdnance"}} ({{ordnanceCtx.deployedCount}})</div>
+    </div>
+    <div class="list-content">
+        {{#unless ordnanceCtx.deployedCount}}
+        <div class="imsc-deployed-empty">
+            {{localize "IMSC.Ordnance.NoneDeployed"}}
+        </div>
+        {{/unless}}
+
+        {{!-- Torpedoes --}}
+        {{#each ordnanceCtx.deployedTorpedoes}}
+        <div class="imsc-deployed-row imsc-deployed--torpedo {{#if turnComplete}}imsc-deployed--done{{/if}}"
+             data-token-id="{{tokenId}}">
+            <img src="{{img}}" class="imsc-deployed-icon" />
+            <span class="imsc-deployed-name">{{name}}</span>
+            <span class="imsc-deployed-type"><i class="fa-solid fa-rocket"></i></span>
+            <div class="imsc-deployed-controls">
+                <button data-action="panToOrdnance" data-token-id="{{tokenId}}"
+                        data-tooltip="{{localize 'IMSC.Ordnance.PanTo'}}">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+                <button data-action="markOrdnanceDone" data-token-id="{{tokenId}}"
+                        class="{{#if turnComplete}}active{{/if}}"
+                        data-tooltip="{{localize 'IMSC.Ordnance.MarkDone'}}">
+                    <i class="fa-solid fa-check"></i>
+                </button>
+            </div>
+        </div>
+        {{/each}}
+
+        {{!-- Strike Craft --}}
+        {{#each ordnanceCtx.deployedCraft}}
+        <div class="imsc-deployed-row imsc-deployed--craft {{#if turnComplete}}imsc-deployed--done{{/if}}"
+             data-token-id="{{tokenId}}">
+            <img src="{{img}}" class="imsc-deployed-icon" />
+            <span class="imsc-deployed-name">{{name}}</span>
+            <span class="imsc-deployed-type">
+                <i class="fa-solid fa-jet-fighter-up"></i>
+            </span>
+            <div class="imsc-deployed-hull">
+                <span>{{hull.value}}/{{hull.max}}</span>
+            </div>
+            <div class="imsc-deployed-controls">
+                <button data-action="panToOrdnance" data-token-id="{{tokenId}}"
+                        data-tooltip="{{localize 'IMSC.Ordnance.PanTo'}}">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+                <button data-action="markOrdnanceDone" data-token-id="{{tokenId}}"
+                        class="{{#if turnComplete}}active{{/if}}"
+                        data-tooltip="{{localize 'IMSC.Ordnance.MarkDone'}}">
+                    <i class="fa-solid fa-check"></i>
+                </button>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</div>

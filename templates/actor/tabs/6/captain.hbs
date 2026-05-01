@@ -1,0 +1,17 @@
+{{!-- tabs/6/captain.hbs — Captain's station tab (6-player) --}}
+<section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
+
+    {{> "modules/impmal-shipcombat/templates/actor/partials/captain-claim-prompt.hbs"}}
+
+    {{#if (or isGM (lookup (lookup roles "captain") "isMyRole"))}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/captain-status-bar.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/captain-leadership.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/captain-conditions.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/captain-core-actions.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/captain-hand.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/captain-active-orders.hbs"}}
+    {{/if}}
+
+    {{> 'modules/impmal-shipcombat/templates/actor/partials/complete-turn.hbs' tabRoleId="captain" turnDone=(lookup @root.sys.turnDone "captain")}}
+
+</section>

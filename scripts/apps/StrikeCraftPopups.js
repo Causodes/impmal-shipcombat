@@ -239,6 +239,19 @@ export class StrikeCraftAttackPopup extends foundry.applications.api.HandlebarsA
   _onRender(context, options) {
     super._onRender?.(context, options);
 
+    // ── Live accuracy refresh ──────────────────────────────────────────────
+    if (!this._liveHooks) {
+      const _rerender = foundry.utils.debounce(() => {
+        if (this.rendered) this.render();
+      }, 100);
+      this._liveHooks = [
+        Hooks.on("updateActor",  _rerender),
+        Hooks.on("updateToken",  _rerender),
+        Hooks.on("refreshToken", _rerender),
+      ];
+      this._rerenderFn = _rerender;
+    }
+
     this.element.querySelectorAll("[data-action='confirmAttack']").forEach(btn => {
       btn.addEventListener("click", ev => {
         ev.preventDefault();
@@ -275,6 +288,13 @@ export class StrikeCraftAttackPopup extends foundry.applications.api.HandlebarsA
 
   _onClose(options) {
     this._hideArrow();
+    if (this._liveHooks) {
+      Hooks.off("updateActor",  this._rerenderFn);
+      Hooks.off("updateToken",  this._rerenderFn);
+      Hooks.off("refreshToken", this._rerenderFn);
+      this._liveHooks = null;
+      this._rerenderFn = null;
+    }
     super._onClose?.(options);
   }
 

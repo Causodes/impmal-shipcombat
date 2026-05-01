@@ -1,0 +1,16 @@
+{{!-- tabs/6/sensors.hbs — Sensors Operator's station tab --}}
+<section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
+
+    {{> "modules/impmal-shipcombat/templates/actor/partials/sensors-claim-prompt.hbs"}}
+
+    {{#if (or isGM (lookup (lookup roles "sensors") "isMyRole"))}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/sensors-captain-boost.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/sensors-status-bar.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/sensors-radar.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/sensors-bda.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/sensors-abilities-ref.hbs"}}
+    {{/if}}
+
+    {{> 'modules/impmal-shipcombat/templates/actor/partials/complete-turn.hbs' tabRoleId="sensors" turnDone=(lookup @root.sys.turnDone "sensors")}}
+
+</section>

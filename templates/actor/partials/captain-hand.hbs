@@ -1,0 +1,117 @@
+{{!-- Captain: Card Hand (grid + deck footer) --}}
+<div class="sheet-list">
+    <div class="list-header row-content">
+        <div class="list-name">
+            {{localize "IMSC.Captain.Hand"}}
+            <span class="imsc-hand-count">({{captainCtx.handCount}}/6)</span>
+        </div>
+        {{#if captainCtx.handCapBonus}}
+        <span class="imsc-hand-cap-note" data-tooltip="{{localize 'IMSC.Captain.HandCapNoteTooltip'}}">
+            {{localize "IMSC.Captain.HandCapNote"}}
+        </span>
+        {{/if}}
+    </div>
+    <div class="list-content">
+        {{#if captainCtx.hand.length}}
+        <div class="imsc-captain-hand-grid">
+        {{#each captainCtx.hand}}
+        <div class="imsc-captain-card imsc-captain-card--{{category}}" data-card-id="{{cardId}}" draggable="true">
+            <div class="imsc-captain-card-header">
+                <span class="imsc-captain-card-cat">{{catLabel}}</span>
+                {{#if targetRole}}
+                <span class="imsc-captain-card-target" data-tooltip="{{targetRoleLabel}}">
+                    <i class="{{targetRoleIcon}}"></i>
+                </span>
+                {{/if}}
+                {{#if setsStance}}
+                <span class="imsc-captain-card-stance-dot"
+                      data-tooltip="{{localize (concat 'IMSC.Captain.Stance.' setsStance)}}">
+                    <i class="fa-solid fa-flag"></i>
+                </span>
+                {{/if}}
+            </div>
+            <div class="imsc-captain-card-name">
+                <i class="{{icon}}"></i> {{label}}
+            </div>
+            <div class="imsc-captain-card-desc">{{desc}}</div>
+            {{#if setsStance}}
+            <div class="imsc-captain-card-stance-footer">
+                <i class="fa-solid fa-flag"></i>
+                {{localize (concat "IMSC.Captain.Stance." setsStance)}}
+            </div>
+            {{/if}}
+            <div class="imsc-captain-card-actions">
+                <a class="imsc-captain-card-action imsc-captain-card-action--reorder"
+                   data-action="captainReorderCard" data-direction="up"
+                   data-tooltip="{{localize 'IMSC.Captain.MoveCardUp'}}">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </a>
+                <a class="imsc-captain-card-action imsc-captain-card-action--reorder"
+                   data-action="captainReorderCard" data-direction="down"
+                   data-tooltip="{{localize 'IMSC.Captain.MoveCardDown'}}">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </a>
+                <a class="imsc-captain-card-action" data-action="captainPlayCard" data-card-id="{{cardId}}"
+                   data-tooltip="{{localize 'IMSC.Captain.PlayCard'}}">
+                    <i class="fa-solid fa-play"></i> {{localize "IMSC.Captain.PlayCard"}}
+                </a>
+                <a class="imsc-captain-card-action imsc-captain-card-action--discard"
+                   data-action="captainDiscardCard" data-card-id="{{cardId}}"
+                   data-tooltip="{{localize 'IMSC.Captain.DiscardCard'}}">
+                    <i class="fa-solid fa-trash-can"></i>
+                </a>
+                {{#unless @root.captainCtx.mulliganUsed}}
+                <a class="imsc-captain-card-action imsc-captain-card-action--mulligan"
+                   data-action="captainMulligan" data-card-id="{{cardId}}"
+                   data-tooltip="{{localize 'IMSC.Captain.Mulligan'}}">
+                    <i class="fa-solid fa-rotate"></i>
+                </a>
+                {{/unless}}
+            </div>
+        </div>
+        {{/each}}
+        </div>
+        {{else}}
+        <div class="list-row">
+            <div class="row-content">
+                <div class="list-name imsc-empty-label">
+                    {{localize "IMSC.Captain.HandEmpty"}}
+                </div>
+            </div>
+        </div>
+        {{/if}}
+    </div>
+    {{!-- Deck / Discard footer --}}
+    <div class="list-footer row-content imsc-deck-footer">
+        <div class="imsc-deck-footer-piles">
+            <span class="imsc-pile-count">
+                <i class="fa-solid fa-layer-group"></i>
+                {{localize "IMSC.Captain.DrawPile"}}: {{captainCtx.drawPileCount}}
+            </span>
+            <span class="imsc-pile-count">
+                <i class="fa-solid fa-trash-can"></i>
+                {{localize "IMSC.Captain.DiscardPile"}}: {{captainCtx.discardPileCount}}
+            </span>
+        </div>
+        <div class="imsc-deck-footer-actions">
+            <button type="button"
+                    data-action="captainFullRedraw"
+                    class="imsc-full-redraw-btn"
+                    {{#unless captainCtx.canFullRedraw}}disabled{{/unless}}
+                    data-tooltip="{{localize 'IMSC.Captain.FullRedrawHint'}}">
+                <i class="fa-solid fa-arrows-rotate"></i>
+                {{localize "IMSC.Captain.FullRedraw"}}
+            </button>
+            {{#if captainCtx.canDraw}}
+            <span class="imsc-draw-row">
+                <input type="number" class="imsc-draw-count-input" min="1" max="{{captainCtx.drawCount}}"
+                       value="{{captainCtx.drawCount}}" data-max-draw="{{captainCtx.drawCount}}">
+                <button type="button" data-action="captainDraw"
+                        data-tooltip="{{localize 'IMSC.Captain.DrawCard'}} ({{localize 'IMSC.Captain.DrawMax'}}: {{captainCtx.drawCount}})">
+                    <i class="fa-solid fa-hand"></i> {{localize "IMSC.Captain.DrawCard"}}
+                </button>
+            </span>
+            {{/if}}
+        </div>
+    </div>
+</div>

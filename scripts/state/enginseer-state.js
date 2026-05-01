@@ -6,13 +6,11 @@
  * Inside each function, `this` refers to the ShipCombatState class itself.
  */
 
-import { POWER_CORES_MAX } from "../constants.js";
-
 // ── Power Cores ───────────────────────────────────────────────────────────
 
 export async function assignPowerCore(targetUserId) {
   const data = this.getData();
-  const available = data.resources?.enginseer?.powerCores ?? POWER_CORES_MAX;
+  const available = data.resources?.enginseer?.powerCores ?? 0;
   if (available <= 0) {
     ui.notifications.warn(game.i18n.localize("IMSC.Warning.NoPowerCores"));
     return;
@@ -43,7 +41,18 @@ export async function stagePowerCore(targetRoleId) {
     ui.notifications.warn(game.i18n.localize("IMSC.Warning.PowerFluctuation"));
     return;
   }
-  const available = data.resources?.enginseer?.powerCores ?? POWER_CORES_MAX;
+  // Derive available from reactor max minus currently distributed cores so the
+  // guard stays accurate even if the reactor was changed mid-combat.
+  const reactorStats    = this.getReactorStats();
+  const _staged         = data.resources?.enginseer?.stagedCores ?? {};
+  const _stagedCount    = Object.values(_staged).filter(Boolean).length;
+  const _distributed    = _stagedCount
+    + (data.resources?.enginseer?.stagedShieldCores ?? 0)
+    + (data.resources?.enginseer?.stagedAuxCores    ?? 0)
+    + (data.resources?.enginseer?.committedAuxCores ?? 0)
+    + (data.shieldPool?.committed ?? 0)
+    + Object.values(data.assignedCores ?? {}).filter(Boolean).length;
+  const available = Math.max(0, reactorStats.coreOutput - _distributed);
   if (available <= 0) {
     ui.notifications.warn(game.i18n.localize("IMSC.Warning.NoPowerCores"));
     return;
@@ -214,7 +223,7 @@ export async function repairHull(plasmaSpent, sl) {
 
   const heat = sys.resources?.enginseer?.heat ?? 0;
   const reactor    = ShipCombatState.getReactorStats(this.ship);
-  const heatMax    = reactor.heatCapacity ?? 10;
+  const heatMax    = reactor.heatCapacity;
   const heatRoom   = Math.max(0, heatMax - heat);
   // Repair is capped to available heat budget (1 heat per HP) and existing damage
   const repairAttempted = Math.max(0, plasmaSpent + sl);
@@ -246,7 +255,7 @@ export async function fluxToCharge() {
     return;
   }
   const ap = sys.resources?.enginseer?.auxiliaryPower ?? 0;
-  const apCap = this.getReactorStats()?.auxPowerCapacity ?? 40;
+  const apCap = this.getReactorStats().auxPowerCapacity;
   // AP Shutdown (Core Systems High): AP cannot increase
   const newAP = this.getData?.()?.conditions?.coreSystems?.tier === "high" ? ap : Math.min(apCap, ap + 1);
   await this.update({

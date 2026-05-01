@@ -48,14 +48,14 @@ export class StrikeCraftSheet extends IMActorSheet {
   };
 
   static PARTS = {
-    header: { template: `modules/${MODULE_ID}/templates/actor/strike-craft-header.hbs`, classes: ["vehicle-header"] },
+    header: { template: `modules/${MODULE_ID}/templates/actor/sheets/strike-craft-header.hbs`, classes: ["vehicle-header"] },
     tabs:   { template: "templates/generic/tab-navigation.hbs" },
     main: {
-      template: `modules/${MODULE_ID}/templates/actor/strike-craft-sheet.hbs`,
+      template: `modules/${MODULE_ID}/templates/actor/sheets/strike-craft-sheet.hbs`,
       scrollable: [""],
     },
     config: {
-      template: `modules/${MODULE_ID}/templates/actor/strike-craft-config.hbs`,
+      template: `modules/${MODULE_ID}/templates/actor/sheets/strike-craft-config.hbs`,
       scrollable: [""],
     },
   };
@@ -205,11 +205,14 @@ export class StrikeCraftSheet extends IMActorSheet {
       const ratio     = 100 / powerMax;
       const committed = thrustPct * ratio;
       const extra     = Math.max(0, selectedPct - thrustPct) * ratio;
-      const minmove   = (minMovePct / powerMax) * 100;
+      // Hide delimiter once slider passes min-move, redisplay if it moves back.
+      const effectiveMinmove = selectedPct >= minMovePct ? 0 : (minMovePct / powerMax) * 100;
       if (powerBarEl) {
         powerBarEl.style.setProperty("--committed", `${committed}%`);
         powerBarEl.style.setProperty("--extra",     `${extra}%`);
-        powerBarEl.style.setProperty("--minmove",   `${minmove}%`);
+        powerBarEl.style.setProperty("--minmove",   `${effectiveMinmove}%`);
+        const line = powerBarEl.querySelector(".imsc-power-minmove-line");
+        if (line) line.style.display = effectiveMinmove > 0 ? "" : "none";
       }
       if (fuelDisplay) fuelDisplay.textContent = `${selectedPct}%`;
     };

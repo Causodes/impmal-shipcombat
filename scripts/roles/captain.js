@@ -220,9 +220,9 @@ export function buildCaptainContext(sys, opts = {}) {
     shieldPool:     sys.shieldPool ?? { current: 0, committed: 0 },
     // Auxiliary Power (read-only display)
     auxiliaryPower:    sys.resources?.enginseer?.auxiliaryPower ?? 0,
-    auxPowerCapacity:  opts.reactorStats?.auxPowerCapacity ?? 40,
-    auxPowerPct:       (opts.reactorStats?.auxPowerCapacity ?? 40) > 0
-      ? Math.round(((sys.resources?.enginseer?.auxiliaryPower ?? 0) / (opts.reactorStats?.auxPowerCapacity ?? 40)) * 100)
+    auxPowerCapacity:  opts.reactorStats?.auxPowerCapacity ?? 0,
+    auxPowerPct:       (opts.reactorStats?.auxPowerCapacity ?? 0) > 0
+      ? Math.round(((sys.resources?.enginseer?.auxiliaryPower ?? 0) / (opts.reactorStats?.auxPowerCapacity ?? 0)) * 100)
       : 0,
   };
 }

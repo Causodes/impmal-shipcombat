@@ -7,7 +7,7 @@ const { describe, it, assertEqual, assert } = globalThis._test;
 // We can't import the full role file (it requires sheet context),
 // but we can test the exported heatColor and the heat tier logic.
 const { heatColor } = await import("../scripts/theme.js");
-const { POWER_CORES_MAX, DEFAULT_COMBAT_STATE } = await import("../scripts/constants.js");
+const { DEFAULT_COMBAT_STATE } = await import("../scripts/constants.js");
 
 describe("Enginseer – Heat system", () => {
 
@@ -16,11 +16,8 @@ describe("Enginseer – Heat system", () => {
     assertEqual(DEFAULT_COMBAT_STATE.resources.enginseer.heat, 0);
   });
 
-  it("default power cores matches POWER_CORES_MAX", () => {
-    assertEqual(
-      DEFAULT_COMBAT_STATE.resources.enginseer.powerCores,
-      POWER_CORES_MAX,
-    );
+  it("default powerCores is 0 (reactor not yet installed)", () => {
+    assertEqual(DEFAULT_COMBAT_STATE.resources.enginseer.powerCores, 0);
   });
 
   it("heatColor at 0% is green", () => {
@@ -93,8 +90,10 @@ describe("Enginseer – Core bank and shield commitment", () => {
     assertEqual(Object.keys(staged).length, 0, "Should start empty");
   });
 
-  it("default actionChoice is empty (no action chosen)", () => {
-    assertEqual(DEFAULT_COMBAT_STATE.resources.enginseer.actionChoice, "");
+  it("default actionChoices is empty array (no action chosen)", () => {
+    const choices = DEFAULT_COMBAT_STATE.resources.enginseer.actionChoices;
+    assert(Array.isArray(choices), "actionChoices should be an array");
+    assertEqual(choices.length, 0, "actionChoices should start empty");
   });
 
   it("heatCoresStaged defaults to 1", () => {

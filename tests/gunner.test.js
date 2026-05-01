@@ -148,20 +148,20 @@ describe("Gunner – Zone classification", () => {
 
 describe("Gunner – Weapon type colors from theme", () => {
 
-  it("macroCannon → 0xff4444", () => {
-    assertEqual(pixi(THEME.weaponTypes.macroCannon), 0xff4444);
+  it("ammo resource type (macro cannons) → 0xe67e22", () => {
+    assertEqual(pixi(THEME.weaponTypes.ammo), 0xe67e22);
   });
 
-  it("plasmaCannon → 0x4488ff", () => {
-    assertEqual(pixi(THEME.weaponTypes.plasmaCannon), 0x4488ff);
+  it("heat resource type (plasma) → 0xe74c3c", () => {
+    assertEqual(pixi(THEME.weaponTypes.heat), 0xe74c3c);
   });
 
-  it("lanceBattery → 0x44ff88", () => {
-    assertEqual(pixi(THEME.weaponTypes.lanceBattery), 0x44ff88);
+  it("power resource type (lances) → 0x2980b9", () => {
+    assertEqual(pixi(THEME.weaponTypes.power), 0x2980b9);
   });
 
-  it("pointDefense → 0xffaa44", () => {
-    assertEqual(pixi(THEME.weaponTypes.pointDefense), 0xffaa44);
+  it("none resource type (point defense) → 0xffaa44", () => {
+    assertEqual(pixi(THEME.weaponTypes.none), 0xffaa44);
   });
 });
 

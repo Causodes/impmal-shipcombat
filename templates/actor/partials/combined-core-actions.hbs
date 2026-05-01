@@ -1,0 +1,30 @@
+{{!-- Combined Core Actions: Captain + Ordnance Master (5-player Supreme Commander tab) --}}
+<div class="sheet-list imsc-captain-core-actions imsc-role-section">
+    <div class="list-header row-content">
+        <div class="list-name">{{localize "IMSC.Label.CoreActions"}}</div>
+    </div>
+    <div class="list-content">
+        {{#each captainCtx.coreActions}}
+        <div class="imsc-core-action-card">
+            <button class="imsc-core-action-btn" data-action="captainCoreAction" data-core-action="{{id}}"
+                    {{#unless canAfford}}disabled{{/unless}}
+                    data-tooltip="{{descLocalized}}">
+                <i class="{{icon}}"></i>
+                <span>{{labelLocalized}}</span>
+                <small>{{localize "IMSC.Label.PowerCores"}}</small>
+            </button>
+        </div>
+        {{/each}}
+        {{#each ordnanceCtx.coreActions}}
+        <div class="imsc-core-action-card">
+            <button class="imsc-core-action-btn" data-action="ordnanceMasterCoreAction" data-core-action="{{id}}"
+                    {{#unless canAfford}}disabled{{/unless}}
+                    data-tooltip="{{descLocalized}}">
+                <i class="{{icon}}"></i>
+                <span>{{labelLocalized}}</span>
+                <small>{{localize "IMSC.Label.PowerCores"}}</small>
+            </button>
+        </div>
+        {{/each}}
+    </div>
+</div>

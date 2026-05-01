@@ -1,4 +1,4 @@
-import { MODULE_ID, ROLES, ROLE_ACTIONS, POWER_CORES_MAX, SHIP_CLASSIFICATIONS, PAYLOAD_TYPES, CRIT_CONDITIONS, CRIT_LOCATIONS } from "../../constants.js";
+import { MODULE_ID, ROLES, ROLE_ACTIONS, SHIP_CLASSIFICATIONS, PAYLOAD_TYPES, CRIT_CONDITIONS, CRIT_LOCATIONS } from "../../constants.js";
 import { emitToGM } from "../../socket.js";
 import { ShipCombatState } from "../../state/ShipCombatState.js";
 
@@ -140,29 +140,31 @@ export class ShipSheet extends IMActorSheet {
   };
 
   static PARTS = {
-    header:    { template: `modules/${MODULE_ID}/templates/actor/ship-header.hbs`,    classes: ["vehicle-header"], scrollable: [""] },
-    tabs:      { template: "templates/generic/tab-navigation.hbs" },
-    overview:  { template: `modules/${MODULE_ID}/templates/actor/ship-overview.hbs`,  scrollable: [""] },
-    captain:   { template: `modules/${MODULE_ID}/templates/actor/ship-captain.hbs`,   scrollable: [""] },
-    enginseer: { template: `modules/${MODULE_ID}/templates/actor/ship-enginseer.hbs`, scrollable: [""] },
-    pilot:     { template: `modules/${MODULE_ID}/templates/actor/ship-pilot.hbs`,     scrollable: [""] },
-    sensors:   { template: `modules/${MODULE_ID}/templates/actor/ship-sensors.hbs`,   scrollable: [""] },
-    gunner:    { template: `modules/${MODULE_ID}/templates/actor/ship-gunner.hbs`,    scrollable: [""] },
-    ordnance:  { template: `modules/${MODULE_ID}/templates/actor/ship-ordnance.hbs`,  scrollable: [""] },
-    config:    { template: `modules/${MODULE_ID}/templates/actor/ship-config.hbs`,    scrollable: [""] },
+    header:       { template: `modules/${MODULE_ID}/templates/actor/partials/ship-header.hbs`,           classes: ["vehicle-header"], scrollable: [""] },
+    tabs:         { template: "templates/generic/tab-navigation.hbs" },
+    overview:     { template: `modules/${MODULE_ID}/templates/actor/tabs/ship-overview.hbs`,              scrollable: [""] },
+    captain:      { template: `modules/${MODULE_ID}/templates/actor/tabs/6/captain.hbs`,             scrollable: [""] },
+    captain5man:  { template: `modules/${MODULE_ID}/templates/actor/tabs/5/captain.hbs`,             scrollable: [""] },
+    enginseer:    { template: `modules/${MODULE_ID}/templates/actor/tabs/6/enginseer.hbs`,           scrollable: [""] },
+    pilot:        { template: `modules/${MODULE_ID}/templates/actor/tabs/6/pilot.hbs`,               scrollable: [""] },
+    sensors:      { template: `modules/${MODULE_ID}/templates/actor/tabs/6/sensors.hbs`,             scrollable: [""] },
+    gunner:       { template: `modules/${MODULE_ID}/templates/actor/tabs/6/gunner.hbs`,              scrollable: [""] },
+    ordnance:     { template: `modules/${MODULE_ID}/templates/actor/tabs/6/ordnance.hbs`,            scrollable: [""] },
+    config:       { template: `modules/${MODULE_ID}/templates/actor/tabs/ship-config.hbs`,                scrollable: [""] },
     // effects tab suppressed  -  kept for future use
     // effects:   { template: `modules/${MODULE_ID}/templates/actor/ship-effects.hbs`,   scrollable: [""] },
   };
 
   static TABS = {
-    overview:  { id: "overview",  group: "primary", label: "IMSC.Tab.Overview"   },
-    captain:   { id: "captain",   group: "primary", label: "IMSC.Role.Captain"   },
-    enginseer: { id: "enginseer", group: "primary", label: "IMSC.Role.Enginseer" },
-    pilot:     { id: "pilot",     group: "primary", label: "IMSC.Role.Pilot"     },
-    sensors:   { id: "sensors",   group: "primary", label: "IMSC.Role.Sensors"   },
-    gunner:    { id: "gunner",    group: "primary", label: "IMSC.Role.Gunner"    },
-    ordnance:  { id: "ordnance",  group: "primary", label: "IMSC.Role.Ordnance"  },
-    config:    { id: "config",    group: "primary", label: "IMSC.Tab.Config"     },
+    overview:    { id: "overview",    group: "primary", label: "IMSC.Tab.Overview"    },
+    captain:     { id: "captain",     group: "primary", label: "IMSC.Role.Captain"    },
+    captain5man: { id: "captain5man", group: "primary", label: "IMSC.Role.Captain"    },
+    enginseer:   { id: "enginseer",   group: "primary", label: "IMSC.Role.Enginseer"  },
+    pilot:       { id: "pilot",       group: "primary", label: "IMSC.Role.Pilot"      },
+    sensors:     { id: "sensors",     group: "primary", label: "IMSC.Role.Sensors"    },
+    gunner:      { id: "gunner",      group: "primary", label: "IMSC.Role.Gunner"     },
+    ordnance:    { id: "ordnance",    group: "primary", label: "IMSC.Role.Ordnance"   },
+    config:      { id: "config",      group: "primary", label: "IMSC.Tab.Config"      },
     // effects:   { id: "effects",   group: "primary", label: "IMSC.Tab.Effects"    },
   };
 
@@ -183,9 +185,18 @@ export class ShipSheet extends IMActorSheet {
 
   _allowedParts() {
     const disabled = this._getDisabledRoles();
+    // When ordnance is disabled (crew ≤ 5), the captain uses the combined 5-man tab.
+    const useCombinedCaptain = disabled.has("ordnance");
+
     if (game.user.isGM) {
       const all = new Set(Object.keys(ShipSheet.PARTS));
       for (const r of disabled) all.delete(r);
+      if (useCombinedCaptain) {
+        all.delete("captain");
+        all.add("captain5man");
+      } else {
+        all.delete("captain5man");
+      }
       return all;
     }
     const myRole = this._resolveRoleForUser(game.user);
@@ -195,7 +206,9 @@ export class ShipSheet extends IMActorSheet {
     const allowed = new Set(["header", "tabs"]);
     if (canObserve) allowed.add("overview");
     if (isOwner) allowed.add("config");
-    if (myRole && !disabled.has(myRole)) allowed.add(myRole);
+    // Captain player gets the combined tab when ordnance is merged in.
+    const effectivePart = (myRole === "captain" && useCombinedCaptain) ? "captain5man" : myRole;
+    if (effectivePart && !disabled.has(effectivePart)) allowed.add(effectivePart);
     return allowed;
   }
 
@@ -297,9 +310,7 @@ export class ShipSheet extends IMActorSheet {
       zoneThreshold: shieldCfg.zoneThresholds?.[sector] ?? 8,
     }));
 
-    const powerCoresAvailable = sys.resources?.enginseer?.powerCores ?? POWER_CORES_MAX;
-    // Per-ship powerCoresMax (stored on actor) takes precedence over the world setting.
-    const powerCoresMax = sys.powerCoresMax ?? game.settings.get(MODULE_ID, "powerCoresMax");
+    const powerCoresMax       = ShipCombatState.getReactorStats(this.actor).coreOutput;
 
     const stagedCoreCount       = Object.values(stagedCoresMap).filter(Boolean).length;
     const stagedShieldCoreCount = sys.resources?.enginseer?.stagedShieldCores ?? 0;
@@ -307,7 +318,11 @@ export class ShipSheet extends IMActorSheet {
     const committedAuxCoreCount = sys.resources?.enginseer?.committedAuxCores ?? 0;
     const shieldCommittedCount  = sys.shieldPool?.committed ?? 0;
     const assignedCoreCount     = Object.values(sys.assignedCores ?? {}).filter(Boolean).length;
-    const totalCoreCount        = powerCoresAvailable + stagedCoreCount + stagedShieldCoreCount + stagedAuxCoreCount + committedAuxCoreCount + shieldCommittedCount + assignedCoreCount;
+    // Derive available from reactor output minus already-distributed cores so that
+    // mid-combat reactor changes are reflected immediately without waiting for a new round.
+    const distributedCores    = stagedCoreCount + stagedShieldCoreCount + stagedAuxCoreCount + committedAuxCoreCount + shieldCommittedCount + assignedCoreCount;
+    const powerCoresAvailable = Math.max(0, powerCoresMax - distributedCores);
+    const totalCoreCount      = powerCoresAvailable + distributedCores;
 
     const components = this.actor.items.filter(i => i.type === `${MODULE_ID}.component`);
     const equippedComponents = components.filter(c => c.system.equipped !== false);

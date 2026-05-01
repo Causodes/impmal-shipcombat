@@ -1,0 +1,27 @@
+{{!-- Captain: Core Actions --}}
+<div class="sheet-list imsc-captain-core-actions imsc-role-section">
+    {{#unless captainCtx.hasCoreAssigned}}
+    <div class="imsc-section-overlay imsc-section-overlay--taken">
+        <div class="imsc-overlay-lock-indicator">
+            <i class="fa-solid fa-lock fa-lg"></i>
+            <span>{{localize "IMSC.Tooltip.NoPowerCore"}}</span>
+        </div>
+    </div>
+    {{/unless}}
+    <div class="list-header row-content">
+        <div class="list-name">{{localize "IMSC.Label.CoreActions"}}</div>
+    </div>
+    <div class="list-content">
+        {{#each captainCtx.coreActions}}
+        <div class="imsc-core-action-card">
+            <button class="imsc-core-action-btn" data-action="captainCoreAction" data-core-action="{{id}}"
+                    {{#unless canAfford}}disabled{{/unless}}
+                    data-tooltip="{{descLocalized}}">
+                <i class="{{icon}}"></i>
+                <span>{{labelLocalized}}</span>
+                <small>{{localize "IMSC.Label.PowerCores"}}</small>
+            </button>
+        </div>
+        {{/each}}
+    </div>
+</div>

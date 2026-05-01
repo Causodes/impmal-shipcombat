@@ -1,0 +1,59 @@
+{{!-- Enginseer: Hull Repair --}}
+<div class="sheet-list imsc-role-section">
+
+    {{#unless engineerCtx.repairSelected}}
+    <div class="imsc-section-overlay{{#if (imscOr (imscNot engineerCtx.canRepairHull) (imscEq engineerCtx.actionsRemaining 0))}} imsc-section-overlay--taken{{/if}}">
+        {{#if engineerCtx.hasInternalFire}}
+            <div class="imsc-overlay-lock-indicator">
+                <i class="fa-solid fa-fire fa-lg"></i>
+                <span>{{localize "IMSC.Warning.RepairBlockedByFire"}}</span>
+            </div>
+        {{else if (imscNot engineerCtx.hasBankedCores)}}
+            <div class="imsc-overlay-lock-indicator">
+                <i class="fa-solid fa-lock fa-lg"></i>
+                <span>{{localize "IMSC.Enginseer.RequiresBankedCore"}}</span>
+            </div>
+        {{else if (imscEq engineerCtx.hull 0)}}
+            <div class="imsc-overlay-lock-indicator">
+                <i class="fa-solid fa-check fa-lg"></i>
+                <span>{{localize "IMSC.Enginseer.HullFull"}}</span>
+            </div>
+        {{else if (imscEq engineerCtx.actionsRemaining 0)}}
+            <div class="imsc-overlay-lock-indicator">
+                <i class="fa-solid fa-ban fa-lg"></i>
+                <span>{{localize "IMSC.Enginseer.ActionTakenDesc"}}</span>
+            </div>
+        {{else}}
+        <button class="imsc-section-overlay-btn" data-action="selectAction" data-action-type="repair">
+            {{localize "IMSC.Enginseer.HullRepair"}}
+        </button>
+        {{/if}}
+    </div>
+    {{/unless}}
+
+    <div class="list-header row-content">
+        <div class="list-name">{{localize "IMSC.Enginseer.HullRepair"}}</div>
+        <div class="imsc-hull-status">
+            <span class="imsc-hull-value">{{engineerCtx.hull}} / {{engineerCtx.hullMax}}</span>
+            <div class="imsc-hull-bar-track">
+                <div class="imsc-hull-bar-fill" style="width: {{engineerCtx.hullPct}}%"></div>
+            </div>
+        </div>
+    </div>
+    <div class="list-content">
+        <div class="imsc-eng-action-row">
+            <p class="imsc-eng-action-desc">{{localize "IMSC.Enginseer.HullRepairDesc"}}</p>
+            <div class="imsc-eng-action-ctrl">
+                <button class="imsc-alloc-btn" data-action="adjustRepairPlasma" data-delta="-1"
+                        {{#unless engineerCtx.canRepairHull}}disabled{{/unless}}>&minus;</button>
+                <span class="imsc-core-alloc-count">{{engineerCtx.repairPlasmaStaged}}</span>
+                <button class="imsc-alloc-btn" data-action="adjustRepairPlasma" data-delta="1"
+                        {{#unless engineerCtx.canRepairHull}}disabled{{/unless}}>+</button>
+            </div>
+            <button type="button" class="imsc-eng-confirm" data-action="repairHull"
+                    {{#unless engineerCtx.canRepairHull}}disabled{{/unless}}>
+                {{localize "IMSC.Enginseer.Execute"}}
+            </button>
+        </div>
+    </div>
+</div>

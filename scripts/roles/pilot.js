@@ -276,7 +276,7 @@ export function buildHelmContext(sys, opts = {}) {
   const overdriveMult = overdrive ? 2 : 1;
   const powerPerAP    = engineComponent?.system?.powerPerAP ?? 0;
   const auxiliaryPower = sys.resources?.enginseer?.auxiliaryPower ?? 0;
-  const auxPowerCapacity = opts.reactorStats?.auxPowerCapacity ?? 40;
+  const auxPowerCapacity = opts.reactorStats?.auxPowerCapacity ?? 0;
   const apThrustBonus  = sys.resources?.pilot?.apThrustBonus ?? 0;
   const powerMax   = 100 * overdriveMult + apThrustBonus;
   const fuelBurned = sys.resources?.pilot?.fuelBurned ?? 0;
@@ -394,9 +394,9 @@ export function helmOnRender(sheet) {
     const committed  = fuelBurned  * ratio;
     const extra      = Math.max(0, selectedPct - fuelBurned) * ratio;
     if (powerBarEl) {
-      // Once committed fuel has passed the min-move threshold, hide the amber
-      // zone and the white delimiter line — they are no longer relevant.
-      const effectiveMinmove = committed >= minMovePct ? 0 : minMovePct;
+      // Hide the delimiter once the slider (even uncommitted) passes the min-move
+      // threshold; redisplay it if the slider moves back below the threshold.
+      const effectiveMinmove = (selectedPct * ratio) >= minMovePct ? 0 : minMovePct;
       powerBarEl.style.setProperty("--committed", `${committed}%`);
       powerBarEl.style.setProperty("--extra",     `${extra}%`);
       powerBarEl.style.setProperty("--minmove",   `${effectiveMinmove}%`);

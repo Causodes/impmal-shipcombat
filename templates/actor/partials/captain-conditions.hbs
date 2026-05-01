@@ -1,0 +1,44 @@
+{{!-- Captain: Conditions Panel --}}
+<div class="sheet-list">
+    <div class="list-header row-content">
+        <div class="list-name">{{localize "IMSC.Captain.Conditions"}}</div>
+    </div>
+    <div class="list-content">
+        {{#if captainCtx.hasAnyCondition}}
+        {{#each captainCtx.conditionsList}}
+        {{#if hasCondition}}
+        <div class="list-row imsc-crit-row {{tierClass}}" data-loc-id="{{locId}}" data-tooltip='{{conditionEffect}}'>
+            <div class="row-content">
+                <div class="list-name">
+                    <span class="imsc-crit-location">{{locLabel}}</span>
+                    <span class="imsc-crit-name">{{conditionName}}</span>
+                    {{#if jammedItemName}}
+                    <span class="imsc-crit-meta"><i class="fa-solid fa-gun-slash"></i> {{jammedItemName}}</span>
+                    {{/if}}
+                </div>
+                <div class="imsc-crit-tier-badge {{tierClass}}">{{tierLabel}}</div>
+                <div class="list-controls">
+                    <button type="button"
+                            data-action="captainTriage"
+                            data-loc-id="{{locId}}"
+                            {{#unless canTriage}}disabled{{/unless}}
+                            data-tooltip="{{triageName}}">
+                        <i class="fa-solid fa-wrench"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {{/if}}
+        {{/each}}
+        {{else}}
+        <div class="list-row">
+            <div class="row-content">
+                <div class="list-name imsc-empty-label">
+                    <i class="fa-solid fa-circle-check"></i>
+                    {{localize "IMSC.Captain.NoConditions"}}
+                </div>
+            </div>
+        </div>
+        {{/if}}
+    </div>
+</div>
