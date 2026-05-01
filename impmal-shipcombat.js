@@ -170,6 +170,9 @@ Hooks.once("init", async () => {
     `modules/${MODULE_ID}/templates/actor/tabs/6/gunner.hbs`,
     // ── Role tab compositors — 5-player ──────────────────────────────────
     `modules/${MODULE_ID}/templates/actor/tabs/5/captain.hbs`,
+    // ── Role tab compositors — 4-player ──────────────────────────────────
+    `modules/${MODULE_ID}/templates/actor/tabs/4/captain.hbs`,
+    `modules/${MODULE_ID}/templates/actor/tabs/4/gunner.hbs`,
     // ── Shared partials ───────────────────────────────────────────────────
     `modules/${MODULE_ID}/templates/actor/partials/complete-turn.hbs`,
     `modules/${MODULE_ID}/templates/actor/partials/core-status-banner.hbs`,
@@ -232,6 +235,7 @@ Hooks.once("init", async () => {
     `modules/${MODULE_ID}/templates/actor/partials/gunner-claim-prompt.hbs`,
     `modules/${MODULE_ID}/templates/actor/partials/gunner-captain-boost.hbs`,
     `modules/${MODULE_ID}/templates/actor/partials/gunner-status-bar.hbs`,
+    `modules/${MODULE_ID}/templates/actor/partials/gunner-combined-status-bar.hbs`,
     `modules/${MODULE_ID}/templates/actor/partials/gunner-ordnance-allocation.hbs`,
     `modules/${MODULE_ID}/templates/actor/partials/gunner-core-actions.hbs`,
     `modules/${MODULE_ID}/templates/actor/partials/gunner-weapon-batteries.hbs`,

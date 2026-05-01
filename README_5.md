@@ -113,7 +113,7 @@ Heat accumulates from weapon fire and reactor events.
 
 ### Voidshield Flux
 
-Each dispatched Power Core generates void flux the following round, which the Supreme Commander allocates across the four shield sectors.
+Each dispatched Power Core generates void flux the following round, which the Enginseer allocates across the four shield sectors.
 
 ---
 
@@ -130,6 +130,7 @@ Roll Reflexes (Major Voidship) once per round. Allocate SL to:
 |-------|--------------|
 | Speed | +1 void unit of movement this round |
 | Maneuverability | +1 degree of bearing change this round |
+| Evasion | −5% hit chance on all incoming weapon attacks this round |
 
 ### Helm Control
 
@@ -239,7 +240,7 @@ Roll Ranged (Ordnance) once per round. Allocate SL to:
 |--------|--------|
 | Directed Fire | For every crit scored this round, the Gunner nominates the hit location instead of rolling |
 | Extend Range | Double the auspex band size for the next weapon attack |
-| Emergency Resupply | Immediately restore 20% of maximum ready rounds |
+| Emergency Resupply | Immediately restore 25% of maximum ready rounds |
 
 ### Deployed Torpedoes Panel
 

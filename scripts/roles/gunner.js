@@ -196,10 +196,10 @@ async function _onGunnerCoreAction(event, target) {
     emitToGM("updateResource", { roleId: "gunner", key: "chooseCritLocation", value: true });
     emitToGM("updateResource", { roleId: "gunner", key: "critLocationChoice",  value: locId });
   } else if (action === "emergencyResupply") {
-    // Emergency Resupply: immediately replenish 20% ammo from reserves
+    // Emergency Resupply: immediately replenish 25% ammo from reserves
     const caps    = _getOrdnanceBayCaps(this.actor);
     const current = sys.resources?.gunner?.ammo ?? 0;
-    const gain    = Math.max(1, Math.ceil(caps.ammoMax * 0.2));
+    const gain    = Math.max(1, Math.ceil(caps.ammoMax * 0.25));
     const next    = Math.min(caps.ammoMax, current + gain);
     const played  = [...(sys.resources?.gunner?.coreActionsPlayed ?? []), "emergencyResupply"];
     emitToGM("updateResource", { roleId: "gunner", key: "coreActionsPlayed", value: played });

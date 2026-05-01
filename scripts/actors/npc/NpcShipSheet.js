@@ -666,13 +666,16 @@ function _onNpcAllocBonus(event, target) {
   const delta = parseInt(target.dataset.delta) || 0;
   const sys   = this.actor.system;
   const pilot = sys.resources?.pilot ?? {};
-  const allocSpeed = pilot.allocSpeed ?? 0;
-  const allocMano  = pilot.allocMano ?? 0;
+  const allocSpeed   = pilot.allocSpeed   ?? 0;
+  const allocMano    = pilot.allocMano    ?? 0;
+  const allocEvasion = pilot.allocEvasion ?? 0;
 
   if (stat === "speed") {
-    this.actor.update({ "system.resources.pilot.allocSpeed": Math.max(0, allocSpeed + delta) });
-  } else {
-    this.actor.update({ "system.resources.pilot.allocMano": Math.max(0, allocMano + delta) });
+    this.actor.update({ "system.resources.pilot.allocSpeed":   Math.max(0, allocSpeed + delta) });
+  } else if (stat === "mano") {
+    this.actor.update({ "system.resources.pilot.allocMano":    Math.max(0, allocMano + delta) });
+  } else if (stat === "evasion") {
+    this.actor.update({ "system.resources.pilot.allocEvasion": Math.max(0, allocEvasion + delta) });
   }
 }
 
@@ -729,6 +732,7 @@ function _onNpcResetHelm() {
     "system.resources.pilot.pilotingSL": 0,
     "system.resources.pilot.allocSpeed": 0,
     "system.resources.pilot.allocMano": 0,
+    "system.resources.pilot.allocEvasion": 0,
     "system.resources.pilot.fuelBurned": 0,
     "system.resources.pilot.bearing": 0,
     "system.resources.pilot.overdrive": false,
@@ -861,6 +865,7 @@ async function _onFullReset() {
     "system.resources.pilot.pilotingSL": 0,
     "system.resources.pilot.allocSpeed": 0,
     "system.resources.pilot.allocMano": 0,
+    "system.resources.pilot.allocEvasion": 0,
     "system.resources.pilot.fuelBurned": 0,
     "system.resources.pilot.prevTurnMove": 0,
     "system.resources.pilot.bearing": 0,

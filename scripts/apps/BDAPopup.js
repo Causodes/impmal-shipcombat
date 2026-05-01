@@ -23,6 +23,16 @@ async function _resolveSensorsActorFromShip(shipActor) {
     const user = game.users.get(entry[0]);
     return user?.character ?? null;
   }
+  // Fallback: in 4-man mode the captain handles the Augur role.
+  const captainRef = sys.crewActors?.captain;
+  if (captainRef?.uuid) {
+    try { return await fromUuid(captainRef.uuid); } catch { /* ignore */ }
+  }
+  const captainEntry = Object.entries(sys.roles ?? {}).find(([, r]) => r === "captain");
+  if (captainEntry) {
+    const captainUser = game.users.get(captainEntry[0]);
+    return captainUser?.character ?? null;
+  }
   return null;
 }
 

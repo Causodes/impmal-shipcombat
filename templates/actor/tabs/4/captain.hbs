@@ -1,18 +1,27 @@
-{{!-- tabs/6/captain.hbs — Captain's station tab (6-player) --}}
+{{!-- tabs/4/captain.hbs — Supreme Commander / Augur combined station tab (≤ 4 players) --}}
+{{!-- Handles Captain + Sensors (Augur) roles. Ordnance launch actions are on the Gunner tab. --}}
 <section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
 
     {{> "modules/impmal-shipcombat/templates/actor/partials/captain-claim-prompt.hbs"}}
 
     {{#if (or isGM (lookup (lookup roles "captain") "isMyRole"))}}
+
     {{> "modules/impmal-shipcombat/templates/actor/partials/captain-status-bar.hbs"}}
     {{> "modules/impmal-shipcombat/templates/actor/partials/captain-leadership.hbs"}}
-    {{> "modules/impmal-shipcombat/templates/actor/partials/captain-voidshields.hbs"}}
+
+    {{!-- ══════ CONDITION SECTION ══════ --}}
     {{> "modules/impmal-shipcombat/templates/actor/partials/captain-conditions.hbs"}}
-    {{> "modules/impmal-shipcombat/templates/actor/partials/captain-core-actions.hbs"}}
+
+        {{!-- ══════ AUGUR SECTIONS ══════ --}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/sensors-radar.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/sensors-bda.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/sensors-abilities-ref.hbs"}}
+
+    {{!-- ══════ ORDERS SECTIONS ══════ --}}
     {{> "modules/impmal-shipcombat/templates/actor/partials/captain-hand.hbs"}}
     {{> "modules/impmal-shipcombat/templates/actor/partials/captain-active-orders.hbs"}}
-    {{/if}}
 
     {{> 'modules/impmal-shipcombat/templates/actor/partials/complete-turn.hbs' tabRoleId="captain" turnDone=(lookup @root.sys.turnDone "captain")}}
+    {{/if}}
 
 </section>

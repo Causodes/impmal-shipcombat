@@ -6,6 +6,7 @@ See the role-specific reference documents for full details on what each station 
 
 - [README_6.md](README_6.md)
 - [README_5.md](README_5.md)
+- [README_4.md](README_4.md)
 
 ---
 
@@ -17,6 +18,7 @@ See the role-specific reference documents for full details on what each station 
 **Optional (for combat animations):**
 - Sequencer
 - JB2A Patreon (Jules and Ben's Animated Assets - Patreon version required for the full animation set)
+
 ---
 
 ## The Ship Sheet
@@ -29,7 +31,7 @@ The Header shows a snapshot of ship status visible to all crew: hull integrity, 
 
 ### Overview Tab
 
-Players can view and claim roles as well as view and equip various voidship components on the this tab. The "Ready" column on the Bridge Crew table indicates that status of the role; players who have marked their turn as "Done" will have the status update to "Yes". Once all roles are ready, the GM can advance the turn in the combat tracker.
+Players can view and claim roles as well as view and equip various voidship components on this tab. The "Ready" column on the Bridge Crew table indicates that status of the role; players who have marked their turn as "Done" will have the status update to "Yes". Once all roles are ready, the GM can advance the turn in the combat tracker.
 
 ---
 
@@ -39,7 +41,7 @@ The Configuration tab is where role count, weapon configuration, and the ship co
 
 ### Hull Max
 
-**Hull maximum is set directly on the ship actor**: it is the only stat not derived from a component. Set it in the header bar at the top of the sheet.
+**Hull maximum is set directly on the ship actor** — it is the only stat not derived from a component. Set it in the header bar at the top of the sheet.
 
 ### Component Slots
 
@@ -73,8 +75,8 @@ Only one component per equipment slot type is active at a time; switching the dr
 
 Torpedoes and strike craft are separate **actors** (types `impmal-shipcombat.torpedo` and `impmal-shipcombat.strikeCraft`) that live outside the ship sheet. They are registered as launch templates by dragging them into the two drop targets on the Config tab:
 
-- **Torpedo Actors**: drag one or more torpedo actors here; the Ordnance Master selects which type to arm/launch each round
-- **Strike Craft Actors**: drag one or more strike craft actors here; same selection logic
+- **Torpedo Actors** — drag one or more torpedo actors here; the Ordnance Master selects which type to arm/launch each round
+- **Strike Craft Actors** — drag one or more strike craft actors here; same selection logic
 
 Each template actor carries all stats for that ordnance type: speed, maneuverability, fuel, warhead damage and blast radius (torpedoes), hull, auspex rating, weapon load (strike craft). When a torpedo or flight is launched, a new token is spawned on the canvas using the template actor's stats. The original template actor is never modified during play. 
 
@@ -122,7 +124,7 @@ Certain actions, such as repair actions, step down conditions.
 
 Torpedo tokens are manually controlled by the owning player. Each torpedo has hull (warhead count), speed, maneuverability, and fuel. They must be moved each round; the controlling player issues helm orders. On detonation, the warhead deals area damage falling off with distance from the blast centre, multiplied by the number of intact warhead sections (hull integrity). All ships, torpedoes, and strike craft within the blast radius are affected regardless of allegiance.
 
-The turn a torpedo is launched it drifts automatically and cannot be given orders - it acts normally from the following round.
+The turn a torpedo is launched it drifts automatically and cannot be given orders — it acts normally from the following round.
 
 ### Strike Craft
 

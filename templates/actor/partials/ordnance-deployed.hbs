@@ -27,6 +27,11 @@
                         {{#if isLaunchTurn}}disabled data-tooltip="{{localize 'IMSC.Ordnance.LaunchTurnLocked'}}"{{else}}data-tooltip="{{localize 'IMSC.Ordnance.MarkDone'}}"{{/if}}>
                     <i class="fa-solid fa-check"></i>
                 </button>
+            </div>
+        </div>
+        {{/each}}
+
+        {{!-- Strike Craft --}}
         {{#each ordnanceCtx.deployedCraft}}
         <div class="imsc-deployed-row imsc-deployed--craft {{#if turnComplete}}imsc-deployed--done{{/if}}"
              data-token-id="{{tokenId}}">

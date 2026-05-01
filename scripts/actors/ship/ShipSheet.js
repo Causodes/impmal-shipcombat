@@ -37,7 +37,7 @@ const ROLE_MAIN_SKILLS = {
   captain:   { skillKey: "presence",  specialisation: "Leadership",     rootLabel: "Presence",  label: "IMSC.MainSkill.Leadership" },
   enginseer: { skillKey: "tech",      specialisation: "Engineering",    rootLabel: "Tech",      label: "IMSC.MainSkill.Engineering" },
   pilot:     { skillKey: "piloting",  specialisation: "Major Voidship", rootLabel: "Piloting",  label: "IMSC.MainSkill.MajorVoidship" },
-  sensors:   { skillKey: "intuition", specialisation: "Surroundings",   rootLabel: "Intuition", label: "IMSC.MainSkill.IntuitionSurroundings" },
+  sensors:   { skillKey: "presence",  specialisation: "Leadership",     rootLabel: "Presence",  label: "IMSC.MainSkill.Leadership"            },
   gunner:    { skillKey: "ranged",    specialisation: "Ordnance",       rootLabel: "Ranged",    label: "IMSC.MainSkill.RangedOrdnance" },
   ordnance:  { skillKey: "athletics", specialisation: "Might",          rootLabel: "Athletics", label: "IMSC.MainSkill.AthleticsMight" },
 };
@@ -144,11 +144,13 @@ export class ShipSheet extends IMActorSheet {
     tabs:         { template: "templates/generic/tab-navigation.hbs" },
     overview:     { template: `modules/${MODULE_ID}/templates/actor/tabs/ship-overview.hbs`,              scrollable: [""] },
     captain:      { template: `modules/${MODULE_ID}/templates/actor/tabs/6/captain.hbs`,             scrollable: [""] },
+    captain4man:  { template: `modules/${MODULE_ID}/templates/actor/tabs/4/captain.hbs`,            scrollable: [""] },
     captain5man:  { template: `modules/${MODULE_ID}/templates/actor/tabs/5/captain.hbs`,             scrollable: [""] },
     enginseer5man: { template: `modules/${MODULE_ID}/templates/actor/tabs/5/enginseer.hbs`,            scrollable: [""] },
     enginseer:    { template: `modules/${MODULE_ID}/templates/actor/tabs/6/enginseer.hbs`,           scrollable: [""] },
     pilot:        { template: `modules/${MODULE_ID}/templates/actor/tabs/6/pilot.hbs`,               scrollable: [""] },
     sensors:      { template: `modules/${MODULE_ID}/templates/actor/tabs/6/sensors.hbs`,             scrollable: [""] },
+    gunner4man:   { template: `modules/${MODULE_ID}/templates/actor/tabs/4/gunner.hbs`,              scrollable: [""] },
     gunner5man:   { template: `modules/${MODULE_ID}/templates/actor/tabs/5/gunner.hbs`,              scrollable: [""] },
     gunner:       { template: `modules/${MODULE_ID}/templates/actor/tabs/6/gunner.hbs`,              scrollable: [""] },
     ordnance:     { template: `modules/${MODULE_ID}/templates/actor/tabs/6/ordnance.hbs`,            scrollable: [""] },
@@ -160,11 +162,13 @@ export class ShipSheet extends IMActorSheet {
   static TABS = {
     overview:    { id: "overview",    group: "primary", label: "IMSC.Tab.Overview"    },
     captain:     { id: "captain",     group: "primary", label: "IMSC.Role.Captain"    },
+    captain4man: { id: "captain4man", group: "primary", label: "IMSC.Role.Captain"    },
     captain5man: { id: "captain5man", group: "primary", label: "IMSC.Role.Captain"    },
     enginseer5man: { id: "enginseer5man", group: "primary", label: "IMSC.Role.Enginseer" },
     enginseer:   { id: "enginseer",   group: "primary", label: "IMSC.Role.Enginseer"  },
     pilot:       { id: "pilot",       group: "primary", label: "IMSC.Role.Pilot"      },
     sensors:     { id: "sensors",     group: "primary", label: "IMSC.Role.Sensors"    },
+    gunner4man:  { id: "gunner4man",  group: "primary", label: "IMSC.Role.Gunner"     },
     gunner5man:  { id: "gunner5man",  group: "primary", label: "IMSC.Role.Gunner"     },
     gunner:      { id: "gunner",      group: "primary", label: "IMSC.Role.Gunner"     },
     ordnance:    { id: "ordnance",    group: "primary", label: "IMSC.Role.Ordnance"   },
@@ -182,7 +186,7 @@ export class ShipSheet extends IMActorSheet {
     const crewSize = this.actor.system.crewSize ?? 6;
     const disabled = new Set();
     if (crewSize <= 5) disabled.add("ordnance");
-    if (crewSize <= 4) disabled.add("captain");
+    if (crewSize <= 4) disabled.add("sensors");
     if (crewSize <= 3) disabled.add("gunner");
     return disabled;
   }
@@ -190,7 +194,11 @@ export class ShipSheet extends IMActorSheet {
   _allowedParts() {
     const disabled = this._getDisabledRoles();
     // When ordnance is disabled (crew ≤ 5), the captain uses the combined 5-man tab.
+    // 5-man: ordnance disabled → captain/enginseer/gunner use combined 5-man tabs.
     const useCombinedCaptain = disabled.has("ordnance");
+    // 4-man: sensors disabled → captain uses captain4man (with Augur content);
+    //        gunner uses gunner4man (with ordnance launch actions).
+    const useCombinedSensors = disabled.has("sensors");
 
     if (game.user.isGM) {
       const all = new Set(Object.keys(ShipSheet.PARTS));
@@ -207,6 +215,16 @@ export class ShipSheet extends IMActorSheet {
         all.delete("enginseer5man");
         all.delete("gunner5man");
       }
+      // 4-man variants supersede 5-man variants for captain and gunner.
+      if (useCombinedSensors) {
+        all.delete("captain5man");
+        all.add("captain4man");
+        all.delete("gunner5man");
+        all.add("gunner4man");
+      } else {
+        all.delete("captain4man");
+        all.delete("gunner4man");
+      }
       return all;
     }
     const myRole = this._resolveRoleForUser(game.user);
@@ -216,9 +234,12 @@ export class ShipSheet extends IMActorSheet {
     const allowed = new Set(["header", "tabs"]);
     if (canObserve) allowed.add("overview");
     if (isOwner) allowed.add("config");
-    // Captain player gets the combined tab when ordnance is merged in.
-    const effectivePart = (myRole === "captain" && useCombinedCaptain) ? "captain5man"
+    // 4-man: captain uses captain4man, gunner uses gunner4man (supersedes 5-man variants).
+    // 5-man: captain uses captain5man, enginseer uses enginseer5man, gunner uses gunner5man.
+    const effectivePart = (myRole === "captain"   && useCombinedSensors)  ? "captain4man"
+      : (myRole === "captain"   && useCombinedCaptain) ? "captain5man"
       : (myRole === "enginseer" && useCombinedCaptain) ? "enginseer5man"
+      : (myRole === "gunner"    && useCombinedSensors)  ? "gunner4man"
       : (myRole === "gunner"    && useCombinedCaptain) ? "gunner5man"
       : myRole;
     if (effectivePart && !disabled.has(effectivePart)) allowed.add(effectivePart);

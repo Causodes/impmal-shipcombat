@@ -733,3 +733,15 @@
   margin-left: 0.2rem;
 }
 
+
+/* ── Gunner: Combined Core Actions (4-man 3x2 grid) ─────────────────────── */
+
+.imsc-gunner-core-actions .list-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px 6px;
+}
+.imsc-gunner-core-actions--combined .list-content {
+  grid-template-columns: repeat(3, 1fr);
+}

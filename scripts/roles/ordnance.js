@@ -19,7 +19,7 @@
 
 import { emitToGM } from "../socket.js";
 import { SystemAdapter } from "../systems/SystemAdapter.js";
-import { MODULE_ID, PAYLOAD_TYPES, PAYLOADS_BY_ROLE, ORDNANCE_MASTER_ACTIONS, ORDNANCE_MASTER_CORE_ACTIONS } from "../constants.js";
+import { MODULE_ID, PAYLOAD_TYPES, PAYLOADS_BY_ROLE, ORDNANCE_MASTER_ACTIONS, ORDNANCE_MASTER_CORE_ACTIONS, ORDNANCE_4MAN_COSTS } from "../constants.js";
 import { RecoverCraftPopup } from "../apps/StrikeCraftPopups.js";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -168,10 +168,18 @@ export function buildOrdnanceContext(sys, opts = {}) {
   const hullValue    = opts.shipActor?.system?.hull?.value ?? 0;
   const hullDamaged  = hullValue > 0;
 
+  // In 4-man mode the Gunner handles ordnance with no Bosun SL for allocation,
+  // so base costs are pre-reduced via ORDNANCE_4MAN_COSTS.
+  const crewSize = sys.crewSize ?? 6;
+  const is4man = crewSize <= 4;
+
   // Build action list with affordability using allocated tracks.
   const actions = Object.values(ORDNANCE_MASTER_ACTIONS).map(a => {
-    const effectiveCrew = _effectiveCrewCost(a.crew, allocEfficiency);
-    const effectiveDuration = _effectiveDuration(a.duration, allocExpedience);
+    const override = is4man ? ORDNANCE_4MAN_COSTS[a.id] : null;
+    const baseCrew     = override?.crew     ?? a.crew;
+    const baseDuration = override?.duration ?? a.duration;
+    const effectiveCrew = _effectiveCrewCost(baseCrew, allocEfficiency);
+    const effectiveDuration = _effectiveDuration(baseDuration, allocExpedience);
     const canAfford = manpower >= effectiveCrew;
 
     // Per-action criteria checks
@@ -188,8 +196,8 @@ export function buildOrdnanceContext(sys, opts = {}) {
       ...a,
       labelLocalized: game.i18n.localize(a.label),
       descLocalized:  game.i18n.localize(a.desc),
-      baseCrew: a.crew,
-      baseDuration: a.duration,
+      baseCrew,
+      baseDuration,
       effectiveCrew,
       effectiveDuration,
       canAfford: canAfford && criteriaMet,

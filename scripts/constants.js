@@ -211,6 +211,23 @@ export const ORDNANCE_MASTER_ACTIONS = {
   hullRepairParty:{ id: "hullRepairParty",label: "IMSC.Ordnance.HullRepairParty",desc: "IMSC.Ordnance.HullRepairPartyDesc",crew: 7, duration: 4, icon: "fa-solid fa-wrench",            completionBenefit: true },
 };
 
+// ─── Ordnance costs for ≤ 4-player mode ───────────────────────────────────────
+// In 4-man the Gunner handles ordnance with no Bosun SL to allocate for
+// Efficiency / Expedience. These override the base crew / duration so the
+// actions are viable without that allocation layer.
+export const ORDNANCE_4MAN_COSTS = {
+  armTorpedo:      { crew: 6, duration: 2 },
+  launchTorpedo:   { crew: 3, duration: 1 },
+  armCraft:        { crew: 7, duration: 2 },
+  launchCraft:     { crew: 7, duration: 2 },
+  recallCraft:     { crew: 4, duration: 2 },
+  loadAmmo:        { crew: 4, duration: 1 },
+  loadPayload:     { crew: 4, duration: 1 },
+  generatePower:   { crew: 4, duration: 1 },
+  damageControl:   { crew: 3, duration: 2 },
+  hullRepairParty: { crew: 5, duration: 3 },
+};
+
 // ─── Ordnance Master Logistics Doctrines (Core Actions) ────────────────────────────
 // High-impact doctrines that reshape turn economy. One per round.
 

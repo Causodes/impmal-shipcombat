@@ -1,0 +1,84 @@
+{{!-- tabs/4/gunner.hbs -- Gunnery / Ordnance combined station tab (<= 4 players) --}}
+{{!-- Handles Gunner + Ordnance Master roles. Augur content is on the Captain tab. --}}
+<section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
+
+    {{> "modules/impmal-shipcombat/templates/actor/partials/gunner-claim-prompt.hbs"}}
+
+    {{#if (or isGM (lookup (lookup roles "gunner") "isMyRole"))}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/gunner-captain-boost.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/gunner-combined-status-bar.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/gunner-ordnance-allocation.hbs"}}
+
+    {{!-- ORDNANCE LAUNCH ACTIONS --}}
+    <div class="sheet-list imsc-ordnance-actions">
+        <div class="list-header row-content">
+            <div class="list-name">{{localize "IMSC.Ordnance.MainAction"}}</div>
+        </div>
+        <div class="list-content">
+            <div class="imsc-ordnance-action-grid">
+                {{#each ordnanceCtx.actions}}
+                {{#unless (imscEq id "loadPayload")}}
+                <button class="imsc-ordnance-action-btn" data-action="ordnanceMasterAction" data-action-id="{{id}}"
+                        {{#unless canAfford}}disabled{{/unless}}
+                        data-tooltip="{{descLocalized}}">
+                    <i class="{{icon}}"></i>
+                    <span>{{labelLocalized}}</span>
+                    <small>{{effectiveCrew}} crew / {{effectiveDuration}}T</small>
+                </button>
+                {{/unless}}
+                {{/each}}
+            </div>
+        </div>
+    </div>
+
+    {{!-- COMBINED CORE ACTIONS (Gunner + Ordnance, 3x2 grid) --}}
+    <div class="sheet-list imsc-gunner-core-actions imsc-gunner-core-actions--combined imsc-role-section">
+        {{#unless gunnerCtx.hasCoreAssigned}}
+        <div class="imsc-section-overlay imsc-section-overlay--taken">
+            <div class="imsc-overlay-lock-indicator">
+                <i class="fa-solid fa-lock fa-lg"></i>
+                <span>{{localize "IMSC.Tooltip.NoPowerCore"}}</span>
+            </div>
+        </div>
+        {{/unless}}
+        <div class="list-header row-content">
+            <div class="list-name">{{localize "IMSC.Label.CoreActions"}}</div>
+        </div>
+        <div class="list-content">
+            {{#each gunnerCtx.coreActions}}
+            <div class="imsc-core-action-card">
+                <button class="imsc-core-action-btn" data-action="gunnerCoreAction" data-core-action="{{id}}"
+                        {{#unless canAfford}}disabled{{/unless}}
+                        data-tooltip="{{descLocalized}}">
+                    <i class="{{icon}}"></i>
+                    <span>{{labelLocalized}}</span>
+                    <small>{{localize "IMSC.Label.PowerCores"}}</small>
+                </button>
+            </div>
+            {{/each}}
+            {{#each ordnanceCtx.coreActions}}
+            {{#unless (imscEq id "magazineCrossfeed")}}
+            <div class="imsc-core-action-card">
+                <button class="imsc-core-action-btn" data-action="ordnanceMasterCoreAction" data-core-action="{{id}}"
+                        {{#unless canAfford}}disabled{{/unless}}
+                        data-tooltip="{{descLocalized}}">
+                    <i class="{{icon}}"></i>
+                    <span>{{labelLocalized}}</span>
+                    <small>{{localize "IMSC.Label.PowerCores"}}</small>
+                </button>
+            </div>
+            {{/unless}}
+            {{/each}}
+        </div>
+    </div>
+
+    {{!-- WEAPONS --}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/gunner-weapon-batteries.hbs"}}
+
+    {{!-- DEPLOYED ORDNANCE TRACKER --}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/ordnance-deployed.hbs"}}
+    {{/if}}
+
+    {{> 'modules/impmal-shipcombat/templates/actor/partials/complete-turn.hbs' tabRoleId="gunner" turnDone=(lookup @root.sys.turnDone "gunner")}}
+
+</section>

@@ -37,6 +37,16 @@
                             {{#if helm.allocLocked}}disabled{{/if}}>+</button>
                 </div>
             </div>
+            <div class="imsc-helm-stat" data-tooltip="{{localize "IMSC.Helm.EvasionTooltip"}}">
+                <span class="imsc-helm-stat-label">{{localize "IMSC.Helm.Evasion"}}</span>
+                <div class="imsc-alloc-row">
+                    <button class="imsc-alloc-btn" data-action="allocBonus" data-stat="evasion" data-delta="-1"
+                            {{#if helm.allocLocked}}disabled{{/if}}>&minus;</button>
+                    <span class="imsc-helm-stat-value">{{helm.evasionPct}}%</span>
+                    <button class="imsc-alloc-btn" data-action="allocBonus" data-stat="evasion" data-delta="1"
+                            {{#if helm.allocLocked}}disabled{{/if}}>+</button>
+                </div>
+            </div>
             <div class="imsc-helm-stat" data-tooltip="{{helm.minMoveTooltip}}">
                 <span class="imsc-helm-stat-label">{{localize "IMSC.Helm.MinMove"}}</span>
                 <span class="imsc-helm-stat-value">{{helm.minMove}}</span>

@@ -723,6 +723,7 @@ export class ShipCombatState {
       "resources.pilot.pilotingSL":         0,
       "resources.pilot.allocSpeed":         0,
       "resources.pilot.allocMano":          0,
+      "resources.pilot.allocEvasion":       0,
       "resources.pilot.pilotingMessageId": "",
       "resources.pilot.helmResetId":        prevResetId + 1,
       "resources.pilot.bearing":            0,
@@ -741,6 +742,7 @@ export class ShipCombatState {
       "resources.pilot.pilotingSL":         0,
       "resources.pilot.allocSpeed":         0,
       "resources.pilot.allocMano":          0,
+      "resources.pilot.allocEvasion":       0,
       "resources.pilot.pilotingMessageId": "",
       "resources.pilot.helmResetId":        prevResetId + 1,
       "resources.pilot.bearing":            0,
@@ -844,7 +846,7 @@ export class ShipCombatState {
     updates["conditions.coreSystems"]    = { ...condClear };
     updates["conditions.weaponsSensors"] = { ...condClear };
     // ── Captain: re-initialize deck and triage ──
-    const _excl5man = (data.crewSize ?? 6) <= 5 ? ["ordnance"] : [];
+    const _excl5man = (data.crewSize ?? 6) <= 4 ? ["ordnance", "sensors"] : (data.crewSize ?? 6) <= 5 ? ["ordnance"] : [];
     const captainDeck = buildCaptainDeck(_excl5man);
     const captainHand = captainDeck.splice(0, 3);
     updates["resources.captain.stance"]               = "none";
@@ -1019,7 +1021,7 @@ export class ShipCombatState {
     const data = this.getData();
     const max = this.getReactorStats().coreOutput;
     const shieldCfg = this.getShieldStats();
-    const _excl5man = (data.crewSize ?? 6) <= 5 ? ["ordnance"] : [];
+    const _excl5man = (data.crewSize ?? 6) <= 4 ? ["ordnance", "sensors"] : (data.crewSize ?? 6) <= 5 ? ["ordnance"] : [];
     const captainDeck = buildCaptainDeck(_excl5man);
     const captainHand = captainDeck.splice(0, 3);
     const updates = {

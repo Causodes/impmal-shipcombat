@@ -1,0 +1,120 @@
+{{!-- Gunner/Ordnance: Combined Status Bar (4-player mode) --}}
+{{!-- Merges the Gunner status bar (ammo + heat + power) with the Ordnance status bar --}}
+{{!-- (OP + readiness cards + commitments). Auxiliary power omitted from the Ordnance    --}}
+{{!-- section — the Gunner bar already shows the shared power track.                     --}}
+<div class="sheet-list imsc-role-status-bar">
+    <div class="list-header row-content">
+        <div class="list-name">{{localize "IMSC.Gunner.StatusTitle"}}</div>
+        {{#with (lookup roles "gunner")}}
+        {{> "modules/impmal-shipcombat/templates/actor/partials/core-status-banner.hbs"
+            coreCount=coreCount coreActionsPlayedLabels=@root.gunnerCtx.coreActionsPlayedLabels hasCoreStaged=hasCoreStaged}}
+        {{/with}}
+    </div>
+    <div class="list-content">
+        <div class="imsc-role-status-panel">
+            <div class="imsc-resource-bar-row">
+                <span class="imsc-resource-bar-label">{{localize "IMSC.Gunner.Ammo"}}</span>
+                <div class="imsc-resource-bar-track imsc-resource-bar-track--plasma">
+                    <div class="imsc-resource-bar-fill imsc-bar-ammo" style="width: {{gunnerCtx.ammoPct}}%"></div>
+                </div>
+                <span class="imsc-resource-bar-value" style="color: #e67e22">{{gunnerCtx.ammo}}/{{gunnerCtx.ammoMax}}</span>
+            </div>
+            <div class="imsc-resource-bar-row">
+                <span class="imsc-resource-bar-label">{{localize "IMSC.Gunner.Heat"}}</span>
+                <div class="imsc-resource-bar-track imsc-resource-bar-track--heat">
+                    <div class="imsc-resource-bar-fill-cover" style="width: calc(100% - {{gunnerCtx.heatPct}}%)"></div>
+                </div>
+                <span class="imsc-resource-bar-value" style="color: {{gunnerCtx.heatColor}}">{{gunnerCtx.heat}}/{{gunnerCtx.heatMax}}</span>
+            </div>
+            <div class="imsc-resource-bar-row">
+                <span class="imsc-resource-bar-label">{{localize "IMSC.Sensors.PowerTrack"}}</span>
+                <div class="imsc-resource-bar-track imsc-resource-bar-track--plasma">
+                    <div class="imsc-resource-bar-fill imsc-bar-charge" style="width: {{gunnerCtx.powerPct}}%"></div>
+                </div>
+                <span class="imsc-resource-bar-value" style="color: #7ec8e3">{{gunnerCtx.power}}/{{gunnerCtx.powerMax}}</span>
+            </div>
+            <div class="imsc-resource-bar-row">
+                <span class="imsc-resource-bar-label">{{localize "IMSC.Ordnance.OP"}}</span>
+                <div class="imsc-resource-bar-track imsc-resource-bar-track--plasma">
+                    <div class="imsc-resource-bar-fill imsc-bar-op" style="width: {{ordnanceCtx.mpPct}}%"></div>
+                    {{#if ordnanceCtx.mpLostPct}}
+                    <div class="imsc-bar-lost" style="left: {{ordnanceCtx.mpPct}}%; width: {{ordnanceCtx.mpLostPct}}%"></div>
+                    {{/if}}
+                </div>
+                <span class="imsc-resource-bar-value" style="color: #00ff88">{{ordnanceCtx.manpower}}/{{ordnanceCtx.manpowerMax}}</span>
+            </div>
+        </div>
+
+        {{!-- Ordnance Readiness — three side-by-side cards --}}
+        <div class="imsc-ordnance-cards">
+
+            {{!-- Torpedo card --}}
+            <div class="imsc-ord-card">
+                <div class="imsc-ord-card-header">
+                    <i class="fa-solid fa-rocket"></i>
+                    <span>{{localize "IMSC.Ordnance.Torpedoes"}}</span>
+                </div>
+                <div class="imsc-ord-card-body">
+                    {{#if ordnanceCtx.readyTorpedoes}}
+                    <span class="imsc-ord-badge imsc-ord-badge--ready">
+                        <i class="fa-solid fa-circle"></i> {{ordnanceCtx.readyTorpedoes}} {{localize "IMSC.Ordnance.Armed"}}
+                    </span>
+                    {{/if}}
+                    {{#if ordnanceCtx.loadingTorpedoes}}
+                    <span class="imsc-ord-badge imsc-ord-badge--loading">
+                        <i class="fa-solid fa-circle"></i> {{ordnanceCtx.loadingTorpedoes}} {{localize "IMSC.Ordnance.Loading"}}
+                    </span>
+                    {{/if}}
+                    {{#if ordnanceCtx.deployedTorpedoCount}}
+                    <span class="imsc-ord-badge imsc-ord-badge--deployed">
+                        <i class="fa-solid fa-circle"></i> {{ordnanceCtx.deployedTorpedoCount}} {{localize "IMSC.Ordnance.InFlight"}}
+                    </span>
+                    {{/if}}
+                    {{#unless ordnanceCtx.readyTorpedoes}}
+                    {{#unless ordnanceCtx.loadingTorpedoes}}
+                    {{#unless ordnanceCtx.deployedTorpedoCount}}
+                    <span class="imsc-ord-badge imsc-ord-badge--none">{{localize "IMSC.Ordnance.NoneReady"}}</span>
+                    {{/unless}}
+                    {{/unless}}
+                    {{/unless}}
+                    {{#if ordnanceCtx.hasTorpedoConfig}}
+                    <span class="imsc-ord-badge {{#if (imscEq ordnanceCtx.autoArmTimer 1)}}imsc-ord-badge--ready{{else}}imsc-ord-badge--loading{{/if}}"
+                          data-tooltip="{{localize 'IMSC.Ordnance.AutoArmTooltip'}}">
+                        <i class="fa-solid fa-clock"></i> {{localize 'IMSC.Ordnance.AutoArm'}}: {{ordnanceCtx.autoArmTimer}}T
+                    </span>
+                    {{/if}}
+                </div>
+            </div>
+
+            {{!-- Strike Craft card --}}
+            <div class="imsc-ord-card imsc-ord-card--craft">
+                <div class="imsc-ord-card-header">
+                    <i class="fa-solid fa-jet-fighter"></i>
+                    <span>{{localize "IMSC.Ordnance.StrikeCraft"}}</span>
+                    <span class="imsc-ord-flights">{{ordnanceCtx.deployedCraftCount}}/{{ordnanceCtx.maxFlights}}</span>
+                </div>
+                <div class="imsc-ord-card-body">
+                    <div class="imsc-ordnance-pips">
+                        {{#each ordnanceCtx.craftPips}}
+                        <div class="imsc-ordnance-pip imsc-ordnance-pip--{{state}}"></div>
+                        {{/each}}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {{!-- Active Commitments (condensed inline) --}}
+        {{#if ordnanceCtx.commitments.length}}
+        <div class="imsc-commitments-inline">
+            {{#each ordnanceCtx.commitments}}
+            <span class="imsc-commitment-pill {{#if isNew}}imsc-commitment-pill--new{{/if}} {{#if noCancel}}imsc-commitment-pill--locked{{/if}}"
+                  data-tooltip="{{actionLabel}}  -  {{crewCount}} crew, {{turnsRemaining}} turn(s) left{{#if completionBenefit}} | Benefit awarded on completion{{/if}}{{#if isNew}}{{#if noCancel}} | Cannot cancel: effect already applied{{else}} | Right-click to cancel{{/if}}{{/if}}"
+                  data-index="{{index}}">
+                <i class="{{icon}}"></i> {{crewCount}}<i class="fa-solid fa-user fa-xs"></i> {{turnsRemaining}}T{{#if noCancel}}<i class="fa-solid fa-lock fa-xs" style="margin-left:2px;opacity:0.6"></i>{{/if}}
+            </span>
+            {{/each}}
+        </div>
+        {{/if}}
+    </div>
+</div>

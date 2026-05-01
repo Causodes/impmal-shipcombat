@@ -16,28 +16,34 @@ async function _onAllocBonus(event, target) {
   const sys = this.actor.system;
   const stat  = target.dataset.stat;
   const delta = Number(target.dataset.delta);
-  const pilotingSL = sys.resources?.pilot?.pilotingSL ?? 0;
-  const allocSpeed = sys.resources?.pilot?.allocSpeed ?? 0;
-  const allocMano  = sys.resources?.pilot?.allocMano  ?? 0;
-  const fuelBurned = sys.resources?.pilot?.fuelBurned ?? 0;
+  const pilotingSL  = sys.resources?.pilot?.pilotingSL  ?? 0;
+  const allocSpeed   = sys.resources?.pilot?.allocSpeed   ?? 0;
+  const allocMano    = sys.resources?.pilot?.allocMano    ?? 0;
+  const allocEvasion = sys.resources?.pilot?.allocEvasion ?? 0;
+  const fuelBurned   = sys.resources?.pilot?.fuelBurned   ?? 0;
 
   if (fuelBurned > 0) return;
 
-  let newAllocSpeed = allocSpeed;
-  let newAllocMano  = allocMano;
+  let newAllocSpeed   = allocSpeed;
+  let newAllocMano    = allocMano;
+  let newAllocEvasion = allocEvasion;
 
   if (stat === "speed") {
     newAllocSpeed = Math.max(0, allocSpeed + delta);
   } else if (stat === "mano") {
     newAllocMano = Math.max(0, allocMano + delta);
+  } else if (stat === "evasion") {
+    newAllocEvasion = Math.max(0, allocEvasion + delta);
   }
 
-  if (newAllocSpeed + newAllocMano > pilotingSL) return;
+  if (newAllocSpeed + newAllocMano + newAllocEvasion > pilotingSL) return;
 
   if (stat === "speed") {
-    emitToGM("updateResource", { roleId: "pilot", key: "allocSpeed", value: newAllocSpeed });
+    emitToGM("updateResource", { roleId: "pilot", key: "allocSpeed",   value: newAllocSpeed });
   } else if (stat === "mano") {
-    emitToGM("updateResource", { roleId: "pilot", key: "allocMano", value: newAllocMano });
+    emitToGM("updateResource", { roleId: "pilot", key: "allocMano",    value: newAllocMano });
+  } else if (stat === "evasion") {
+    emitToGM("updateResource", { roleId: "pilot", key: "allocEvasion", value: newAllocEvasion });
   }
 }
 
@@ -66,9 +72,10 @@ async function _onRollPiloting() {
   if (!result) return;
 
   const sl = Math.max(0, result.SL);
-  emitToGM("updateResource", { roleId: "pilot", key: "pilotingSL",  value: sl });
-  emitToGM("updateResource", { roleId: "pilot", key: "allocSpeed",  value: 0  });
-  emitToGM("updateResource", { roleId: "pilot", key: "allocMano",   value: 0  });
+  emitToGM("updateResource", { roleId: "pilot", key: "pilotingSL",   value: sl });
+  emitToGM("updateResource", { roleId: "pilot", key: "allocSpeed",   value: 0  });
+  emitToGM("updateResource", { roleId: "pilot", key: "allocMano",    value: 0  });
+  emitToGM("updateResource", { roleId: "pilot", key: "allocEvasion", value: 0  });
 
   const msgId = result.messageId ?? "";
   if (msgId) {
@@ -236,10 +243,11 @@ export function buildHelmContext(sys, opts = {}) {
   const { engineComponent } = opts;
   const baseSpeed = sys.movement?.speed ?? 6;
   const baseMano  = sys.movement?.maneuverability ?? 2;
-  const pilotingSL = sys.resources?.pilot?.pilotingSL ?? 0;
-  const allocSpeed = sys.resources?.pilot?.allocSpeed ?? 0;
-  const allocMano  = sys.resources?.pilot?.allocMano  ?? 0;
-  const overdrive  = sys.resources?.pilot?.overdrive ?? false;
+  const pilotingSL  = sys.resources?.pilot?.pilotingSL  ?? 0;
+  const allocSpeed   = sys.resources?.pilot?.allocSpeed   ?? 0;
+  const allocMano    = sys.resources?.pilot?.allocMano    ?? 0;
+  const allocEvasion = sys.resources?.pilot?.allocEvasion ?? 0;
+  const overdrive    = sys.resources?.pilot?.overdrive    ?? false;
   const speedPayloadBonus = sys.resources?.pilot?.payload === "fuelCatalyst"
     ? Math.max(1, Math.ceil(baseSpeed * 0.5))
     : 0;
@@ -289,11 +297,13 @@ export function buildHelmContext(sys, opts = {}) {
     pilotingSL,
     allocSpeed,
     allocMano,
+    allocEvasion,
+    evasionPct:      allocEvasion * 5,
     overdrive,
     powerMax,
     effectiveSpeed:  effSpeed,
     effectiveMano:   effMano,
-    remainingSL:     Math.max(0, pilotingSL - allocSpeed - allocMano),
+    remainingSL:     Math.max(0, pilotingSL - allocSpeed - allocMano - allocEvasion),
     allocLocked:     fuelBurned > 0,
     hasRolledPiloting: !!pilotingMessageId,
     minMove,
