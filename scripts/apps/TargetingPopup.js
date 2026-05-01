@@ -254,7 +254,8 @@ export class TargetingPopup extends foundry.applications.api.HandlebarsApplicati
       const battleClarityBonus   = (priorityTargetId && priorityTargetId === candidate.id) ? 10 : 0;
       const battleClarityPierce  = (priorityTargetId && priorityTargetId === candidate.id) ? 2 : 0;
 
-      let totalAccuracy = auspex.rating + finalZoneMod + (fireModeDetails.hitMod ?? 0) + lockAccuracyBonus + (allocAccuracy * 5) + weaponHitMod + adjustBearingBonus + rangingFireBonus + battleClarityBonus + stanceHitMod;
+      const captainHitBonus = sys.resources?.gunner?.captainHitBonus ?? 0;
+      let totalAccuracy = auspex.rating + finalZoneMod + (fireModeDetails.hitMod ?? 0) + lockAccuracyBonus + (allocAccuracy * 5) + weaponHitMod + adjustBearingBonus + rangingFireBonus + battleClarityBonus + stanceHitMod + captainHitBonus;
 
       // Zone 1 (close scan): halve the miss chance
       let zone1Bonus = 0;
@@ -275,6 +276,7 @@ export class TargetingPopup extends foundry.applications.api.HandlebarsApplicati
       if (adjustBearingBonus !== 0) breakdownParts.push(`Adj. Bearing: ${_sign(adjustBearingBonus)}%`);
       if (rangingFireBonus !== 0) breakdownParts.push(`Ranging Fire: ${_sign(rangingFireBonus)}%`);
       if (battleClarityBonus !== 0) breakdownParts.push(`Battle Clarity: ${_sign(battleClarityBonus)}%`);
+      if (captainHitBonus !== 0) breakdownParts.push(`Insp. Targeting: ${_sign(captainHitBonus)}%`);
       if (zone1Bonus !== 0) breakdownParts.push(`Close Scan: +${zone1Bonus}%`);
       const accuracyTooltip = breakdownParts.join("\n");
 

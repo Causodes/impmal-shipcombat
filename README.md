@@ -156,7 +156,7 @@ The Gunner fires the ship's weapon batteries. Rolling Ranged (Ordnance) allocate
 | Auxiliary Power | Draws from Auxiliary Power; 4 tiers |
 | Heat | Shares the heat track with the Enginseer |
 
-** Auxiliary Power tiers:**
+**Auxiliary Power tiers:**
 
 | Tier | Description | Damage multiplier |
 |--------|------|-------------------|

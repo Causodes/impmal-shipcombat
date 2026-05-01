@@ -1,3 +1,8 @@
+/* ── Captain: Leadership header — pin Roll Initiative to far right ── */
+.imsc-leadership-header .list-name {
+  flex: 1;
+}
+
 /* ── Captain: Stance Row (inside imsc-role-status-bar / imsc-role-status-panel) ── */
 /* The sticky header itself is provided by .imsc-role-status-bar in enginseer.css.  */
 

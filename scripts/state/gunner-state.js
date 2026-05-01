@@ -142,7 +142,8 @@ export async function fireWeapon({ weaponId, actorId, fireMode, targetToken, hit
   const stance           = sys.resources?.captain?.stance ?? "none";
   const stanceHitMod     = stance === "aggressive" ? 10 : stance === "defensive" ? -10 : 0;
   const fcPenalty        = sys.conditions?.weaponsSensors?.tier === "high" ? -20 : 0;
-  const effectiveAccuracy = isAutoHit ? 999 : Math.max(accuracy + (allocAccuracy * 5) + weaponHitMod + stanceHitMod + fcPenalty, 1);
+  const captainHitBonus  = sys.resources?.gunner?.captainHitBonus ?? 0;
+  const effectiveAccuracy = isAutoHit ? 999 : Math.max(accuracy + (allocAccuracy * 5) + weaponHitMod + stanceHitMod + fcPenalty + captainHitBonus, 1);
 
   const salvoRolls = [];
   let jammed = false;
