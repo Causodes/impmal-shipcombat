@@ -737,6 +737,8 @@ export class ShipCombatState {
       "resources.pilot.bearing":            0,
       "resources.pilot.prowGunLocked":      false,
       "resources.pilot.ramAllocLocked":     false,
+      "resources.pilot.bearingUsed":        0,
+      "resources.pilot.momentumUsed":       0,
     });
   }
 
@@ -757,6 +759,22 @@ export class ShipCombatState {
       "resources.pilot.helmResetId":        prevResetId + 1,
       "resources.pilot.bearing":            0,
       "resources.pilot.prevTurnMove":       this.ship?.system?.movement?.speed ?? 0,
+      "resources.pilot.bearingUsed":        0,
+      "resources.pilot.momentumUsed":       0,
+      "resources.pilot.velocityX":          (() => {
+        const token = this.ship?.getActiveTokens?.()?.[0];
+        const rot   = token?.document?.rotation ?? 0;
+        const h0    = (rot - 90) * (Math.PI / 180);
+        const spd   = this.ship?.system?.movement?.speed ?? 6;
+        return Math.cos(h0) * (spd / 2);
+      })(),
+      "resources.pilot.velocityY":          (() => {
+        const token = this.ship?.getActiveTokens?.()?.[0];
+        const rot   = token?.document?.rotation ?? 0;
+        const h0    = (rot - 90) * (Math.PI / 180);
+        const spd   = this.ship?.system?.movement?.speed ?? 6;
+        return Math.sin(h0) * (spd / 2);
+      })(),
       "resources.enginseer.actionChoices":  [],
       "resources.enginseer.extraActions":   0,
       "resources.enginseer.heat":          0,

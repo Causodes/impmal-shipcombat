@@ -35,6 +35,19 @@
                     {{/if}}
                 </div>
 
+                {{!-- Crew Scale --}}
+                <div class="imsc-config-row">
+                    <label class="imsc-config-label">{{localize "IMSC.Config.CrewScale"}}</label>
+                    {{#if isOwner}}
+                    <select class="imsc-config-select" data-ship-config="system.crewScale">
+                        <option value="warship"    {{#if crewScaleWarship}}selected{{/if}}>{{localize "IMSC.Config.CrewScaleWarship"}}</option>
+                        <option value="smallcraft" {{#if crewScaleSmallCraft}}selected{{/if}}>{{localize "IMSC.Config.CrewScaleSmallCraft"}}</option>
+                    </select>
+                    {{else}}
+                    <span class="imsc-config-value">{{crewScaleLabel}}</span>
+                    {{/if}}
+                </div>
+
                 {{!-- Movement Mode --}}
                 <div class="imsc-config-row">
                     <label class="imsc-config-label">{{localize "IMSC.Config.Movement"}}</label>
@@ -52,8 +65,8 @@
                 <hr class="imsc-config-sep">
 
                 {{!-- Torpedo launch sides --}}
-                <div class="imsc-config-row">
-                    <label class="imsc-config-label imsc-config-label--wide">{{localize "IMSC.Ordnance.LaunchSidesTitle"}}</label>
+                <div class="imsc-config-row imsc-config-row--launch">
+                    <label class="imsc-config-label--launch">{{localize "IMSC.Ordnance.LaunchSidesTitle"}}</label>
                     <div class="imsc-launch-sides">
                         {{#each ordnanceLaunchSides.torpedo}}
                         <label class="imsc-launch-side-toggle" data-for-dir="{{this.key}}">
@@ -68,8 +81,8 @@
 
                 {{!-- Strike Craft launch sides --}}
                 {{#if useStrikeCraft}}
-                <div class="imsc-config-row">
-                    <label class="imsc-config-label imsc-config-label--wide">{{localize "IMSC.Ordnance.LaunchSidesStrikeCraftTitle"}}</label>
+                <div class="imsc-config-row imsc-config-row--launch">
+                    <label class="imsc-config-label--launch">{{localize "IMSC.Ordnance.LaunchSidesStrikeCraftTitle"}}</label>
                     <div class="imsc-launch-sides">
                         {{#each ordnanceLaunchSides.strikeCraft}}
                         <label class="imsc-launch-side-toggle" data-for-dir="{{this.key}}">

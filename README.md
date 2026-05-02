@@ -46,7 +46,7 @@ The Configuration tab is where role count, weapon configuration, and the ship co
 |---------|--------|-------|
 | Active Roles | 3 – 6 | Number of active player stations; see crew reference READMEs for per-size layouts |
 | Strike Craft | Yes / No | Show or hide the Strike Craft ordnance column and actor template drop target |
-| Movement | Simplified / Realistic | Simplified is the current model (bow-aligned travel, immediate bearing changes). Realistic (Newtonian) is planned for a future update and is currently disabled |
+| Movement | Simplified / Realistic | Helm movement model. **Simplified** uses fixed-radius arcs and immediate bearing changes. **Realistic** uses Newtonian vector physics with persistent momentum. |
 
 ### Torpedo / Strike Craft Launch Directions
 
@@ -97,9 +97,42 @@ The health of an ordnance actor template should be 0/1; this will be multiplied 
 
 ---
 
-## Minimum Move
+## Movement
 
-To simulate momentum in space, all craft have a minimum move obligation. This obligation is represented by the yellow portion of the Power slider on the movement controls. This is equal to half the distance the craft traveled its previous turn (half of speed for the first turn of combat). A craft must move this distance; if the craft has moved less than its minimum move by the end of the craft's turn, it will automatically drift forward to the minimum move distance.
+Two movement models are available, selectable in the Configuration tab.
+
+### Simplified Movement
+
+The ship travels in a fixed-radius arc anchored to the current heading. The Helmsman sets a bearing (port or starboard, up to Maneuverability × 15°) and a power level; the ship arcs that many degrees and travels the corresponding distance. Minimum move is enforced: the ship must travel at least half the distance it moved last turn, represented by the yellow marker on the Thrust slider.
+
+### Realistic Movement (Newtonian)
+
+The ship has a persistent **velocity vector** carried between turns. Each helm activation adds thrust along the new heading on top of that residual momentum. The interplay of momentum and thrust determines where the ship actually ends up.
+
+#### Helm Controls
+
+| Control | Description |
+|---------|-------------|
+| **Bearing** | Port/starboard heading change, in degrees. Capped to Maneuverability × 15° per turn (the **Bearing Adjustments** bar tracks remaining budget). |
+| **Thrust** | Power committed to the drives. |
+| **Momentum** | Percentage of last turn's velocity to carry into this manoeuvre. Remaining momentum auto-drifts at turn end. |
+
+#### Velocity Display
+
+The Min. Move indicator in the header row shows the current momentum vector on hover. Click the compass icon to toggle between **relative** bearing (degrees off the ship's nose) and **true** bearing (compass north = 0°).
+
+### Ramming
+
+The **Ram Target** button (both modes) becomes active when at least one visible target is reachable within the current bearing arc and remaining power. Hovering a row in the popup previews the ram arc; clicking **Ram** commits all remaining power.
+
+**Physics on impact:**
+- The rammed ship is displaced in the direction of impact and receives hull damage bypassing shields and armour.
+- The ramming ship receives hull damage in return.
+- **Realistic mode:** The ramming ship retains 20% of its velocity vector; the rammed ship inherits 50% of the ramming ship's velocity.
+- **Simplified mode:** The ramming ship rotates ±20° randomly to simulate the impact jolt.
+- In both modes a crit roll is made for each ship.
+- **Damage formula** (both modes): `(bowArmour + 0.25 × hullMax) × thrustFraction × angleMod × 2`. The ramming ship's incoming damage is reduced by bow armour.
+- After a ram the helm is locked for the remainder of the turn: Thrust slider, prow weapons, and bow ordnance launches are all disabled.
 
 ---
 

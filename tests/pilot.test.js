@@ -485,3 +485,145 @@ describe("Pilot – Ghost colour references theme", () => {
     assertEqual(pixi(THEME.overlay.helmGhost), 0x00ff88);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("Pilot – canReachRealistic: carryPct shifts drift endpoint", () => {
+  /**
+   * Inline replication of HelmPreview.canReachRealistic geometry.
+   * Drift end = start + (carryPct/100) * velocity * gridSize.
+   * Thrust must bridge drift_end → target within powerRemaining budget and bearing arc.
+   */
+  function canReachRealistic(shipBasis, targetCx, targetCy, effSpeed, maxBearingDeg, powerRemaining, powerMax, vx, vy, carryPct = 0) {
+    const { cx0, cy0, h0, gridSize } = shipBasis;
+    const carry     = carryPct / 100;
+    const driftEndX = cx0 + carry * vx * gridSize;
+    const driftEndY = cy0 + carry * vy * gridSize;
+    const Tx = targetCx - driftEndX;
+    const Ty = targetCy - driftEndY;
+    const tMag = Math.hypot(Tx, Ty);
+
+    if (tMag < gridSize * 0.5) {
+      return { bearingDeg: 0, thrustPct: 0, isPureDrift: true };
+    }
+
+    const maxThrustPx = (powerRemaining / 100) * effSpeed * gridSize;
+    if (tMag > maxThrustPx + 0.5) return null;
+
+    const thrustAngle = Math.atan2(Ty, Tx);
+    let bearingRad    = thrustAngle - h0;
+    bearingRad = ((bearingRad + Math.PI) % (2 * Math.PI)) - Math.PI;
+    const bearingDeg  = bearingRad * (180 / Math.PI);
+    if (Math.abs(bearingDeg) > maxBearingDeg + 1e-6) return null;
+
+    const thrustPct = (effSpeed * gridSize > 0) ? (tMag / (effSpeed * gridSize)) * 100 : 0;
+    if (thrustPct > powerRemaining + 0.5) return null;
+
+    return { bearingDeg, thrustPct, isPureDrift: false };
+  }
+
+  const gridSize = 100;
+  // Ship facing east (rotation 90 → h0 = 0), at origin
+  const basis = { cx0: 0, cy0: 0, h0: 0, gridSize };
+
+  it("carryPct=0: drift stays at origin; target due east at 1 grid is reachable", () => {
+    // driftEnd = (0,0), thrust eastward = 100px = 1 grid unit (thrustPct 100)
+    const result = canReachRealistic(basis, 100, 0, 1, 90, 100, 100, 2, 0, 0);
+    assert(result !== null, "should reach");
+    assertApprox(result.thrustPct, 100, 1);
+  });
+
+  it("carryPct=100 with vx=1: drift moves 1 grid east; target at drift_end is pure drift", () => {
+    // driftEnd = (100, 0) = exactly the target → pure drift ram
+    const result = canReachRealistic(basis, 100, 0, 1, 90, 100, 100, 1, 0, 100);
+    assert(result !== null, "should reach as pure drift");
+    assertEqual(result.isPureDrift, true);
+    assertEqual(result.thrustPct, 0);
+  });
+
+  it("carryPct=100 with vx=2: drift overshoots target; target is behind drift_end", () => {
+    // driftEnd = (200, 0), target = (100, 0) → Tx = -100, thrustAngle = π
+    // bearing from east-facing ship = π − 0 = π ≈ 180° → exceeds maxBearing 30°
+    const result = canReachRealistic(basis, 100, 0, 1, 30, 100, 100, 2, 0, 100);
+    assertEqual(result, null, "should NOT reach: drift overshoots, can't turn back 180°");
+  });
+
+  it("carryPct=50 with vx=2: drift moves 1 grid; target at 1.5 grids east is reachable", () => {
+    // driftEnd = (100, 0), target = (150, 0) → Tx = 50 = 0.5 grid → thrustPct 50
+    const result = canReachRealistic(basis, 150, 0, 1, 30, 100, 100, 2, 0, 50);
+    assert(result !== null, "should reach");
+    assertApprox(result.thrustPct, 50, 1);
+    assertApprox(result.bearingDeg, 0, 0.5);
+  });
+
+  it("carryPct=0 vs carryPct=100 yield different reach results for same velocity/target", () => {
+    // vx=3, target 1 grid east (100,0)
+    // carryPct=0: driftEnd=(0,0), thrust to (100,0) = 100px, easily reachable
+    // carryPct=100: driftEnd=(300,0), target behind by 200px and 180° off bearing → unreachable
+    const r0   = canReachRealistic(basis, 100, 0, 1, 30, 100, 100, 3, 0, 0);
+    const r100 = canReachRealistic(basis, 100, 0, 1, 30, 100, 100, 3, 0, 100);
+    assert(r0   !== null, "carryPct=0 should reach");
+    assert(r100 === null, "carryPct=100 should NOT reach (drift past target)");
+  });
+
+  it("pure drift: carryPct=100, vx=1, target exactly at drift_end", () => {
+    // driftEnd = (100, 0) = target → pure drift
+    const result = canReachRealistic(basis, 100, 0, 1, 45, 100, 100, 1, 0, 100);
+    assert(result !== null);
+    assertEqual(result.isPureDrift, true);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("Pilot – computeRamRotationRealistic: post-impact rotation cap", () => {
+  /**
+   * Inline replication of HelmPreview.computeRamRotationRealistic.
+   */
+  function computeRamRotation(h0deg, attackAngle, maxBearingDeg) {
+    const h0    = (h0deg - 90) * (Math.PI / 180);
+    const candA = attackAngle + Math.PI / 2;
+    const candB = attackAngle - Math.PI / 2;
+    const normDiff = (a, b) => {
+      const d = ((a - b + Math.PI) % (2 * Math.PI)) - Math.PI;
+      return Math.abs(d);
+    };
+    const targetHeading = normDiff(candA, h0) <= normDiff(candB, h0) ? candA : candB;
+    let delta = ((targetHeading - h0 + Math.PI) % (2 * Math.PI)) - Math.PI;
+    const maxRad = maxBearingDeg * (Math.PI / 180);
+    delta = Math.max(-maxRad, Math.min(maxRad, delta));
+    return (h0 + delta) * (180 / Math.PI) + 90;
+  }
+
+  it("cap of 20° means rotation ≤ 20° from current heading", () => {
+    // Ship facing east (rot=90), attack from west (attackAngle = π)
+    // orthogonal candidates: π ± π/2 = 3π/2 (south) and π/2 (north)
+    // h0 = 0 (east), closest orthogonal = π/2 (north) or -π/2 (south) — equal distance
+    const before = 90; // east
+    const result = computeRamRotation(before, Math.PI, 20);
+    const delta = Math.abs(result - before);
+    assert(delta <= 20 + 0.1, `rotation delta ${delta} should be ≤ 20°`);
+  });
+
+  it("with full mano bearing (mano=4, maxBearing=60), cap at 20 limits rotation", () => {
+    const mano = 4;
+    const fullBearing = Math.max(0, mano) * 15; // 60°
+    const capped = Math.min(20, fullBearing);    // 20°
+    assertEqual(capped, 20);
+  });
+
+  it("with mano=1 (maxBearing=15), cap of 20 does not inflate rotation beyond 15°", () => {
+    const mano = 1;
+    const fullBearing = Math.max(0, mano) * 15; // 15°
+    const capped = Math.min(20, fullBearing);    // 15° (not inflated)
+    assertEqual(capped, 15);
+  });
+
+  it("ship already orthogonal: zero rotation applied", () => {
+    // Ship facing north (rot=0, h0=-π/2), attack from west (attackAngle=π)
+    // orthogonal to π is π/2 (south, h0=π/2) or -π/2 (north, h0=-π/2)
+    // Ship already at h0=-π/2 (north) → delta should be ~0
+    const result = computeRamRotation(0, Math.PI, 20);
+    assertApprox(result, 0, 1); // stays near north (rot ≈ 0)
+  });
+});

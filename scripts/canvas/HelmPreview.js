@@ -486,6 +486,194 @@ export class HelmPreview {
     }
   }
 
+  // ── Realistic (Newtonian) movement ───────────────────────────────────────
+
+  /**
+   * Project where the ship ends up using Newtonian two-segment movement:
+   *   1. Drift: translate by (vx, vy) grid squares
+   *   2. Thrust: translate by (thrustPct/100 × speed) VU in bearing direction
+   *
+   * @param {Token}  token
+   * @param {number} bearingDeg  – heading change in degrees (±)
+   * @param {number} thrustPct   – additional thrust this move (0–powerMax)
+   * @param {number} speed       – effective speed stat (VU at 100% thrust)
+   * @param {number} vx          – velocity X component in VU
+   * @param {number} vy          – velocity Y component in VU
+   * @returns {{ x, y, rotation }}
+   */
+  static projectPositionRealistic(token, bearingDeg, thrustPct, speed, vx, vy, carryPct = 0) {
+    if (!token) return null;
+    const { cx0, cy0, h0, gridSize, tokenW, tokenH } = this._tokenBasis(token);
+    const carry      = carryPct / 100;
+    const bearingRad = bearingDeg * (Math.PI / 180);
+    const thrustDir  = h0 + bearingRad;
+    const thrustMag  = (thrustPct / 100) * speed * gridSize;
+    const finalCx    = cx0 + carry * vx * gridSize + thrustMag * Math.cos(thrustDir);
+    const finalCy    = cy0 + carry * vy * gridSize + thrustMag * Math.sin(thrustDir);
+    const finalRotation = token.document.rotation + bearingDeg;
+    return {
+      x:        finalCx - tokenW / 2,
+      y:        finalCy - tokenH / 2,
+      rotation: finalRotation,
+    };
+  }
+
+  /**
+   * Straight-line path for Newtonian movement: the actual trajectory through space
+   * is the vector sum (start → final), not the two-segment decomposition.
+   * Returns [start, end] centre-points for the preview line.
+   */
+  static projectPathRealistic(token, bearingDeg, thrustPct, speed, vx, vy, carryPct = 0) {
+    if (!token) return [];
+    const { cx0, cy0, h0, gridSize, tokenW, tokenH } = this._tokenBasis(token);
+    const carry      = carryPct / 100;
+    const bearingRad = bearingDeg * (Math.PI / 180);
+    const thrustDir  = h0 + bearingRad;
+    const thrustMag  = (thrustPct / 100) * speed * gridSize;
+    const finalCx    = cx0 + carry * vx * gridSize + thrustMag * Math.cos(thrustDir);
+    const finalCy    = cy0 + carry * vy * gridSize + thrustMag * Math.sin(thrustDir);
+    return [{ x: cx0, y: cy0 }, { x: finalCx, y: finalCy }];
+  }
+
+  /**
+   * Animation waypoints for Newtonian movement along the straight-line path
+   * (vector sum of drift + thrust).  Rotation interpolates gradually to the
+   * final heading over the course of the move.
+   */
+  static projectWaypointsRealistic(token, bearingDeg, thrustPct, speed, vx, vy, carryPct = 0) {
+    if (!token) return [];
+    const { cx0, cy0, h0, gridSize, tokenW, tokenH } = this._tokenBasis(token);
+    const carry         = carryPct / 100;
+    const bearingRad    = bearingDeg * (Math.PI / 180);
+    const thrustDir     = h0 + bearingRad;
+    const thrustMag     = (thrustPct / 100) * speed * gridSize;
+    const finalCx       = cx0 + carry * vx * gridSize + thrustMag * Math.cos(thrustDir);
+    const finalCy       = cy0 + carry * vy * gridSize + thrustMag * Math.sin(thrustDir);
+    const startRotation = token.document.rotation;
+    const finalRotation = startRotation + bearingDeg;
+    const totalDist     = Math.hypot(finalCx - cx0, finalCy - cy0);
+    if (totalDist < 1) {
+      // Pure rotation: single waypoint at same position
+      if (bearingDeg !== 0) {
+        return [{ x: Math.round(token.document.x), y: Math.round(token.document.y), rotation: finalRotation }];
+      }
+      return [];
+    }
+    const steps = Math.max(1, Math.round(totalDist / gridSize));
+    const waypoints = [];
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps;
+      waypoints.push({
+        x:        Math.round(cx0 + (finalCx - cx0) * t - tokenW / 2),
+        y:        Math.round(cy0 + (finalCy - cy0) * t - tokenH / 2),
+        rotation: startRotation + bearingDeg * t,
+      });
+    }
+    return waypoints;
+  }
+
+  /**
+   * Redraw the helm preview line using the Newtonian two-segment path.
+   */
+  static updateLineRealistic(bearingDeg, thrustPct, speed, vx, vy, carryPct = 0) {
+    if (!this._line || !this._token) return;
+    const points = this.projectPathRealistic(this._token, bearingDeg, thrustPct, speed, vx, vy, carryPct);
+    if (points.length < 2) return;
+    this._line.clear();
+    this._line.lineStyle(2, pixi(THEME.overlay.helmGhost), 0.6);
+    this._line.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      this._line.lineTo(points[i].x, points[i].y);
+    }
+  }
+
+  /**
+   * Determine whether the ship can reach a target in Realistic mode.
+   *
+   * Two-step check:
+   *   1. Drift_end = start + (vx, vy) × gridSize
+   *   2. Thrust vector = target − drift_end; must be ≤ powerRemaining budget
+   *      and within the ±maxBearingDeg arc.
+   *
+   * @returns {{ bearingDeg, thrustPct, isPureDrift } | null}
+   */
+  static canReachRealistic(shipBasis, targetCx, targetCy, effSpeed, maxBearingDeg, powerRemaining, powerMax, vx, vy, carryPct = 0) {
+    const { cx0, cy0, h0, gridSize } = shipBasis;
+    const carry     = carryPct / 100;
+    const driftEndX = cx0 + carry * vx * gridSize;
+    const driftEndY = cy0 + carry * vy * gridSize;
+    const Tx = targetCx - driftEndX;
+    const Ty = targetCy - driftEndY;
+    const tMag = Math.hypot(Tx, Ty);
+
+    // Pure drift ram: target lies right at drift_end
+    if (tMag < gridSize * 0.5) {
+      return { bearingDeg: 0, thrustPct: 0, isPureDrift: true };
+    }
+
+    // Maximum thrust in pixels at remaining power
+    const maxThrustPx = (powerRemaining / 100) * effSpeed * gridSize;
+    if (tMag > maxThrustPx + 0.5) return null;
+
+    // Required thrust bearing relative to current heading
+    const thrustAngle = Math.atan2(Ty, Tx);
+    let bearingRad    = thrustAngle - h0;
+    // Normalise to (−π, π]
+    bearingRad = ((bearingRad + Math.PI) % (2 * Math.PI)) - Math.PI;
+    const bearingDeg = bearingRad * (180 / Math.PI);
+    if (Math.abs(bearingDeg) > maxBearingDeg + 1e-6) return null;
+
+    // thrustPct on the 0–powerRemaining scale
+    const thrustPct = (effSpeed * gridSize > 0) ? (tMag / (effSpeed * gridSize)) * 100 : 0;
+    if (thrustPct > powerRemaining + 0.5) return null;
+
+    return { bearingDeg, thrustPct, isPureDrift: false };
+  }
+
+  /**
+   * Compute the optimal ram rotation in Realistic mode.
+   * Picks whichever ±90° candidate from attackAngle is closest to the
+   * current heading, then clamps to ±maxBearingDeg.
+   *
+   * @param {number} h0deg         – current ship Foundry rotation (degrees)
+   * @param {number} attackAngle   – math radians, from ramming ship to target
+   * @param {number} maxBearingDeg – max bearing magnitude
+   * @returns {number}             – Foundry rotation degrees
+   */
+  static computeRamRotationRealistic(h0deg, attackAngle, maxBearingDeg) {
+    const h0    = (h0deg - 90) * (Math.PI / 180);
+    const candA = attackAngle + Math.PI / 2;
+    const candB = attackAngle - Math.PI / 2;
+    const normDiff = (a, b) => {
+      const d = ((a - b + Math.PI) % (2 * Math.PI)) - Math.PI;
+      return Math.abs(d);
+    };
+    const targetHeading = normDiff(candA, h0) <= normDiff(candB, h0) ? candA : candB;
+    let delta = ((targetHeading - h0 + Math.PI) % (2 * Math.PI)) - Math.PI;
+    const maxRad = maxBearingDeg * (Math.PI / 180);
+    delta = Math.max(-maxRad, Math.min(maxRad, delta));
+    return (h0 + delta) * (180 / Math.PI) + 90;
+  }
+
+  /**
+   * Show a ram-course ghost for Realistic mode: two-segment path in red.
+   */
+  static showRamRealistic(token, bearingDeg, thrustPct, speed, vx, vy, carryPct = 0) {
+    const projected = this.projectPositionRealistic(token, bearingDeg, thrustPct, speed, vx, vy, carryPct);
+    if (!projected) return;
+    this.show(token, projected);
+    if (this._sprite) this._sprite.tint = pixi(THEME.overlay.helmRam);
+    if (!this._line || !this._token) return;
+    const points = this.projectPathRealistic(token, bearingDeg, thrustPct, speed, vx, vy, carryPct);
+    if (points.length < 2) return;
+    this._line.clear();
+    this._line.lineStyle(3, pixi(THEME.overlay.helmRam), 0.85);
+    this._line.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      this._line.lineTo(points[i].x, points[i].y);
+    }
+  }
+
   // ── Internals ────────────────────────────────────────────────────────────
 
   static _tokenBasis(token) {

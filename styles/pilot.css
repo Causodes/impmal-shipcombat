@@ -224,6 +224,27 @@
   cursor: default;
 }
 
+/* Velocity bearing toggle (REL/TRUE) — icon-only link in section header */
+/* Inherits imsc-full-reset-link sizing/positioning; overrides hover colour */
+.imsc-vel-bearing-toggle {
+  opacity: 0.5;
+  font-size: 0.85rem;
+}
+.imsc-vel-bearing-toggle:hover {
+  opacity: 1;
+  color: var(--color-level-info, #4a9eff) !important;
+}
+
+/* Bearing budget bar: full-height progress-only bar (no range input inside) */
+.imsc-bearing-budget-bar {
+  cursor: default;
+}
+
+/* Momentum bar: same layout as power bar but amber background to convey min-move semantics */
+.imsc-momentum-bar {
+  background: #d4a014;
+}
+
 /* Confirm button */
 .imsc-helm-confirm-row {
   display: flex;

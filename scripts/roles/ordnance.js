@@ -117,6 +117,9 @@ export function buildOrdnanceContext(sys, opts = {}) {
   const componentManpower = opts.ordnanceBayStats?.manpower ?? 0;
   const storedMax    = sys.resources?.ordnance?.manpowerMax ?? 0;
   const manpowerMax  = storedMax > 0 ? storedMax : componentManpower;
+  const mpLabel      = opts.crewScale === "smallcraft"
+    ? (game?.i18n?.localize("IMSC.Ordnance.OPSmallCraft") ?? "Hands")
+    : (game?.i18n?.localize("IMSC.Ordnance.OP") ?? "Manpower");
   const bosunSL      = sys.resources?.ordnance?.bosunSL     ?? 0;
   const bosunRolled  = sys.resources?.ordnance?.bosunRolled  ?? false;
   const actionUsed   = sys.resources?.ordnance?.actionUsed   ?? false;
@@ -420,6 +423,7 @@ export function buildOrdnanceContext(sys, opts = {}) {
     manpowerMax,
     mpPct,
     mpLostPct,
+    mpLabel,
     auxPower,
     auxPowerMax,
     auxPowerPct,

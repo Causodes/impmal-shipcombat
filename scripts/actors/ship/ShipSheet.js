@@ -535,15 +535,49 @@ export class ShipSheet extends IMActorSheet {
         const h = buildHelmContext(sys, {
           engineComponent: components.find(i => i.system.slot === "engine" && i.system.equipped !== false),
           reactorStats: ShipCombatState.getReactorStats(this.actor),
+          shipRotation: this.actor.getActiveTokens()?.[0]?.document?.rotation ?? 0,
+          velocityBearingMode: this._velocityBearingMode ?? "relative",
         });
-        h.hasRamTargets = !!(
-          canvas?.ready &&
-          canvas?.tokens?.placeables?.some(t =>
-            t.document.actor?.id !== this.actor.id &&
-            !t.document.hidden &&
-            t.document.actor != null
-          )
-        );
+        h.hasRamTargets = (() => {
+          if (!canvas?.ready) return false;
+          const token = this.actor.getActiveTokens()?.[0];
+          if (!token) return false;
+          const isRealistic  = game.settings.get(MODULE_ID, "movementMode") === "realistic";
+          const fuelBurned   = sys.resources?.pilot?.fuelBurned ?? 0;
+          const baseSpeed    = sys.movement?.speed ?? 6;
+          const allocSpeed   = sys.resources?.pilot?.allocSpeed ?? 0;
+          const effSpeed     = Math.max(0, baseSpeed + allocSpeed);
+          const overdrive    = sys.resources?.pilot?.overdrive ?? false;
+          const apBonus      = sys.resources?.pilot?.apThrustBonus ?? 0;
+          const powerMax     = (overdrive ? 200 : 100) + apBonus;
+          const powerRemaining = Math.max(0, powerMax - fuelBurned);
+          const baseMano     = sys.movement?.maneuverability ?? 2;
+          const allocMano    = sys.resources?.pilot?.allocMano ?? 0;
+          const maxBearingDeg = Math.max(0, baseMano + allocMano) * 15;
+          const vx = isRealistic ? (sys.resources?.pilot?.velocityX ?? 0) : 0;
+          const vy = isRealistic ? (sys.resources?.pilot?.velocityY ?? 0) : 0;
+          const carryPct     = isRealistic ? (this._helmState?.carryPct ?? 0) : 0;
+          const prevTurnMove = sys.resources?.pilot?.prevTurnMove ?? 0;
+          const minMove      = Math.ceil(prevTurnMove / 2);
+          const minMovePx    = (!isRealistic && fuelBurned === 0) ? minMove : 0;
+          const shipBasis    = HelmPreview._tokenBasis(token);
+          const gridSize     = canvas.grid.size;
+          return canvas.tokens.placeables.some(t => {
+            if (t === token || t.document.hidden || !t.document.actor) return false;
+            const tW = t.document.width  * gridSize;
+            const tH = t.document.height * gridSize;
+            const tx = t.document.x + tW / 2;
+            const ty = t.document.y + tH / 2;
+            const reach = isRealistic
+              ? HelmPreview.canReachRealistic(shipBasis, tx, ty, effSpeed, maxBearingDeg, powerRemaining, powerMax, vx, vy, carryPct)
+              : HelmPreview.canReach(shipBasis, tx, ty, effSpeed, maxBearingDeg, powerRemaining, powerMax, minMovePx);
+            if (!reach) return false;
+            const cx = token.document.x + token.document.width  * gridSize / 2;
+            const cy = token.document.y + token.document.height * gridSize / 2;
+            const dist = Math.hypot((tx - cx) / gridSize, (ty - cy) / gridSize);
+            return ShipCombatState.getEffectiveLockTier(t.id, dist) >= 1;
+          });
+        })();
         return h;
       })(),
       engineerCtx: buildEngineerContext(sys, {
@@ -563,6 +597,7 @@ export class ShipSheet extends IMActorSheet {
         ordnanceBayStats: ShipCombatState.getOrdnanceBayStats(this.actor),
         reactorStats:     ShipCombatState.getReactorStats(this.actor),
         useStrikeCraft:   sys.useStrikeCraft !== false,
+        crewScale:        sys.crewScale ?? "warship",
       }),
       captainCtx: buildCaptainContext(sys, {
         reactorStats: ShipCombatState.getReactorStats(this.actor),
@@ -622,6 +657,11 @@ export class ShipSheet extends IMActorSheet {
         { value: 3, label: "3", selected: crewSize === 3 },
       ],
       useStrikeCraft: sys.useStrikeCraft !== false,
+      crewScaleWarship:   (sys.crewScale ?? "warship") === "warship",
+      crewScaleSmallCraft: sys.crewScale === "smallcraft",
+      crewScaleLabel: sys.crewScale === "smallcraft"
+        ? game.i18n.localize("IMSC.Config.CrewScaleSmallCraft")
+        : game.i18n.localize("IMSC.Config.CrewScaleWarship"),
       ordnanceLaunchSides: (() => {
         const SIDE_LABELS = {
           bow: game.i18n.localize("IMSC.Sector.Bow"),

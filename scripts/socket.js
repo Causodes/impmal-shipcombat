@@ -220,6 +220,7 @@ async function _handleAction(action, payload = {}) {
         payload.attackAngle ?? 0,
         payload.powerMax ?? 100,
         payload.rammingActorId ?? null,
+        payload.maxBearingDeg ?? 30,
       );
       if (payload.waypoints?.length) {
         // Animate path for the ramming token (player ship or NPC)

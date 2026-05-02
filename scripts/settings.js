@@ -42,4 +42,18 @@ export function registerSettings() {
       "military": "IMSC.Flavor.Military",
     },
   });
+
+  game.settings.register(MODULE_ID, "movementMode", {
+    name: "IMSC.Setting.MovementMode",
+    hint: "IMSC.Setting.MovementModeHint",
+    scope: "world",
+    config: true,
+    requiresReload: true,
+    type: String,
+    default: "simplified",
+    choices: {
+      "simplified": "IMSC.Config.MovementSimplified",
+      "realistic":  "IMSC.Config.MovementRealistic",
+    },
+  });
 }

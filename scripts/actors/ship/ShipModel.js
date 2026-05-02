@@ -26,6 +26,7 @@ export class ShipModel extends warhammer.models.BaseWarhammerActorModel {
     schema.round          = new fields.NumberField({ initial: 0, min: 0, integer: true });
     schema.crewSize       = new fields.NumberField({ initial: 6, min: 3, max: 6, integer: true });
     schema.useStrikeCraft = new fields.BooleanField({ initial: true });
+    schema.crewScale      = new fields.StringField({ initial: "warship", choices: ["warship", "smallcraft"] });
 
     // ── Bridge crew assignments { [userId]: roleId } ─────────────────────
     schema.roles         = new fields.ObjectField({ initial: {} });

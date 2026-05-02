@@ -34,7 +34,7 @@
                 <span class="imsc-resource-bar-value" style="color: #7ec8e3">{{gunnerCtx.power}}/{{gunnerCtx.powerMax}}</span>
             </div>
             <div class="imsc-resource-bar-row">
-                <span class="imsc-resource-bar-label">{{localize "IMSC.Ordnance.OP"}}</span>
+                <span class="imsc-resource-bar-label">{{ordnanceCtx.mpLabel}}</span>
                 <div class="imsc-resource-bar-track imsc-resource-bar-track--plasma">
                     <div class="imsc-resource-bar-fill imsc-bar-op" style="width: {{ordnanceCtx.mpPct}}%"></div>
                     {{#if ordnanceCtx.mpLostPct}}

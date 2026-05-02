@@ -212,6 +212,21 @@ input[data-slot-count]:focus {
   cursor: not-allowed;
 }
 
+/* Launch-side rows: center the pill group beneath a small label */
+.imsc-config-row--launch {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.imsc-config-label--launch {
+  font-weight: 600;
+  font-size: 0.8em;
+  opacity: 0.7;
+  white-space: nowrap;
+  text-align: center;
+}
+
 /* Separator between basic config rows and launch-side toggles */
 .imsc-config-sep {
   border: none;

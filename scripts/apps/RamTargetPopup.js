@@ -41,6 +41,10 @@ export class RamTargetPopup extends foundry.applications.api.HandlebarsApplicati
   minMoveGridUnits = 0;
   fuelBurned      = 0;
   shipBasis       = null;
+  isRealistic     = false;
+  velocityX       = 0;
+  velocityY       = 0;
+  carryPct        = 0;
 
   constructor(options = {}) {
     super(options);
@@ -52,6 +56,10 @@ export class RamTargetPopup extends foundry.applications.api.HandlebarsApplicati
     this.minMoveGridUnits = options.minMoveGridUnits ?? 0;
     this.fuelBurned       = options.fuelBurned       ?? 0;
     this.shipBasis        = options.shipBasis        ?? null;
+    this.isRealistic      = options.isRealistic      ?? false;
+    this.velocityX        = options.velocityX        ?? 0;
+    this.velocityY        = options.velocityY        ?? 0;
+    this.carryPct         = options.carryPct         ?? 0;
   }
 
   static DEFAULT_OPTIONS = {
@@ -102,12 +110,20 @@ export class RamTargetPopup extends foundry.applications.api.HandlebarsApplicati
       const ty = candidate.y + cH / 2;
 
       // Arc/reach check
-      const reach = HelmPreview.canReach(
-        shipBasis, tx, ty,
-        this.effSpeed, this.maxBearingDeg,
-        this.powerRemaining, this.powerMax,
-        this.minMoveGridUnits,
-      );
+      const reach = this.isRealistic
+        ? HelmPreview.canReachRealistic(
+            shipBasis, tx, ty,
+            this.effSpeed, this.maxBearingDeg,
+            this.powerRemaining, this.powerMax,
+            this.velocityX, this.velocityY,
+            this.carryPct,
+          )
+        : HelmPreview.canReach(
+            shipBasis, tx, ty,
+            this.effSpeed, this.maxBearingDeg,
+            this.powerRemaining, this.powerMax,
+            this.minMoveGridUnits,
+          );
       if (!reach) continue;
 
       // Lock-tier gate (same logic as TargetingPopup)
@@ -190,7 +206,11 @@ export class RamTargetPopup extends foundry.applications.api.HandlebarsApplicati
         if (!target) return;
         const token = this.ship?.getActiveTokens?.()?.[0];
         if (token) {
-          HelmPreview.showRam(token, target.bearingDeg, target.thrustPct, this.effSpeed, this.minMoveGridUnits);
+          if (this.isRealistic) {
+            HelmPreview.showRamRealistic(token, target.bearingDeg, target.thrustPct, this.effSpeed, this.velocityX, this.velocityY, this.carryPct);
+          } else {
+            HelmPreview.showRam(token, target.bearingDeg, target.thrustPct, this.effSpeed, this.minMoveGridUnits);
+          }
         }
         this._showTargetRing(target);
       });
@@ -269,10 +289,20 @@ export class RamTargetPopup extends foundry.applications.api.HandlebarsApplicati
     if (!confirmed) return;
 
     // Show final arc preview while projecting
-    HelmPreview.showRam(token, target.bearingDeg, target.thrustPct, this.effSpeed, this.minMoveGridUnits);
+    if (this.isRealistic) {
+      HelmPreview.showRamRealistic(token, target.bearingDeg, target.thrustPct, this.effSpeed, this.velocityX, this.velocityY, this.carryPct);
+    } else {
+      HelmPreview.showRam(token, target.bearingDeg, target.thrustPct, this.effSpeed, this.minMoveGridUnits);
+    }
 
-    const projected = HelmPreview.projectPosition(token, target.bearingDeg, target.thrustPct, this.effSpeed, this.minMoveGridUnits);
-    const waypoints  = HelmPreview.projectWaypoints(token, target.bearingDeg, target.thrustPct, this.effSpeed, this.minMoveGridUnits);
+    let projected, waypoints;
+    if (this.isRealistic) {
+      projected = HelmPreview.projectPositionRealistic(token, target.bearingDeg, target.thrustPct, this.effSpeed, this.velocityX, this.velocityY, this.carryPct);
+      waypoints = HelmPreview.projectWaypointsRealistic(token, target.bearingDeg, target.thrustPct, this.effSpeed, this.velocityX, this.velocityY, this.carryPct);
+    } else {
+      projected = HelmPreview.projectPosition(token, target.bearingDeg, target.thrustPct, this.effSpeed, this.minMoveGridUnits);
+      waypoints = HelmPreview.projectWaypoints(token, target.bearingDeg, target.thrustPct, this.effSpeed, this.minMoveGridUnits);
+    }
     HelmPreview.hide();
 
     if (!projected) {
@@ -282,11 +312,17 @@ export class RamTargetPopup extends foundry.applications.api.HandlebarsApplicati
 
     const fuelUsed = this.powerMax;  // ram consumes ALL remaining power
 
+    // Max out the momentum slider visually (mirrors how thrust is maxed)
+    if (this.isRealistic) {
+      const sheet = this.ship?.sheet;
+      if (sheet?._helmState) sheet._helmState.carryPct = 100;
+    }
+
     emitToGM("pilotRam", {
       userId:         game.user.id,
       targetTokenId:  tokenId,
       fuelUsed,
-      driftUsed:      this.minMoveGridUnits,
+      driftUsed:      this.isRealistic ? 0 : this.minMoveGridUnits,
       speed:          this.effSpeed,
       newX:           projected.x,
       newY:           projected.y,
@@ -295,6 +331,7 @@ export class RamTargetPopup extends foundry.applications.api.HandlebarsApplicati
       attackAngle:    target.attackAngle,
       powerMax:       this.powerMax,
       rammingActorId: this.ship?.id ?? null,
+      maxBearingDeg:  this.maxBearingDeg,
     });
 
     this.close();

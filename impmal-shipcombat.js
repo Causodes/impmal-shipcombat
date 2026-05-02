@@ -502,12 +502,44 @@ Hooks.on("updateCombat", async (combat, changes) => {
 
   // ── Ship's turn ENDED: auto-move at minimum speed if the ship didn't move ──
   if (prevCombatantId === shipCombatant.id) {
-    const fuelBurned = ship.system.resources?.pilot?.fuelBurned ?? 0;
-    if (fuelBurned === 0) {
-      const token = ship.getActiveTokens()?.[0];
-      if (token) {
-        const speed = (ship.system.movement?.speed ?? 6)
-                    + (ship.system.resources?.pilot?.allocSpeed ?? 0);
+    const fuelBurned  = ship.system.resources?.pilot?.fuelBurned ?? 0;
+    const token       = ship.getActiveTokens()?.[0];
+    const isRealistic = game.settings.get(MODULE_ID, "movementMode") === "realistic";
+
+    if (token) {
+      const speed = (ship.system.movement?.speed ?? 6)
+                  + (ship.system.resources?.pilot?.allocSpeed ?? 0);
+
+      if (isRealistic) {
+        // Realistic: always auto-drift the remaining uncarried portion of velocity,
+        // regardless of whether the pilot used thrust this turn.
+        const vx = ship.system.resources?.pilot?.velocityX ?? 0;
+        const vy = ship.system.resources?.pilot?.velocityY ?? 0;
+        const momentumUsed   = ship.system.resources?.pilot?.momentumUsed ?? 0;
+        const remainFraction = Math.max(0, 1 - momentumUsed / 100);
+        const velMag = Math.floor(Math.hypot(vx, vy) * remainFraction);
+        if (velMag > 0) {
+          const gridSize = canvas.grid.size;
+          const tokenW   = token.document.width  * gridSize;
+          const tokenH   = token.document.height * gridSize;
+          const cx       = token.document.x + tokenW / 2;
+          const cy       = token.document.y + tokenH / 2;
+          const newCx    = cx + vx * gridSize * remainFraction;
+          const newCy    = cy + vy * gridSize * remainFraction;
+          await ShipCombatState.confirmMovement({
+            fuelUsed:         0,
+            driftUsed:        0,
+            speed,
+            newX:             newCx - tokenW / 2,
+            newY:             newCy - tokenH / 2,
+            newRotation:      token.document.rotation,
+            gridSquaresMoved: velMag,
+            velocityX:        vx,
+            velocityY:        vy,
+          });
+        }
+      } else if (fuelBurned === 0) {
+        // Simplified: auto-move at minimum speed straight ahead only if no thrust used.
         const prevTurnMove = ship.system.resources?.pilot?.prevTurnMove ?? 0;
         const minMove      = Math.ceil(prevTurnMove / 2);
         const bearing      = ship.system.resources?.pilot?.bearing ?? 0;

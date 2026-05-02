@@ -30,15 +30,44 @@ export async function consumePilotCore(userId, actionId) {
 
 /**
  * Overcharge – Retrograde Thrust: reduce the min-move obligation by retroValue VU.
+ * In Realistic mode, cancels up to retroValue VU of velocity along the current heading.
  */
 export async function pilotRetrograde(userId, retroValue, newX, newY, newRotation, waypoints) {
   const consumed = await this.consumePilotCore(userId, "retro");
   if (!consumed) return;
 
-  const data          = this.getData();
-  const prevMove      = data.resources?.pilot?.prevTurnMove ?? 0;
-  const currentMin    = Math.ceil(prevMove / 2);
-  const newMin        = Math.max(0, currentMin - retroValue);
+  const data = this.getData();
+  const isRealistic = game.settings.get(MODULE_ID, "movementMode") === "realistic";
+
+  if (isRealistic) {
+    const token = this.ship?.getActiveTokens()?.[0];
+    const vx = data.resources?.pilot?.velocityX ?? 0;
+    const vy = data.resources?.pilot?.velocityY ?? 0;
+    const vmag = Math.hypot(vx, vy);
+    if (vmag > 0 && token) {
+      // Cancel retroValue VU from the velocity along the current heading direction
+      const h0 = (token.document.rotation - 90) * (Math.PI / 180);
+      const dot = vx * Math.cos(h0) + vy * Math.sin(h0);
+      const cancel = Math.min(retroValue, Math.max(0, dot));
+      const newVx = vx - cancel * Math.cos(h0);
+      const newVy = vy - cancel * Math.sin(h0);
+      await this.update({
+        "resources.pilot.velocityX": newVx,
+        "resources.pilot.velocityY": newVy,
+      });
+      // Move token to retrograde position if any
+      if (waypoints?.length) {
+        // waypoints driven by caller
+      } else if (newX !== undefined) {
+        await token.document.update({ x: newX, y: newY, rotation: newRotation }, { animate: true });
+      }
+    }
+    return;
+  }
+
+  const prevMove   = data.resources?.pilot?.prevTurnMove ?? 0;
+  const currentMin = Math.ceil(prevMove / 2);
+  const newMin     = Math.max(0, currentMin - retroValue);
   await this.update({ "resources.pilot.prevTurnMove": newMin * 2 });
 }
 
@@ -54,11 +83,39 @@ export async function pilotOverdrive(userId) {
 
 /**
  * Overcharge – Strafe: move the ship token laterally without changing heading.
+ * In Realistic mode, also adds the lateral delta to the velocity vector.
  */
 export async function pilotStrafe(userId, newX, newY, newRotation, dist, waypoints) {
   const consumed = await this.consumePilotCore(userId, "strafe");
   if (!consumed) return;
-  await this.confirmMovement({ fuelUsed: this.getData().resources?.pilot?.fuelBurned ?? 0, newX, newY, newRotation, gridSquaresMoved: dist, waypoints });
+  const data = this.getData();
+  const isRealistic = game.settings.get(MODULE_ID, "movementMode") === "realistic";
+  let velocityX, velocityY;
+  if (isRealistic) {
+    const token = this.ship?.getActiveTokens()?.[0];
+    const vx = data.resources?.pilot?.velocityX ?? 0;
+    const vy = data.resources?.pilot?.velocityY ?? 0;
+    if (token) {
+      // Determine direction from displacement vs current heading perpendicular
+      const h0 = (token.document.rotation - 90) * (Math.PI / 180);
+      const perpAngle = h0 + Math.PI / 2; // starboard
+      // Project displacement onto perp to get signed dist
+      const gridSize = (typeof canvas !== "undefined") ? canvas.grid.size : 100;
+      const dx = (newX - (token.document.x ?? 0)) / gridSize;
+      const dy = (newY - (token.document.y ?? 0)) / gridSize;
+      const signedDist = dx * Math.cos(perpAngle) + dy * Math.sin(perpAngle);
+      velocityX = vx + Math.cos(perpAngle) * signedDist;
+      velocityY = vy + Math.sin(perpAngle) * signedDist;
+    }
+  }
+  await this.confirmMovement({
+    fuelUsed: data.resources?.pilot?.fuelBurned ?? 0,
+    newX, newY, newRotation,
+    gridSquaresMoved: dist,
+    waypoints,
+    velocityX,
+    velocityY,
+  });
 }
 
 /**
@@ -70,6 +127,7 @@ export async function pilotFlipAndBurn(userId, halfSpeedUnits, newX, newY, newRo
   if (!consumed) return;
   const data       = this.getData();
   const fuelBurned = data.resources?.pilot?.fuelBurned ?? 0;
+  const isRealistic = game.settings.get(MODULE_ID, "movementMode") === "realistic";
   await this.confirmMovement({
     fuelUsed:         fuelBurned + 50,
     newX,
@@ -77,6 +135,9 @@ export async function pilotFlipAndBurn(userId, halfSpeedUnits, newX, newY, newRo
     newRotation,
     gridSquaresMoved: halfSpeedUnits,
     waypoints,
+    // In Realistic mode the burn fully arrests momentum (velocity → 0)
+    velocityX: isRealistic ? 0 : undefined,
+    velocityY: isRealistic ? 0 : undefined,
   });
 }
 
@@ -104,8 +165,9 @@ export async function apToThrust(userId) {
 
 /**
  * Confirm a helm movement segment. Updates fuel burned, drift accumulated, prevTurnMove, and token position.
+ * In Realistic mode, also stores the new velocity vector.
  */
-export async function confirmMovement({ fuelUsed, driftUsed = 0, speed, newX, newY, newRotation, gridSquaresMoved, waypoints }) {
+export async function confirmMovement({ fuelUsed, driftUsed = 0, speed, newX, newY, newRotation, gridSquaresMoved, waypoints, velocityX, velocityY, bearingDelta, momentumUsed }) {
   const data = this.getData();
   const effectiveSpeed = speed
     ?? (this.ship?.system?.movement?.speed ?? 6) + (data.resources?.pilot?.allocSpeed ?? 0);
@@ -113,11 +175,28 @@ export async function confirmMovement({ fuelUsed, driftUsed = 0, speed, newX, ne
   const newDriftBurned = existingDrift + driftUsed;
   // prevTurnMove = total grid squares moved this turn (fuel-based + accumulated drift)
   const prevTurnMove = (fuelUsed / 100) * effectiveSpeed + newDriftBurned;
-  await this.update({
+  const updates = {
     "resources.pilot.fuelBurned":   fuelUsed,
     "resources.pilot.driftBurned":  newDriftBurned,
     "resources.pilot.prevTurnMove": prevTurnMove,
-  });
+  };
+  // Persist velocity vector when provided (Realistic mode)
+  if (velocityX !== undefined && velocityY !== undefined) {
+    updates["resources.pilot.velocityX"] = velocityX;
+    updates["resources.pilot.velocityY"] = velocityY;
+  }
+  // Track bearing budget spent this turn (Realistic mode)
+  if (bearingDelta !== undefined && bearingDelta > 0) {
+    const existingBearingUsed = data.resources?.pilot?.bearingUsed ?? 0;
+    updates["resources.pilot.bearingUsed"] = existingBearingUsed + bearingDelta;
+  }
+  // Track momentum carry committed this turn (Realistic mode)
+  if (momentumUsed !== undefined) {
+    updates["resources.pilot.momentumUsed"] = momentumUsed;
+  }
+  // Reset bearing to centre after each committed move
+  updates["resources.pilot.bearing"] = 0;
+  await this.update(updates);
 
   if (!waypoints?.length) {
     const token = this.ship?.getActiveTokens()?.[0];
@@ -158,7 +237,7 @@ export async function confirmMovement({ fuelUsed, driftUsed = 0, speed, newX, ne
 export async function pilotRam(
   userId, targetTokenId, fuelUsed, driftUsed, speed,
   newX, newY, newRotation, waypoints, attackAngle, powerMax,
-  rammingActorId = null,
+  rammingActorId = null, maxBearingDeg = 30,
 ) {
   const RAM_COEFF = 2; // Tunable damage coefficient
 
@@ -234,13 +313,13 @@ export async function pilotRam(
   // ── 7. Damage TO rammed ship (uses RAMMING ship's stats) ──────────────────
   const rammingBowArmour = Math.max(1, rammingSys?.armour?.bow ?? 0);
   const rammingHullMax   = rammingSys?.hull?.max ?? 50;
-  const rammingBase      = rammingBowArmour + 0.1 * rammingHullMax;
+  const rammingBase      = rammingBowArmour + 0.25 * rammingHullMax;
   const damageToRammed   = Math.max(1, Math.round(rammingBase * thrustFraction * angleModRammed * RAM_COEFF));
 
   // ── 8. Damage TO ramming ship (uses RAMMED ship's stats; bow armour soaks) ──
   const rammingTakesArmour  = Math.max(1, rammedSys?.armour?.[hitSectorRammed] ?? 0);
   const rammingTakesHullMax = rammedSys?.hull?.max ?? 50;
-  const rammingBase2        = rammingTakesArmour + 0.1 * rammingTakesHullMax;
+  const rammingBase2        = rammingTakesArmour + 0.25 * rammingTakesHullMax;
   const rawDamageToRamming  = Math.round(rammingBase2 * thrustFraction * 1.0 * RAM_COEFF);
   const damageToRamming     = Math.max(0, rawDamageToRamming - rammingBowArmour);
 
@@ -261,21 +340,78 @@ export async function pilotRam(
   if (damageToRammed  > 0) await rollCrit.call(this, rammedActor,   damageToRammed,  false, 0);
   if (damageToRamming > 0) await rollCrit.call(this, rammingActor,  damageToRamming, false, 0);
 
-  // ── 12. Displace rammed ship half a tile in the impact direction ──────────
-  if (rammedToken && canvas?.ready) {
-    const gridSize   = canvas.grid.size;
-    const halfTile   = gridSize * 0.5;
-    const displaceX  = (rammedToken.document?.x ?? 0) + Math.cos(attackAngle) * halfTile;
-    const displaceY  = (rammedToken.document?.y ?? 0) + Math.sin(attackAngle) * halfTile;
-    await rammedToken.document.update({ x: displaceX, y: displaceY }, { animate: true });
-  }
+  // ── 12. Displace rammed ship + velocity transfer ──────────────────────────
+  const isRealistic = game.settings.get(MODULE_ID, "movementMode") === "realistic";
+  let rammingToken;
 
-  // ── 13. Rotate ramming ship ±20° randomly ─────────────────────────────────
-  const rammingToken = rammingActor?.getActiveTokens?.()?.[0];
-  if (rammingToken && canvas?.ready) {
-    const jitter    = Math.random() * 40 - 20; // −20° to +20°
-    const newRot    = ((rammingToken.document.rotation ?? 0) + jitter + 360) % 360;
-    await rammingToken.document.update({ rotation: newRot }, { animate: false });
+  if (isRealistic) {
+    // Normal-projection 50/50 velocity split
+    const nx = Math.cos(attackAngle);
+    const ny = Math.sin(attackAngle);
+    // Ramming ship velocity (post-thrust, stored by confirmMovement)
+    const rvx = rammingActor.system?.resources?.pilot?.velocityX ?? 0;
+    const rvy = rammingActor.system?.resources?.pilot?.velocityY ?? 0;
+    const dot = rvx * nx + rvy * ny;
+    const icx = dot * nx;  // impact component x
+    const icy = dot * ny;  // impact component y
+    // Ramming ship retains 20% of its total velocity (the rest is lost to the impact)
+    const newRvx = rvx * 0.20;
+    const newRvy = rvy * 0.20;
+    // Rammed ship gains 50% of the ramming ship's velocity vector
+    const tvx = rammedActor.system?.resources?.pilot?.velocityX ?? 0;
+    const tvy = rammedActor.system?.resources?.pilot?.velocityY ?? 0;
+    const newTvx = tvx + rvx * 0.50;
+    const newTvy = tvy + rvy * 0.50;
+    await rammingActor.update({
+      "system.resources.pilot.velocityX": newRvx,
+      "system.resources.pilot.velocityY": newRvy,
+    });
+    await rammedActor.update({
+      "system.resources.pilot.velocityX": newTvx,
+      "system.resources.pilot.velocityY": newTvy,
+    });
+    // Physical displacement: push rammed ship one full tile in impact direction
+    if (rammedToken && canvas?.ready) {
+      const gridSize  = canvas.grid.size;
+      const displaceX = (rammedToken.document?.x ?? 0) + Math.cos(attackAngle) * gridSize;
+      const displaceY = (rammedToken.document?.y ?? 0) + Math.sin(attackAngle) * gridSize;
+      await rammedToken.document.update({ x: displaceX, y: displaceY }, { animate: true });
+    }
+    // ── 13. Final rotation: orthogonal to impact angle, clamped to bearing arc ──
+    rammingToken = rammingActor?.getActiveTokens?.()?.[0];
+    if (rammingToken && canvas?.ready) {
+      const h0deg      = rammingToken.document.rotation ?? 0;
+      const mano       = rammingActor.system?.movement?.maneuverability ?? 2;
+      const allocMano  = rammingActor.system?.resources?.pilot?.allocMano ?? 0;
+      // Cap at 20° – a meaningful orientation nudge toward orthogonal, not a full re-aim
+      const maxBearing = Math.min(20, Math.max(0, mano + allocMano) * 15);
+      const { HelmPreview } = await import("../canvas/HelmPreview.js").catch(() => ({ HelmPreview: null }));
+      let newRot;
+      if (HelmPreview) {
+        newRot = HelmPreview.computeRamRotationRealistic(h0deg, attackAngle, maxBearing);
+      } else {
+        // Fallback: ±20° jitter
+        const jitter = Math.random() * 40 - 20;
+        newRot = ((h0deg + jitter) + 360) % 360;
+      }
+      await rammingToken.document.update({ rotation: newRot }, { animate: false });
+    }
+  } else {
+    // ── 12. Simplified: displace rammed ship one full tile in the impact direction ──
+    if (rammedToken && canvas?.ready) {
+      const gridSize   = canvas.grid.size;
+      const displaceX  = (rammedToken.document?.x ?? 0) + Math.cos(attackAngle) * gridSize;
+      const displaceY  = (rammedToken.document?.y ?? 0) + Math.sin(attackAngle) * gridSize;
+      await rammedToken.document.update({ x: displaceX, y: displaceY }, { animate: true });
+    }
+
+    // ── 13. Rotate ramming ship ±20° randomly ─────────────────────────────────
+    rammingToken = rammingActor?.getActiveTokens?.()?.[0];
+    if (rammingToken && canvas?.ready) {
+      const jitter    = Math.random() * 40 - 20; // −20° to +20°
+      const newRot    = ((rammingToken.document.rotation ?? 0) + jitter + 360) % 360;
+      await rammingToken.document.update({ rotation: newRot }, { animate: false });
+    }
   }
 
   // ── 14. Chat message ───────────────────────────────────────────────────────

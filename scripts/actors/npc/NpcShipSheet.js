@@ -12,6 +12,7 @@
  */
 
 import { MODULE_ID, MACRO_FIRE_TIERS, LANCE_CHARGE_TIERS, SHIP_CLASSIFICATIONS, buildChargeTiers, CRIT_CONDITIONS, CRIT_LOCATIONS } from "../../constants.js";
+import { ShipCombatState } from "../../state/ShipCombatState.js";
 import { HelmPreview } from "../../canvas/HelmPreview.js";
 import { WeaponArcOverlay } from "../../canvas/WeaponArcOverlay.js";
 import { buildHelmContext, helmUpdatePreview } from "../../roles/pilot.js";
@@ -168,14 +169,45 @@ export class NpcShipSheet extends IMActorSheet {
 
     // Helm context
     const helm = buildHelmContext(sys);
-    helm.hasRamTargets = !!(
-      canvas?.ready &&
-      canvas?.tokens?.placeables?.some(t =>
-        t.document.actor?.id !== this.actor.id &&
-        !t.document.hidden &&
-        t.document.actor != null
-      )
-    );
+    helm.hasRamTargets = (() => {
+      if (!canvas?.ready) return false;
+      const token = this.actor.getActiveTokens()?.[0];
+      if (!token) return false;
+      const isRealistic  = game.settings.get(MODULE_ID, "movementMode") === "realistic";
+      const fuelBurned   = sys.resources?.pilot?.fuelBurned ?? 0;
+      const baseSpeed    = sys.movement?.speed ?? 6;
+      const allocSpeed   = sys.resources?.pilot?.allocSpeed ?? 0;
+      const effSpeed     = Math.max(0, baseSpeed + allocSpeed);
+      const overdrive    = sys.resources?.pilot?.overdrive ?? false;
+      const apBonus      = sys.resources?.pilot?.apThrustBonus ?? 0;
+      const powerMax     = (overdrive ? 200 : 100) + apBonus;
+      const powerRemaining = Math.max(0, powerMax - fuelBurned);
+      const baseMano     = sys.movement?.maneuverability ?? 2;
+      const allocMano    = sys.resources?.pilot?.allocMano ?? 0;
+      const maxBearingDeg = Math.max(0, baseMano + allocMano) * 15;
+      const vx = isRealistic ? (sys.resources?.pilot?.velocityX ?? 0) : 0;
+      const vy = isRealistic ? (sys.resources?.pilot?.velocityY ?? 0) : 0;
+      const prevTurnMove = sys.resources?.pilot?.prevTurnMove ?? 0;
+      const minMove      = Math.ceil(prevTurnMove / 2);
+      const minMovePx    = (!isRealistic && fuelBurned === 0) ? minMove : 0;
+      const shipBasis    = HelmPreview._tokenBasis(token);
+      const gridSize     = canvas.grid.size;
+      return canvas.tokens.placeables.some(t => {
+        if (t === token || t.document.hidden || !t.document.actor) return false;
+        const tW = t.document.width  * gridSize;
+        const tH = t.document.height * gridSize;
+        const tx = t.document.x + tW / 2;
+        const ty = t.document.y + tH / 2;
+        const reach = isRealistic
+          ? HelmPreview.canReachRealistic(shipBasis, tx, ty, effSpeed, maxBearingDeg, powerRemaining, powerMax, vx, vy, 0)
+          : HelmPreview.canReach(shipBasis, tx, ty, effSpeed, maxBearingDeg, powerRemaining, powerMax, minMovePx);
+        if (!reach) return false;
+        const cx = token.document.x + token.document.width  * gridSize / 2;
+        const cy = token.document.y + token.document.height * gridSize / 2;
+        const dist = Math.hypot((tx - cx) / gridSize, (ty - cy) / gridSize);
+        return ShipCombatState.getEffectiveLockTier(t.id, dist) >= 1;
+      });
+    })();
 
     Object.assign(context, {
       sys,
