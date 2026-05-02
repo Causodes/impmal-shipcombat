@@ -12,7 +12,7 @@ import { MODULE_ID } from "../constants.js";
  * If the ship has an ordnance actor template assigned, clone its data.
  * GM-only  -  called via socket from the OM's launch actions.
  */
-export async function spawnOrdnance({ type, parentShipTokenId, x, y, rotation, templateId }) {
+export async function spawnOrdnance({ type, parentShipTokenId, x, y, rotation, templateId, forcedHull }) {
   if (!game.user.isGM) return;
 
   const actorType = type === "strikeCraft"
@@ -28,9 +28,9 @@ export async function spawnOrdnance({ type, parentShipTokenId, x, y, rotation, t
   // Use the specified template if provided, otherwise fall back to the first
   const templateRef = (templateId ? templates.find(t => t.id === templateId) : null) ?? templates[0];
 
-  // Look up salvo/flight size from weapons bay component
-  let hullOverride = 1;
-  if (shipActor) {
+  // Look up salvo/flight size from weapons bay component (can be overridden by caller)
+  let hullOverride = forcedHull ?? 1;
+  if (!forcedHull && shipActor) {
     const bay = shipActor.items.find(i => i.type === `${MODULE_ID}.component` && i.system.slot === "weaponsBay");
     if (type === "torpedo") {
       hullOverride = bay?.system?.bayTorpedoSalvoSize ?? 1;

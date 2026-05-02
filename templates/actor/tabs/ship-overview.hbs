@@ -75,6 +75,16 @@
             </div>
             {{/each}}
         </div>
+        {{!-- End Turn button (only shown while in combat) --}}
+        {{#if isInCombat}}
+        <div class="imsc-end-turn-row">
+            <button class="imsc-end-turn-btn" data-action="endShipTurn"
+                    {{#unless allRolesReady}}disabled{{/unless}}
+                    data-tooltip="{{#if allRolesReady}}{{localize 'IMSC.Tooltip.EndShipTurn'}}{{else}}{{localize 'IMSC.Tooltip.EndShipTurnLocked'}}{{/if}}">
+                {{localize "IMSC.Action.EndShipTurn"}}
+            </button>
+        </div>
+        {{/if}}
     </div>
 
     {{!-- Installed Components --}}
@@ -118,21 +128,41 @@
             </div>
         </div>
 
-        {{!-- Torpedo & Strike Craft actor chips --}}
-        {{#if shipSlotSummary.ordnance.length}}
+        {{!-- Ordnance Slots --}}
+        {{#if ordnanceSlotCount}}
         <div class="imsc-ov-comp-section">
-            {{#each shipSlotSummary.ordnance}}
-            <div class="imsc-ov-slot-row imsc-ov-ordnance-row">
-                <span class="imsc-ov-slot-label">{{label}}</span>
-                <span class="imsc-ov-slot-items">
-                    {{#each items}}
-                    <a class="imsc-ov-comp-chip" data-action="viewOrdnanceActor" data-actor-id="{{id}}" data-tooltip="{{name}}">
-                        {{#if img}}<img src="{{img}}">{{/if}}<span>{{name}}</span>
+            <div class="imsc-ov-weapon-section-label">{{localize "IMSC.Label.OrdnanceSlots"}} <span class="imsc-ov-weapon-slots">{{ordnanceOccupiedCount}}/{{ordnanceSlotCount}}</span></div>
+            <div class="imsc-ov-ordnance-box">
+                {{#each ordnanceSelectorSlots}}
+                {{#if activeName}}
+                <div class="imsc-ov-comp-row">
+                    <a class="imsc-ov-comp-chip" data-action="viewOrdnanceActor" data-actor-id="{{activeId}}" data-tooltip="{{activeName}}">
+                        {{#if activeImg}}<img src="{{activeImg}}">{{/if}}<span>{{activeName}}</span>
                     </a>
+                    {{#if @root.canEditComponents}}
+                    <a data-action="clearOrdnanceSlot" data-slot-index="{{index}}" class="imsc-ov-unassign" data-tooltip="{{localize 'IMSC.Action.RemoveFromSlot'}}"><i class="fa-solid fa-xmark"></i></a>
+                    {{/if}}
+                </div>
+                {{/if}}
+                {{/each}}
+                {{#if canEditComponents}}
+                {{#if ordnanceHasRoom}}
+                {{#if ordnanceInventory.length}}
+                <select data-ordnance-slot-index="{{nextOrdnanceSlotIndex}}" class="imsc-ov-weapon-add imsc-ov-ordnance-add">
+                    <option value="">— {{localize "IMSC.Label.AddFromInventory"}} —</option>
+                    {{#each ordnanceInventory}}
+                    <option value="{{value}}">{{name}}</option>
                     {{/each}}
-                </span>
+                </select>
+                {{/if}}
+                {{/if}}
+                {{/if}}
+                {{#unless ordnanceOccupiedCount}}
+                {{#unless canEditComponents}}
+                <span class="imsc-ov-empty">&mdash;</span>
+                {{/unless}}
+                {{/unless}}
             </div>
-            {{/each}}
         </div>
         {{/if}}
 

@@ -24,6 +24,27 @@ import { RecoverCraftPopup } from "../apps/StrikeCraftPopups.js";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
+/**
+ * Return the torpedo and strike-craft templates that are currently loaded in
+ * the ordnance bays, as selected on the Overview tab.  If nothing is selected
+ * the arrays are empty and ordnance actions are unavailable.
+ */
+function _getActiveTemplates(sys) {
+  const active = sys.activeOrdnance ?? [];
+  const torpInv = sys.ordnanceActors?.torpedo     ?? [];
+  const scInv   = sys.ordnanceActors?.strikeCraft ?? [];
+  return {
+    torpedoTemplates: active
+      .filter(a => a?.type === "torpedo")
+      .map(a => torpInv.find(t => t?.id === a.actorId))
+      .filter(Boolean),
+    craftTemplates: active
+      .filter(a => a?.type === "strikeCraft")
+      .map(a => scInv.find(t => t?.id === a.actorId))
+      .filter(Boolean),
+  };
+}
+
 async function _resolveOrdnanceActor(sheet) {
   const sys = sheet.actor.system;
   const ref = sys.crewActors?.ordnance;
@@ -101,7 +122,14 @@ export function buildOrdnanceContext(sys, opts = {}) {
   const actionUsed   = sys.resources?.ordnance?.actionUsed   ?? false;
   const coreUsed     = sys.resources?.ordnance?.coreActionUsed ?? false;
   // Single coreCount integer replaces the old captainFreeCores + assignedCores dual-variable system
-  const coreCount           = sys.resources?.ordnance?.coreCount ?? 0;
+  // In reduced-crew modes the ordnance role is absorbed by another station:
+  //   crewSize = 5  → captain handles ordnance (fall back to captain.coreCount)
+  //   crewSize <= 4 → gunner handles ordnance  (fall back to gunner.coreCount)
+  const _ordCoreDirect = sys.resources?.ordnance?.coreCount ?? 0;
+  const _crewSz = sys.crewSize ?? 6;
+  const coreCount = _ordCoreDirect
+    || (_crewSz === 5  ? (sys.resources?.captain?.coreCount ?? 0) : 0)
+    || (_crewSz <= 4   ? (sys.resources?.gunner?.coreCount  ?? 0) : 0);
   const hasCoreAssigned     = coreCount > 0;
   const coreActionsPlayed   = sys.resources?.ordnance?.coreActionsPlayed ?? [];
   const coreActionsPlayedLabels = coreActionsPlayed.map(id => {
@@ -137,8 +165,7 @@ export function buildOrdnanceContext(sys, opts = {}) {
   const autoLoadTimer   = sys.resources?.ordnance?.autoLoadTimer ?? 2;
 
   // Readiness counts  -  armed torpedoes & strike craft templates available on ship
-  const torpedoTemplates    = sys.ordnanceActors?.torpedo     ?? [];
-  const craftTemplates      = sys.ordnanceActors?.strikeCraft ?? [];
+  const { torpedoTemplates, craftTemplates } = _getActiveTemplates(sys);
   const armedTorpedoes       = sys.resources?.ordnance?.armedTorpedoes       ?? 0;
   const armedCraft           = sys.resources?.ordnance?.armedCraft             ?? 0;
   const craftDestroyed       = sys.resources?.ordnance?.craftDestroyed         ?? 0;
@@ -164,17 +191,26 @@ export function buildOrdnanceContext(sys, opts = {}) {
   const torpedoCapacity     = opts.ordnanceBayStats?.torpedoCapacity ?? 4;
 
   // Ship state for action criteria
-  const internalFire = sys.internalFire ?? 0;
-  const hullValue    = opts.shipActor?.system?.hull?.value ?? 0;
-  const hullDamaged  = hullValue > 0;
+  const internalFire    = sys.internalFire ?? 0;
+  const hullValue       = opts.shipActor?.system?.hull?.value ?? 0;
+  const hullDamaged     = hullValue > 0;
+  const prowGunLocked   = sys.resources?.pilot?.prowGunLocked ?? false;
 
   // In 4-man mode the Gunner handles ordnance with no Bosun SL for allocation,
   // so base costs are pre-reduced via ORDNANCE_4MAN_COSTS.
   const crewSize = sys.crewSize ?? 6;
   const is4man = crewSize <= 4;
 
+  const useStrikeCraft = opts.useStrikeCraft !== false;
+
   // Build action list with affordability using allocated tracks.
-  const actions = Object.values(ORDNANCE_MASTER_ACTIONS).map(a => {
+  const actions = Object.values(ORDNANCE_MASTER_ACTIONS)
+    .filter(a => {
+      if (a.requiresStrikeCraft && !useStrikeCraft) return false;
+      if (a.hideWithStrikeCraft && useStrikeCraft)  return false;
+      return true;
+    })
+    .map(a => {
     const override = is4man ? ORDNANCE_4MAN_COSTS[a.id] : null;
     const baseCrew     = override?.crew     ?? a.crew;
     const baseDuration = override?.duration ?? a.duration;
@@ -184,13 +220,17 @@ export function buildOrdnanceContext(sys, opts = {}) {
 
     // Per-action criteria checks
     let criteriaMet = true;
-    if (a.id === "damageControl"  && internalFire <= 0) criteriaMet = false;
-    if (a.id === "hullRepairParty" && !hullDamaged)     criteriaMet = false;
-    if (a.id === "armTorpedo"     && torpedoTemplates.length === 0) criteriaMet = false;
-    if (a.id === "armCraft"       && craftTemplates.length === 0) criteriaMet = false;
-    if (a.id === "launchTorpedo"  && armedTorpedoes <= 0) criteriaMet = false;
-    if (a.id === "launchCraft"    && (craftTemplates.length === 0 || armedCraft <= 0 || deployedCraftCount >= maxFlightsVal || deployedCraftCount + craftDestroyed >= strikeCraftCapacity)) criteriaMet = false;
-    if (a.id === "recallCraft"    && deployedCraft.length === 0)    criteriaMet = false;
+    if (a.id === "damageControl"   && internalFire <= 0) criteriaMet = false;
+    if (a.id === "hullRepairParty" && !hullDamaged)      criteriaMet = false;
+    if (a.id === "armTorpedo"      && torpedoTemplates.length === 0) criteriaMet = false;
+    if (a.id === "armCraft"        && craftTemplates.length === 0) criteriaMet = false;
+    if (a.id === "launchTorpedo"   && armedTorpedoes <= 0) criteriaMet = false;
+    if (a.id === "torpedoSalvo"    && (torpedoTemplates.length === 0 || armedTorpedoes <= 0)) criteriaMet = false;
+    if (a.id === "emergencyLaunch" && torpedoTemplates.length === 0) criteriaMet = false;
+    if (a.id === "launchCraft"     && (craftTemplates.length === 0 || armedCraft <= 0 || deployedCraftCount >= maxFlightsVal || deployedCraftCount + craftDestroyed >= strikeCraftCapacity)) criteriaMet = false;
+    if (a.id === "recallCraft"     && deployedCraft.length === 0) criteriaMet = false;
+    // Bow ordnance locked after ramming
+    if (prowGunLocked && ["armTorpedo", "launchTorpedo", "torpedoSalvo", "emergencyLaunch", "armCraft", "launchCraft"].includes(a.id)) criteriaMet = false;
 
     return {
       ...a,
@@ -205,7 +245,13 @@ export function buildOrdnanceContext(sys, opts = {}) {
   });
 
   // Core actions (each consumes the assigned Power Core; no manpower cost)
-  const coreActions = ORDNANCE_MASTER_CORE_ACTIONS.map(a => {
+  const coreActions = ORDNANCE_MASTER_CORE_ACTIONS
+    .filter(a => {
+      if (a.requiresStrikeCraft && !useStrikeCraft) return false;
+      if (a.hideWithStrikeCraft && useStrikeCraft)  return false;
+      return true;
+    })
+    .map(a => {
     let criteriaMet = true;
     if (a.id === "combatRecoveryDoctrine") {
       criteriaMet = craftDestroyed > 0 || craftPartialRecovery > 0;
@@ -217,12 +263,21 @@ export function buildOrdnanceContext(sys, opts = {}) {
       const gunnerAmmo = sys.resources?.gunner?.ammo ?? 0;
       criteriaMet = gunnerAmmo >= 4;
     }
+    if (a.id === "rapidRearm") {
+      criteriaMet = torpedoTemplates.length > 0;
+    }
+
+    // rapidRearm: use a crew-size-specific description
+    let descLocalized = game.i18n.localize(a.desc);
+    if (a.id === "rapidRearm" && crewSize < 6) {
+      descLocalized = game.i18n.localize("IMSC.Ordnance.RapidRearmDescSmallCrew");
+    }
 
     return {
       ...a,
       icon: a.icon ?? "fa-solid fa-bolt",
       labelLocalized: game.i18n.localize(a.label),
-      descLocalized:  game.i18n.localize(a.desc),
+      descLocalized,
       canAfford: coreCount > 0 && criteriaMet,
     };
   });
@@ -578,7 +633,8 @@ async function _onOrdnanceMasterAction(event, target) {
     }
 
     // Pick template if multiple loaded
-    const torpTemplates = sys.ordnanceActors?.torpedo ?? [];
+    const torpTemplates = _getActiveTemplates(sys).torpedoTemplates;
+    if (!torpTemplates.length) return;
     const templateId = torpTemplates.length > 1
       ? await _promptTemplate(torpTemplates, game.i18n.localize("IMSC.Label.TorpedoActors"))
       : torpTemplates[0]?.id ?? null;
@@ -586,11 +642,11 @@ async function _onOrdnanceMasterAction(event, target) {
 
     emitToGM("updateResource", { roleId: "ordnance", key: "armedTorpedoes", value: armed - 1 });
 
-    const side = await _promptSide();
+    const side = await _promptSide(sys.ordnanceLaunchSides?.torpedo);
     if (!side) return;
     const shipToken = this.actor.getActiveTokens()?.[0];
-    const spawn = side === "bow"
-      ? _computeBowSpawn(shipToken)
+    const spawn = side === "bow" ? _computeBowSpawn(shipToken)
+      : side === "stern" ? _computeSternSpawn(shipToken)
       : _computePerpendicularSpawn(shipToken, side);
     emitToGM("spawnOrdnance", {
       type: "torpedo",
@@ -600,9 +656,65 @@ async function _onOrdnanceMasterAction(event, target) {
     });
   }
 
+  if (actionId === "torpedoSalvo") {
+    // Consumes 1 armed torpedo, spawns 2 tokens each at full salvo-size hull
+    const armed = sys.resources?.ordnance?.armedTorpedoes ?? 0;
+    if (armed <= 0) {
+      ui.notifications.warn(game.i18n.localize("IMSC.Ordnance.NoArmedTorpedoes"));
+      return;
+    }
+    const torpTemplates = _getActiveTemplates(sys).torpedoTemplates;
+    if (!torpTemplates.length) return;
+    const templateId = torpTemplates.length > 1
+      ? await _promptTemplate(torpTemplates, game.i18n.localize("IMSC.Label.TorpedoActors"))
+      : torpTemplates[0]?.id ?? null;
+    if (torpTemplates.length > 1 && !templateId) return;
+
+    emitToGM("updateResource", { roleId: "ordnance", key: "armedTorpedoes", value: armed - 1 });
+
+    const side = await _promptSide(sys.ordnanceLaunchSides?.torpedo);
+    if (!side) return;
+    const shipToken = this.actor.getActiveTokens()?.[0];
+    const spawn1 = side === "bow" ? _computeBowSpawn(shipToken)
+      : side === "stern" ? _computeSternSpawn(shipToken)
+      : _computePerpendicularSpawn(shipToken, side);
+    // Offset the second token slightly so they don't overlap
+    const spawn2 = { ...spawn1, x: (spawn1.x ?? 0) + (canvas.grid?.size ?? 100) };
+    emitToGM("spawnOrdnance", { type: "torpedo", templateId, parentShipTokenId: shipToken?.id ?? "", ...spawn1 });
+    emitToGM("spawnOrdnance", { type: "torpedo", templateId, parentShipTokenId: shipToken?.id ?? "", ...spawn2 });
+  }
+
+  if (actionId === "emergencyLaunch") {
+    // Spawns 1 torpedo with hull=1 (single warhead), bypasses armed status
+    const torpTemplates = _getActiveTemplates(sys).torpedoTemplates;
+    if (!torpTemplates.length) {
+      ui.notifications.warn(game.i18n.localize("IMSC.Ordnance.NoTorpedoConfig"));
+      return;
+    }
+    const templateId = torpTemplates.length > 1
+      ? await _promptTemplate(torpTemplates, game.i18n.localize("IMSC.Label.TorpedoActors"))
+      : torpTemplates[0]?.id ?? null;
+    if (torpTemplates.length > 1 && !templateId) return;
+
+    const side = await _promptSide(sys.ordnanceLaunchSides?.torpedo);
+    if (!side) return;
+    const shipToken = this.actor.getActiveTokens()?.[0];
+    const spawn = side === "bow" ? _computeBowSpawn(shipToken)
+      : side === "stern" ? _computeSternSpawn(shipToken)
+      : _computePerpendicularSpawn(shipToken, side);
+    emitToGM("spawnOrdnance", {
+      type: "torpedo",
+      templateId,
+      parentShipTokenId: shipToken?.id ?? "",
+      forcedHull: 1,
+      ...spawn,
+    });
+  }
+
   if (actionId === "launchCraft") {
     // Pick template if multiple loaded
-    const craftTemplates = sys.ordnanceActors?.strikeCraft ?? [];
+    const craftTemplates = _getActiveTemplates(sys).craftTemplates;
+    if (!craftTemplates.length) return;
     const armedCraftNow = sys.resources?.ordnance?.armedCraft ?? 0;
     if (armedCraftNow <= 0) return ui.notifications.warn("No craft armed for launch.");
     const templateId = craftTemplates.length > 1
@@ -611,10 +723,10 @@ async function _onOrdnanceMasterAction(event, target) {
     if (craftTemplates.length > 1 && !templateId) return; // cancelled
 
     const shipToken = this.actor.getActiveTokens()?.[0];
-    const side = await _promptSide();
+    const side = await _promptSide(sys.ordnanceLaunchSides?.strikeCraft);
     if (!side) return;
-    const spawn = side === "bow"
-      ? _computeBowSpawn(shipToken)
+    const spawn = side === "bow" ? _computeBowSpawn(shipToken)
+      : side === "stern" ? _computeSternSpawn(shipToken)
       : _computePerpendicularSpawn(shipToken, side);
     emitToGM("spawnOrdnance", {
       type: "strikeCraft",
@@ -673,7 +785,25 @@ async function _onOrdnanceMasterCoreAction(event, target) {
   const sys      = this.actor.system;
   const actionId = target.dataset.coreAction;
 
-  const coreCount = sys.resources?.ordnance?.coreCount ?? 0;
+  const ordCoreCount = sys.resources?.ordnance?.coreCount ?? 0;
+  const crewSizeLocal = sys.crewSize ?? 6;
+  // In reduced-crew modes the ordnance role is absorbed by another station:
+  //   crewSize = 5  → captain's core is consumed
+  //   crewSize <= 4 → gunner's core is consumed
+  let coreCount, coreRoleId;
+  if (ordCoreCount > 0) {
+    coreCount  = ordCoreCount;
+    coreRoleId = "ordnance";
+  } else if (crewSizeLocal === 5 && (sys.resources?.captain?.coreCount ?? 0) > 0) {
+    coreCount  = sys.resources.captain.coreCount;
+    coreRoleId = "captain";
+  } else if (crewSizeLocal <= 4 && (sys.resources?.gunner?.coreCount ?? 0) > 0) {
+    coreCount  = sys.resources.gunner.coreCount;
+    coreRoleId = "gunner";
+  } else {
+    coreCount  = 0;
+    coreRoleId = "ordnance";
+  }
   if (coreCount <= 0) {
     ui.notifications.warn(game.i18n.localize("IMSC.Ordnance.CoreActionUsed"));
     return;
@@ -892,10 +1022,42 @@ async function _onOrdnanceMasterCoreAction(event, target) {
     }
   }
 
+  // ── Rapid Rearm ───────────────────────────────────────────────────────────
+  if (actionId === "rapidRearm") {
+    const torpedoTemplates = _getActiveTemplates(sys).torpedoTemplates;
+    if (!torpedoTemplates.length) {
+      ui.notifications.warn(game.i18n.localize("IMSC.Ordnance.NoTorpedoConfig"));
+      return;
+    }
+    const crewSize = sys.crewSize ?? 6;
+
+    // Always: immediately arm 1 torpedo and reset the auto-arm cycle
+    const armedTorpedoes = sys.resources?.ordnance?.armedTorpedoes ?? 0;
+    emitToGM("updateResource", { roleId: "ordnance", key: "armedTorpedoes", value: armedTorpedoes + 1 });
+    emitToGM("updateResource", { roleId: "ordnance", key: "autoArmTimer",   value: 3 });
+
+    if (crewSize >= 6) {
+      // Full crew: also trigger auto-load (1 free payload)
+      const availablePayloads = sys.resources?.ordnance?.availablePayloads ?? 0;
+      emitToGM("updateResource", { roleId: "ordnance", key: "availablePayloads", value: availablePayloads + 1 });
+      emitToGM("updateResource", { roleId: "ordnance", key: "autoLoadTimer",     value: 2 });
+    } else {
+      // Smaller crew: grant AP equal to half the reactor's AP-per-core value
+      const reactorComp = this.actor.items?.find(i => i.type === `${MODULE_ID}.component` && i.system?.slot === "reactor" && i.system?.equipped !== false);
+      const reserveMultiplier = reactorComp?.system?.reserveMultiplier ?? 0;
+      const apGain = Math.floor(reserveMultiplier / 2);
+      if (apGain > 0) {
+        const auxCap  = reactorComp?.system?.bankCapacity ?? 0;
+        const currentAP = sys.resources?.enginseer?.auxiliaryPower ?? 0;
+        emitToGM("updateResource", { roleId: "enginseer", key: "auxiliaryPower", value: Math.min(auxCap, currentAP + apGain) });
+      }
+    }
+  }
+
   // ── Finalize  -  record played action and consume core ──────────────────────
   const coreActionsPlayed = [...(sys.resources?.ordnance?.coreActionsPlayed ?? []), actionId];
   emitToGM("updateResource", { roleId: "ordnance", key: "coreActionsPlayed", value: coreActionsPlayed });
-  emitToGM("markOvercharge", { roleId: "ordnance" });
+  emitToGM("markOvercharge", { roleId: coreRoleId });
 }
 
 /**
@@ -904,11 +1066,12 @@ async function _onOrdnanceMasterCoreAction(event, target) {
  * lockStabilizer, reinforcedBulkheads) only need the flag set on the role
  * and are checked at usage time. Immediate-effect payloads modify resources.
  */
-function _applyImmediatePayloadEffect(sys, payloadId) {
+function _applyImmediatePayloadEffect(sys, payloadId, { heatCapacity = 0 } = {}) {
   switch (payloadId) {
     case "emergencyCoolant": {
       const heat = sys.resources?.enginseer?.heat ?? 0;
-      emitToGM("updateResource", { roleId: "enginseer", key: "heat", value: Math.max(0, heat - 3) });
+      const reduction = Math.max(1, Math.ceil(heatCapacity * 0.2));
+      emitToGM("updateResource", { roleId: "enginseer", key: "heat", value: Math.max(0, heat - reduction) });
       break;
     }
     case "auxCapacitors": {
@@ -956,7 +1119,9 @@ async function _onSendPayload(event, target) {
   emitToGM("updateResource", { roleId: "ordnance", key: "availablePayloads", value: available - 1 });
 
   // Apply immediate resource effects
-  _applyImmediatePayloadEffect(sys, pDef.id);
+  const reactorComp = this.actor.items?.find(i => i.type === `${MODULE_ID}.component` && i.system?.slot === "reactor" && i.system?.equipped !== false);
+  const heatCapacity = reactorComp?.system?.heatCapacity ?? 0;
+  _applyImmediatePayloadEffect(sys, pDef.id, { heatCapacity });
 
 }
 
@@ -964,16 +1129,37 @@ async function _onSendPayload(event, target) {
  * Prompt the Ordnance Master to choose port or starboard for torpedo launch.
  * Returns "port" | "starboard" | null (if cancelled).
  */
-async function _promptSide() {
+async function _promptSide(allowedSides) {
+  // Build allowed list: allowedSides is an object { bow, port, starboard, stern }
+  // Default to all true if not provided.
+  const ALL_SIDES = [
+    { key: "port",      label: game.i18n.localize("IMSC.Sector.Port"),      icon: "fa-solid fa-arrow-left" },
+    { key: "bow",       label: game.i18n.localize("IMSC.Sector.Bow"),        icon: "fa-solid fa-arrow-up" },
+    { key: "starboard", label: game.i18n.localize("IMSC.Sector.Starboard"), icon: "fa-solid fa-arrow-right" },
+    { key: "stern",     label: game.i18n.localize("IMSC.Sector.Stern"),      icon: "fa-solid fa-arrow-down" },
+  ];
+
+  let filtered;
+  if (!allowedSides) {
+    // Legacy fallback — show all original three
+    filtered = ALL_SIDES.filter(s => s.key !== "stern");
+  } else {
+    filtered = ALL_SIDES.filter(s => allowedSides[s.key] === true);
+  }
+
+  if (filtered.length === 0) {
+    ui.notifications.error(game.i18n.localize("IMSC.Ordnance.NoLaunchSides"));
+    return null;
+  }
+
+  // If only one direction enabled, skip the dialog and return it directly
+  if (filtered.length === 1) return filtered[0].key;
+
   return new Promise(resolve => {
     const d = new foundry.applications.api.DialogV2({
       window: { title: game.i18n.localize("IMSC.Ordnance.ChooseSide") },
       content: `<p>${game.i18n.localize("IMSC.Ordnance.ChooseSideDesc")}</p>`,
-      buttons: [
-        { action: "port",      label: game.i18n.localize("IMSC.Sector.Port"),      icon: "fa-solid fa-arrow-left" },
-        { action: "bow",       label: game.i18n.localize("IMSC.Sector.Bow"),        icon: "fa-solid fa-arrow-up" },
-        { action: "starboard", label: game.i18n.localize("IMSC.Sector.Starboard"), icon: "fa-solid fa-arrow-right" },
-      ],
+      buttons: filtered.map(s => ({ action: s.key, label: s.label, icon: s.icon })),
       close: () => resolve(null),
       submit: result => resolve(result),
     });

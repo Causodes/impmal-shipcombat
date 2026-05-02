@@ -49,7 +49,12 @@
 
     {{!-- ═══════ Weapon Batteries (by position) ═══════ --}}
     {{#each weaponSections}}
-    <div class="sheet-list imsc-weapon-battery-section" data-component-slot="weapon" data-component-position="{{this.id}}">
+    <div class="sheet-list imsc-weapon-battery-section{{#if (and @root.helm.prowGunLocked (imscEq this.id "prow"))}} imsc-prow-locked{{/if}}" data-component-slot="weapon" data-component-position="{{this.id}}">
+        {{#if (and @root.helm.prowGunLocked (imscEq this.id "prow"))}}
+        <div class="imsc-prow-locked-overlay">
+            <i class="fa-solid fa-ban"></i> {{localize "IMSC.Ram.ProwGunLocked"}}
+        </div>
+        {{/if}}
         <div class="list-header row-content">
             <div class="list-name">{{this.labelLocalized}} ({{this.items.length}}/{{this.slotCount}})</div>
         </div>

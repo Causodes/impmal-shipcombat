@@ -47,16 +47,14 @@ export class HelmPreview {
     const tokenH = token.document.height * gridSize;
 
     const bearingRad = bearingDeg * (Math.PI / 180);
-    // Fold min move into the arc  -  both thrust and mandatory drift follow the bearing.
-    const thrustDist = (thrustPct / 100) * speed * gridSize;
-    const minDist    = minMoveGridUnits * gridSize;
-    const totalDist  = thrustDist + minDist;
+    // Slider represents total movement: thrustPct% of (speed + minMove) VU.
+    const totalDist = (thrustPct / 100) * (speed + minMoveGridUnits) * gridSize;
 
     if (totalDist <= 0) {
       return { x: cx0 - tokenW / 2, y: cy0 - tokenH / 2, rotation: token.document.rotation };
     }
 
-    return this._arcEndpoint(cx0, cy0, h0, bearingRad, totalDist, speed, gridSize, token);
+    return this._arcEndpoint(cx0, cy0, h0, bearingRad, totalDist, speed + minMoveGridUnits, gridSize, token);
   }
 
   /**
@@ -68,10 +66,9 @@ export class HelmPreview {
 
     const { cx0, cy0, h0, gridSize } = this._tokenBasis(token);
     const bearingRad = bearingDeg * (Math.PI / 180);
-    const thrustDist = (thrustPct / 100) * speed * gridSize;
-    const minDist    = minMoveGridUnits * gridSize;
-    const totalDist  = thrustDist + minDist;
-    const maxDist    = speed * gridSize;
+    // Slider represents total movement: thrustPct% of (speed + minMove) VU.
+    const totalDist = (thrustPct / 100) * (speed + minMoveGridUnits) * gridSize;
+    const maxDist   = (speed + minMoveGridUnits) * gridSize;
 
     const pts = [{ x: cx0, y: cy0 }];
     if (totalDist <= 0) return pts;
@@ -154,9 +151,8 @@ export class HelmPreview {
     if (!token) return [];
     const { cx0, cy0, h0, gridSize } = this._tokenBasis(token);
     const bearingRad = bearingDeg * (Math.PI / 180);
-    const thrustDist = (thrustPct / 100) * speed * gridSize;
-    const minDist    = minMoveGridUnits * gridSize;
-    const totalDist  = thrustDist + minDist;
+    // Slider represents total movement: thrustPct% of (speed + minMove) VU.
+    const totalDist = (thrustPct / 100) * (speed + minMoveGridUnits) * gridSize;
     if (totalDist <= 0) return [];
 
     // One waypoint per grid unit of travel for smooth per-square animation
@@ -164,7 +160,7 @@ export class HelmPreview {
     const waypoints = [];
     for (let i = 1; i <= steps; i++) {
       const arcLen = (i / steps) * totalDist;
-      waypoints.push(this._arcEndpoint(cx0, cy0, h0, bearingRad, arcLen, speed, gridSize, token));
+      waypoints.push(this._arcEndpoint(cx0, cy0, h0, bearingRad, arcLen, speed + minMoveGridUnits, gridSize, token));
     }
     return waypoints;
   }
@@ -313,6 +309,177 @@ export class HelmPreview {
 
     this._line.clear();
     this._line.lineStyle(2, pixi(THEME.overlay.helmGhost), 0.6);
+    this._line.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      this._line.lineTo(points[i].x, points[i].y);
+    }
+  }
+
+  /**
+   * Project the final position of a Flip and Burn maneuver:
+   * the ship first rotates 180° in place, then moves sternward (backward along
+   * its ORIGINAL heading) at the given distance in grid units.
+   *
+   * @param {Token}  token           – the ship token
+   * @param {number} halfSpeedUnits  – distance in grid units (= 50% of effective speed)
+   */
+  static projectFlipAndBurn(token, halfSpeedUnits) {
+    if (!token || halfSpeedUnits <= 0) return null;
+    const { cx0, cy0, h0, gridSize, tokenW, tokenH } = this._tokenBasis(token);
+    // Translate along the ORIGINAL heading (h0): the ship decelerates along its
+    // old trajectory while now facing backward (h0+π).
+    const dist = halfSpeedUnits * gridSize;
+    const newCx = cx0 + dist * Math.cos(h0);
+    const newCy = cy0 + dist * Math.sin(h0);
+    return {
+      x:        newCx - tokenW / 2,
+      y:        newCy - tokenH / 2,
+      rotation: token.document.rotation + 180,
+    };
+  }
+
+  /**
+   * Waypoints for a Flip and Burn: rotate in place first, then step backward.
+   * @param {Token}  token
+   * @param {number} halfSpeedUnits
+   */
+  static projectFlipAndBurnWaypoints(token, halfSpeedUnits) {
+    if (!token || halfSpeedUnits <= 0) return [];
+    const { cx0, cy0, h0, gridSize, tokenW, tokenH } = this._tokenBasis(token);
+    const flippedRotation = token.document.rotation + 180;
+    const waypoints = [];
+    // First waypoint: spin in place (same x/y, rotation +180°)
+    waypoints.push({
+      x:        Math.round(token.document.x),
+      y:        Math.round(token.document.y),
+      rotation: flippedRotation,
+    });
+    // Then step along old heading (h0), one waypoint per grid unit
+    const steps = Math.max(1, halfSpeedUnits);
+    for (let i = 1; i <= steps; i++) {
+      const d = (i / steps) * halfSpeedUnits * gridSize;
+      waypoints.push({
+        x:        Math.round(cx0 + d * Math.cos(h0) - tokenW / 2),
+        y:        Math.round(cy0 + d * Math.sin(h0) - tokenH / 2),
+        rotation: flippedRotation,
+      });
+    }
+    return waypoints;
+  }
+
+  /**
+   * Show the Flip and Burn ghost: rotated 180°, moved sternward.
+   * Draws a straight line from current position to the final position.
+   */
+  static showFlipAndBurn(token, halfSpeedUnits) {
+    const projected = this.projectFlipAndBurn(token, halfSpeedUnits);
+    if (!projected) return;
+    this.show(token, projected);
+    if (!this._line || !this._token) return;
+    const { cx0, cy0, h0, gridSize } = this._tokenBasis(token);
+    const dist = halfSpeedUnits * gridSize;
+    this._line.clear();
+    this._line.lineStyle(2, pixi(THEME.overlay.helmGhost), 0.6);
+    this._line.moveTo(cx0, cy0);
+    this._line.lineTo(cx0 + dist * Math.cos(h0), cy0 + dist * Math.sin(h0));
+  }
+
+  // ── Ram ──────────────────────────────────────────────────────────────────
+
+  /**
+   * Determine whether the ship can arc to a target canvas centre point.
+   *
+   * Uses closed-form arc geometry (O(1), no iteration).
+   *
+   * The arc model (from _arcEndpoint) is a fixed-radius circular arc where
+   * the pilot's bearing input sets the turn radius and the thrust sets the arc
+   * length.  Given a chord vector (dx, dy) from ship centre to target centre,
+   * the required arc parameters are derived analytically.
+   *
+   * Math:
+   *   φ = 2(θ_target − h0)           — total heading change; normalised to (−π, π]
+   *   arcLength = d · φ / (2·sin(φ/2))  — chord–arc relationship (→ d when φ→0)
+   *   bearingRad = φ · maxDist / arcLength — pilot bearing input
+   *
+   * @param {object} shipBasis          – { cx0, cy0, h0, gridSize } from _tokenBasis()
+   * @param {number} targetCx           – target centre x (canvas pixels)
+   * @param {number} targetCy           – target centre y (canvas pixels)
+   * @param {number} effSpeed           – effective speed stat (VU)
+   * @param {number} maxBearingDeg      – max bearing magnitude (mano × 15°, unbounded)
+   * @param {number} powerRemaining     – uncommitted power budget (0–powerMax %)
+   * @param {number} powerMax           – full power-bar max (usually 100)
+   * @param {number} minMoveGridUnits   – mandatory drift in grid squares
+   * @returns {{ bearingDeg: number, thrustPct: number } | null}
+   */
+  static canReach(shipBasis, targetCx, targetCy, effSpeed, maxBearingDeg, powerRemaining, powerMax, minMoveGridUnits) {
+    const { cx0, cy0, h0, gridSize } = shipBasis;
+    const maxDist      = effSpeed * gridSize;            // pixels at 100% of powerMax
+    const minDistPx    = minMoveGridUnits * gridSize;    // min-move floor in pixels
+    const totalMaxDist = maxDist + minDistPx;             // (speed + minMove) × gridSize
+    const maxArcPx     = (powerRemaining / 100) * totalMaxDist;
+
+    const dx = targetCx - cx0;
+    const dy = targetCy - cy0;
+    const d  = Math.sqrt(dx * dx + dy * dy);
+    if (d < 1) return null;  // trivially on top
+
+    // Half the total heading change, normalised to (−π, π]
+    let halfPhi = Math.atan2(dy, dx) - h0;
+    halfPhi = ((halfPhi + Math.PI) % (2 * Math.PI)) - Math.PI;  // → (−π, π]
+    const phi = 2 * halfPhi;   // total heading change, ∈ (−2π, 2π]
+
+    // Required arc length: d = arcLength · 2sin(φ/2)/φ  →  arcLength = d·φ/(2·sin(φ/2))
+    // Special-case |φ| < ε (straight line) to avoid 0/0.
+    // Also guard φ ≈ ±2π (degenerate full-circle — arcLength → ∞).
+    let arcLength;
+    if (Math.abs(phi) < 1e-6) {
+      arcLength = d;
+    } else {
+      const sinHalf = Math.sin(phi / 2);
+      if (Math.abs(sinHalf) < 1e-9) return null;
+      arcLength = d * phi / (2 * sinHalf);
+    }
+
+    // Arc length must be positive and within fuel budget.
+    if (arcLength <= 0) return null;
+    if (arcLength < minDistPx - 0.5 || arcLength > maxArcPx + 0.5) return null;
+
+    // Required bearing input (pilot slider).
+    const bearingRad = Math.abs(phi) < 1e-6 ? 0 : phi * totalMaxDist / arcLength;
+    const bearingDeg = bearingRad * (180 / Math.PI);
+
+    // maxBearingDeg is mano × 15 and is unbounded — no clamp needed, just check.
+    if (Math.abs(bearingDeg) > maxBearingDeg + 1e-6) return null;
+
+    // thrustPct = slider value; slider at X% → totalDist = X/100 × totalMaxDist.
+    const thrustPct = Math.max(0, arcLength / totalMaxDist * 100);
+
+    return { bearingDeg, thrustPct };
+  }
+
+  /**
+   * Show a ram-course ghost: same arc preview as normal helm but drawn in red.
+   *
+   * @param {Token}  token             – the ship token
+   * @param {number} bearingDeg        – bearing from canReach()
+   * @param {number} thrustPct         – additional thrust % from canReach()
+   * @param {number} speed             – effective speed stat
+   * @param {number} minMoveGridUnits  – mandatory drift in grid squares
+   */
+  static showRam(token, bearingDeg, thrustPct, speed, minMoveGridUnits = 0) {
+    const projected = this.projectPosition(token, bearingDeg, thrustPct, speed, minMoveGridUnits);
+    if (!projected) return;
+    this.show(token, projected);
+
+    // Tint the ghost token red
+    if (this._sprite) this._sprite.tint = pixi(THEME.overlay.helmRam);
+
+    // Redraw the arc path in red
+    if (!this._line || !this._token) return;
+    const points = this.projectPath(token, bearingDeg, thrustPct, speed, this.ARC_SEGMENTS, minMoveGridUnits);
+    if (points.length < 2) return;
+    this._line.clear();
+    this._line.lineStyle(3, pixi(THEME.overlay.helmRam), 0.85);
     this._line.moveTo(points[0].x, points[0].y);
     for (let i = 1; i < points.length; i++) {
       this._line.lineTo(points[i].x, points[i].y);

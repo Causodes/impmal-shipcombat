@@ -1,0 +1,63 @@
+{{!-- Ram Target Popup - styled to match targeting-popup.hbs --}}
+<div class="imsc-tp-wrapper">
+
+    {{!-- Header: burst icon + title + power remaining --}}
+    <div class="imsc-tp-header">
+        <div class="imsc-tp-weapon-icon" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#ff6b6b;">
+            <i class="fa-solid fa-burst"></i>
+        </div>
+        <div class="imsc-tp-header-text">
+            <span class="imsc-tp-weapon-name">{{localize "IMSC.Dialog.RamTitle"}}</span>
+            <span class="imsc-tp-mode-name">{{localize "IMSC.Ram.PopupHint"}}</span>
+        </div>
+        <div class="imsc-tp-header-stats">
+            <span class="imsc-tp-stat imsc-tp-stat--cost">
+                <i class="fa-solid fa-bolt-lightning"></i>
+                {{powerRemaining}}% / {{powerMax}}%
+            </span>
+        </div>
+    </div>
+
+    {{!-- Target list --}}
+    {{#if noTargets}}
+    <div class="imsc-tp-empty">
+        <i class="fa-solid fa-ban"></i>
+        {{localize "IMSC.Ram.NoTargets"}}
+    </div>
+    {{else}}
+    <div class="imsc-tp-targets">
+        {{#each targets}}
+        <div class="imsc-tp-target imsc-ram-target-row" data-token-id="{{this.tokenId}}">
+            <img src="{{this.img}}" class="imsc-tp-target-icon">
+            <div class="imsc-tp-target-info">
+                <span class="imsc-tp-target-name">{{this.name}}</span>
+                <div class="imsc-tp-target-details">
+                    <span class="imsc-tp-detail">
+                        <i class="fa-solid fa-ruler"></i>
+                        {{this.distance}} VU
+                    </span>
+                    <span class="imsc-tp-detail">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        {{this.hitSectorLabel}}
+                    </span>
+                    <span class="imsc-tp-detail">
+                        <i class="fa-solid fa-bolt-lightning"></i>
+                        {{this.thrustPctDisplay}}%
+                    </span>
+                </div>
+            </div>
+            <button class="imsc-tp-fire-btn" data-action="confirmRam" data-token-id="{{this.tokenId}}"
+                    data-tooltip="{{localize "IMSC.Ram.ConfirmTooltip"}}">
+                <i class="fa-solid fa-burst"></i>
+            </button>
+        </div>
+        {{/each}}
+    </div>
+
+    <p class="imsc-ram-warning">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        {{localize "IMSC.Ram.LockoutWarning"}}
+    </p>
+    {{/if}}
+
+</div>

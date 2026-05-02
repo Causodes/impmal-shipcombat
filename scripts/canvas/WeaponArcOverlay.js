@@ -25,6 +25,7 @@ const DIR_OFFSET = {
   dorsal:     0,
   port:      -Math.PI / 2,
   starboard:  Math.PI / 2,
+  stern:      Math.PI,
 };
 
 const SEGS = 32;

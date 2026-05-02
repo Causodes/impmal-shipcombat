@@ -24,6 +24,7 @@ const WEAPON_SECTIONS = [
   { id: "dorsal",    label: "IMSC.Slot.Dorsal" },
   { id: "port",      label: "IMSC.Slot.Port" },
   { id: "starboard", label: "IMSC.Slot.Starboard" },
+  { id: "stern",     label: "IMSC.Slot.Stern" },
 ];
 const EQUIPMENT_SECTIONS = [
   { id: "shields", label: "IMSC.Slot.Shields" },
@@ -37,7 +38,7 @@ const ROLE_MAIN_SKILLS = {
   captain:   { skillKey: "presence",  specialisation: "Leadership",     rootLabel: "Presence",  label: "IMSC.MainSkill.Leadership" },
   enginseer: { skillKey: "tech",      specialisation: "Engineering",    rootLabel: "Tech",      label: "IMSC.MainSkill.Engineering" },
   pilot:     { skillKey: "piloting",  specialisation: "Major Voidship", rootLabel: "Piloting",  label: "IMSC.MainSkill.MajorVoidship" },
-  sensors:   { skillKey: "presence",  specialisation: "Leadership",     rootLabel: "Presence",  label: "IMSC.MainSkill.Leadership"            },
+  sensors:   { skillKey: "intuition", specialisation: "Surroundings",  rootLabel: "Intuition", label: "IMSC.MainSkill.IntuitionSurroundings" },
   gunner:    { skillKey: "ranged",    specialisation: "Ordnance",       rootLabel: "Ranged",    label: "IMSC.MainSkill.RangedOrdnance" },
   ordnance:  { skillKey: "athletics", specialisation: "Might",          rootLabel: "Athletics", label: "IMSC.MainSkill.AthleticsMight" },
 };
@@ -130,6 +131,7 @@ export class ShipSheet extends IMActorSheet {
       openItem: ShipSheet._onOpenItem,
       openOrdnanceActor: ShipSheet._onOpenOrdnanceActor,
       removeOrdnanceActor: ShipSheet._onRemoveOrdnanceActor,
+      clearOrdnanceSlot:   ShipSheet._onClearOrdnanceSlot,
       debugSetCondition: ShipSheet._onDebugSetCondition,
       addToInventory:       ShipSheet._onAddToInventory,
       unassignWeapon:       ShipSheet._onUnassignWeapon,
@@ -146,6 +148,7 @@ export class ShipSheet extends IMActorSheet {
     captain:      { template: `modules/${MODULE_ID}/templates/actor/tabs/6/captain.hbs`,             scrollable: [""] },
     captain4man:  { template: `modules/${MODULE_ID}/templates/actor/tabs/4/captain.hbs`,            scrollable: [""] },
     captain5man:  { template: `modules/${MODULE_ID}/templates/actor/tabs/5/captain.hbs`,             scrollable: [""] },
+    enginseer3man: { template: `modules/${MODULE_ID}/templates/actor/tabs/3/enginseer.hbs`,           scrollable: [""] },
     enginseer5man: { template: `modules/${MODULE_ID}/templates/actor/tabs/5/enginseer.hbs`,            scrollable: [""] },
     enginseer:    { template: `modules/${MODULE_ID}/templates/actor/tabs/6/enginseer.hbs`,           scrollable: [""] },
     pilot:        { template: `modules/${MODULE_ID}/templates/actor/tabs/6/pilot.hbs`,               scrollable: [""] },
@@ -164,6 +167,7 @@ export class ShipSheet extends IMActorSheet {
     captain:     { id: "captain",     group: "primary", label: "IMSC.Role.Captain"    },
     captain4man: { id: "captain4man", group: "primary", label: "IMSC.Role.Captain"    },
     captain5man: { id: "captain5man", group: "primary", label: "IMSC.Role.Captain"    },
+    enginseer3man: { id: "enginseer3man", group: "primary", label: "IMSC.Role.Enginseer" },
     enginseer5man: { id: "enginseer5man", group: "primary", label: "IMSC.Role.Enginseer" },
     enginseer:   { id: "enginseer",   group: "primary", label: "IMSC.Role.Enginseer"  },
     pilot:       { id: "pilot",       group: "primary", label: "IMSC.Role.Pilot"      },
@@ -180,14 +184,15 @@ export class ShipSheet extends IMActorSheet {
 
   /**
    * Returns the set of role IDs that are inactive for the current crew size.
-   * Removal order as crew drops from 6 → 3: ordnance, captain, gunner.
+   * Removal order as crew drops from 6 → 3: ordnance, sensors, pilot.
+   * crewSize <= 3: pilot and enginseer individual tabs are replaced by enginseer3man.
    */
   _getDisabledRoles() {
     const crewSize = this.actor.system.crewSize ?? 6;
     const disabled = new Set();
     if (crewSize <= 5) disabled.add("ordnance");
     if (crewSize <= 4) disabled.add("sensors");
-    if (crewSize <= 3) disabled.add("gunner");
+    if (crewSize <= 3) { disabled.add("pilot"); }
     return disabled;
   }
 
@@ -199,6 +204,8 @@ export class ShipSheet extends IMActorSheet {
     // 4-man: sensors disabled → captain uses captain4man (with Augur content);
     //        gunner uses gunner4man (with ordnance launch actions).
     const useCombinedSensors = disabled.has("sensors");
+    // 3-man: pilot disabled → enginseer uses enginseer3man (merged Enginseer+Helm tab).
+    const useCombinedPilot = disabled.has("pilot");
 
     if (game.user.isGM) {
       const all = new Set(Object.keys(ShipSheet.PARTS));
@@ -225,6 +232,13 @@ export class ShipSheet extends IMActorSheet {
         all.delete("captain4man");
         all.delete("gunner4man");
       }
+      // 3-man: enginseer3man replaces enginseer5man; pilot tab is gone entirely.
+      if (useCombinedPilot) {
+        all.delete("enginseer5man");
+        all.add("enginseer3man");
+      } else {
+        all.delete("enginseer3man");
+      }
       return all;
     }
     const myRole = this._resolveRoleForUser(game.user);
@@ -234,9 +248,11 @@ export class ShipSheet extends IMActorSheet {
     const allowed = new Set(["header", "tabs"]);
     if (canObserve) allowed.add("overview");
     if (isOwner) allowed.add("config");
+    // 3-man: enginseer claims enginseer3man (merged Enginseer+Helm).
     // 4-man: captain uses captain4man, gunner uses gunner4man (supersedes 5-man variants).
     // 5-man: captain uses captain5man, enginseer uses enginseer5man, gunner uses gunner5man.
-    const effectivePart = (myRole === "captain"   && useCombinedSensors)  ? "captain4man"
+    const effectivePart = (myRole === "enginseer" && useCombinedPilot)    ? "enginseer3man"
+      : (myRole === "captain"   && useCombinedSensors)  ? "captain4man"
       : (myRole === "captain"   && useCombinedCaptain) ? "captain5man"
       : (myRole === "enginseer" && useCombinedCaptain) ? "enginseer5man"
       : (myRole === "gunner"    && useCombinedSensors)  ? "gunner4man"
@@ -404,7 +420,7 @@ export class ShipSheet extends IMActorSheet {
           const pos = item.system?.weaponPosition ?? "prow";
           return pos === "flank" ? (item.system?.weaponBay ?? "port") : pos;
         },
-      ).filter(s => s.items.length > 0 || s.slotCount > 0),
+      ).filter(s => s.slotCount > 0),
       weaponSectionsAll: (() => {
         const unequipped = components.filter(c => c.system.slot === "weapon" && c.system.equipped === false);
         return buildSectionedItems(
@@ -421,6 +437,7 @@ export class ShipSheet extends IMActorSheet {
               const pos = c.system.weaponPosition ?? "prow";
               if (s.id === "prow")     return pos === "prow";
               if (s.id === "dorsal")   return pos === "dorsal";
+              if (s.id === "stern")    return pos === "stern";
               // port and starboard both accept flank weapons
               return pos === "flank";
             })
@@ -430,6 +447,61 @@ export class ShipSheet extends IMActorSheet {
       equipmentSections: buildSectionedItems(EQUIPMENT_SECTIONS, equipmentComponents, sys.equipmentSlots)
         .filter(s => s.items.length > 0 || s.slotCount > 0),
       ordnanceActors: sys.ordnanceActors ?? { torpedo: [], strikeCraft: [] },
+      ordnanceSlotCount: Math.max(0, Number(sys.ordnanceSlots?.ordnance ?? 1)),
+      ordnanceSelectorSlots: (() => {
+        const slotMax      = Math.max(0, Number(sys.ordnanceSlots?.ordnance ?? 1));
+        const activeOrdnance = sys.activeOrdnance ?? [];
+        const useStrikeCraft = sys.useStrikeCraft !== false;
+        const tArr  = (sys.ordnanceActors?.torpedo     ?? []).filter(Boolean);
+        const scArr = useStrikeCraft ? (sys.ordnanceActors?.strikeCraft ?? []).filter(Boolean) : [];
+        const inventory = [
+          ...tArr.map(e => ({ id: e.id, name: e.name, img: e.img ?? null, slotType: "torpedo",     value: `torpedo:${e.id}` })),
+          ...scArr.map(e => ({ id: e.id, name: e.name, img: e.img ?? null, slotType: "strikeCraft", value: `strikeCraft:${e.id}` })),
+        ];
+        return Array.from({ length: slotMax }, (_, i) => {
+          const active = activeOrdnance[i] ?? null;
+          const found  = active?.actorId ? inventory.find(t => t.id === active.actorId) : null;
+          return {
+            index:      i,
+            slotNum:    i + 1,
+            activeType: active?.type    ?? null,
+            activeId:   active?.actorId ?? null,
+            activeName: found?.name     ?? null,
+            activeImg:  found?.img      ?? null,
+            activeValue: active?.type && active?.actorId ? `${active.type}:${active.actorId}` : "",
+          };
+        });
+      })(),
+      ordnanceInventory: (() => {
+        const useStrikeCraft = sys.useStrikeCraft !== false;
+        const tArr  = (sys.ordnanceActors?.torpedo     ?? []).filter(Boolean);
+        const scArr = useStrikeCraft ? (sys.ordnanceActors?.strikeCraft ?? []).filter(Boolean) : [];
+        // Exclude actors already loaded into a bay slot so the dropdown only shows new options.
+        const loadedIds = new Set((sys.activeOrdnance ?? []).filter(a => a?.actorId).map(a => a.actorId));
+        return [
+          ...tArr.filter(e => !loadedIds.has(e.id)).map(e => ({ id: e.id, name: e.name, img: e.img ?? null, slotType: "torpedo",     value: `torpedo:${e.id}` })),
+          ...scArr.filter(e => !loadedIds.has(e.id)).map(e => ({ id: e.id, name: e.name, img: e.img ?? null, slotType: "strikeCraft", value: `strikeCraft:${e.id}` })),
+        ];
+      })(),
+      ordnanceOccupiedCount: (() => {
+        const slotMax = Math.max(0, Number(sys.ordnanceSlots?.ordnance ?? 1));
+        const active  = sys.activeOrdnance ?? [];
+        let count = 0;
+        for (let i = 0; i < slotMax; i++) { if (active[i]?.actorId) count++; }
+        return count;
+      })(),
+      ordnanceHasRoom: (() => {
+        const slotMax  = Math.max(0, Number(sys.ordnanceSlots?.ordnance ?? 1));
+        const active   = sys.activeOrdnance ?? [];
+        const occupied = active.slice(0, slotMax).filter(a => a?.actorId).length;
+        return occupied < slotMax;
+      })(),
+      nextOrdnanceSlotIndex: (() => {
+        const slotMax = Math.max(0, Number(sys.ordnanceSlots?.ordnance ?? 1));
+        const active  = sys.activeOrdnance ?? [];
+        for (let i = 0; i < slotMax; i++) { if (!active[i]?.actorId) return i; }
+        return slotMax;
+      })(),
       components,
       weaponComponents,
       equipmentComponents,
@@ -443,14 +515,11 @@ export class ShipSheet extends IMActorSheet {
           { pos: "dorsal",    label: game.i18n.localize("IMSC.Slot.Dorsal"),    items: weaponComponents.filter(c => getWeaponPos(c) === "dorsal"),    slotCount: Math.max(0, Number(sys.weaponSlots?.dorsal    ?? 0)) },
           { pos: "port",      label: game.i18n.localize("IMSC.Slot.Port"),      items: weaponComponents.filter(c => getWeaponPos(c) === "port"),      slotCount: Math.max(0, Number(sys.weaponSlots?.port      ?? 0)) },
           { pos: "starboard", label: game.i18n.localize("IMSC.Slot.Starboard"), items: weaponComponents.filter(c => getWeaponPos(c) === "starboard"), slotCount: Math.max(0, Number(sys.weaponSlots?.starboard ?? 0)) },
-        ] : null;
+          { pos: "stern",     label: game.i18n.localize("IMSC.Slot.Stern"),     items: weaponComponents.filter(c => getWeaponPos(c) === "stern"),     slotCount: Math.max(0, Number(sys.weaponSlots?.stern     ?? 0)) },
+        ].filter(s => s.slotCount > 0) : null;
         const bayStats = ShipCombatState.getOrdnanceBayStats(this.actor);
-        const armedTorpedoes = sys.resources?.ordnance?.armedTorpedoes ?? 0;
-        const armedCraft     = sys.resources?.ordnance?.armedCraft     ?? 0;
-        const ordnance = [
-          { slotId: "torpedo",     label: game.i18n.localize("IMSC.Label.TorpedoActors"),     armed: armedTorpedoes, capacity: bayStats.torpedoCapacity,     items: (sys.ordnanceActors?.torpedo    ?? []).map(e => ({ id: e.id, name: e.name, img: e.img })) },
-          { slotId: "strikeCraft", label: game.i18n.localize("IMSC.Label.StrikeCraftActors"), armed: armedCraft,     capacity: bayStats.strikeCraftCapacity, items: (sys.ordnanceActors?.strikeCraft ?? []).map(e => ({ id: e.id, name: e.name, img: e.img })) },
-        ].filter(s => s.items.length > 0 || s.capacity > 0);
+        // Ordnance is now displayed via ordnanceSelectorSlots in the overview template.
+        const ordnanceSlotMax = Math.max(0, Number(sys.ordnanceSlots?.ordnance ?? 1));
         const equipment = [
           { slotId: "shields",    label: game.i18n.localize("IMSC.Slot.Shields"),    items: components.filter(c => c.system.slot === "shields") },
           { slotId: "armour",     label: game.i18n.localize("IMSC.Slot.Armour"),     items: components.filter(c => c.system.slot === "armour") },
@@ -459,13 +528,24 @@ export class ShipSheet extends IMActorSheet {
           { slotId: "reactor",    label: game.i18n.localize("IMSC.Slot.Reactor"),    items: components.filter(c => c.system.slot === "reactor") },
           { slotId: "weaponsBay", label: game.i18n.localize("IMSC.Slot.WeaponsBay"), items: components.filter(c => c.system.slot === "weaponsBay") },
         ].filter(s => s.items.length > 0);
-        return { weaponGrid, ordnance, equipment, hasAny: !!weaponGrid || ordnance.length > 0 || equipment.length > 0 };
+        return { weaponGrid, equipment, hasAny: !!weaponGrid || ordnanceSlotMax > 0 || equipment.length > 0 };
 
       })(),
-      helm: buildHelmContext(sys, {
-        engineComponent: components.find(i => i.system.slot === "engine" && i.system.equipped !== false),
-        reactorStats: ShipCombatState.getReactorStats(this.actor),
-      }),
+      helm: (() => {
+        const h = buildHelmContext(sys, {
+          engineComponent: components.find(i => i.system.slot === "engine" && i.system.equipped !== false),
+          reactorStats: ShipCombatState.getReactorStats(this.actor),
+        });
+        h.hasRamTargets = !!(
+          canvas?.ready &&
+          canvas?.tokens?.placeables?.some(t =>
+            t.document.actor?.id !== this.actor.id &&
+            !t.document.hidden &&
+            t.document.actor != null
+          )
+        );
+        return h;
+      })(),
       engineerCtx: buildEngineerContext(sys, {
         reactorStats: ShipCombatState.getReactorStats(this.actor),
         shieldStats:  ShipCombatState.getShieldStats(this.actor),
@@ -482,6 +562,7 @@ export class ShipSheet extends IMActorSheet {
         shipActor: this.actor,
         ordnanceBayStats: ShipCombatState.getOrdnanceBayStats(this.actor),
         reactorStats:     ShipCombatState.getReactorStats(this.actor),
+        useStrikeCraft:   sys.useStrikeCraft !== false,
       }),
       captainCtx: buildCaptainContext(sys, {
         reactorStats: ShipCombatState.getReactorStats(this.actor),
@@ -497,6 +578,7 @@ export class ShipSheet extends IMActorSheet {
             { pos: "prow",   label: game.i18n.localize("IMSC.Label.WeaponBow") },
             { pos: "dorsal", label: game.i18n.localize("IMSC.Label.WeaponDorsal") },
             { pos: "flank",  label: game.i18n.localize("IMSC.Label.WeaponFlank") },
+            { pos: "stern",  label: game.i18n.localize("IMSC.Label.WeaponStern") },
           ];
           const assigned = new Set();
           for (const { pos, label } of WEAPON_POS_GROUPS) {
@@ -534,11 +616,28 @@ export class ShipSheet extends IMActorSheet {
       weaponInventory: components.filter(c => c.system.slot === "weapon" && c.system.equipped === false),
       crewSize,
       crewSizeOptions: [
-        { value: 6, label: game.i18n.localize("IMSC.CrewSize.6"), selected: crewSize === 6 },
-        { value: 5, label: game.i18n.localize("IMSC.CrewSize.5"), selected: crewSize === 5 },
-        { value: 4, label: game.i18n.localize("IMSC.CrewSize.4"), selected: crewSize === 4 },
-        { value: 3, label: game.i18n.localize("IMSC.CrewSize.3"), selected: crewSize === 3 },
+        { value: 6, label: "6", selected: crewSize === 6 },
+        { value: 5, label: "5", selected: crewSize === 5 },
+        { value: 4, label: "4", selected: crewSize === 4 },
+        { value: 3, label: "3", selected: crewSize === 3 },
       ],
+      useStrikeCraft: sys.useStrikeCraft !== false,
+      ordnanceLaunchSides: (() => {
+        const SIDE_LABELS = {
+          bow: game.i18n.localize("IMSC.Sector.Bow"),
+          port: game.i18n.localize("IMSC.Sector.Port"),
+          starboard: game.i18n.localize("IMSC.Sector.Starboard"),
+          stern: game.i18n.localize("IMSC.Sector.Stern"),
+        };
+        const SIDE_ICONS = { bow: "fa-arrow-up", port: "fa-arrow-left", starboard: "fa-arrow-right", stern: "fa-arrow-down" };
+        const toArr = src => Object.entries(SIDE_LABELS).map(([key, label]) => ({
+          key, label, icon: SIDE_ICONS[key], value: src?.[key] ?? (key !== "stern"),
+        }));
+        return {
+          torpedo:    toArr(sys.ordnanceLaunchSides?.torpedo),
+          strikeCraft: toArr(sys.ordnanceLaunchSides?.strikeCraft),
+        };
+      })(),
       // GM-only: debug condition forcing
       debugLocations: game.user.isGM ? CRIT_LOCATIONS.map(loc => {
         const existing = sys.conditions?.[loc.id] ?? {};
@@ -551,6 +650,8 @@ export class ShipSheet extends IMActorSheet {
           currentCondLabel: condDef ? game.i18n.localize(condDef.label) : "",
         };
       }) : [],
+      allRolesReady: rolesArray.every(r => r.turnDone),
+      isInCombat: !!(game.combat?.combatants?.some(c => c.actor?.id === this.actor.id)),
     });
 
     // Group ActiveEffects for the Effects tab
@@ -648,8 +749,19 @@ export class ShipSheet extends IMActorSheet {
     const actorId  = row?.dataset?.ordnanceId;
     if (!slotType || !actorId) return;
     const existing = this.actor.system.ordnanceActors?.[slotType] ?? [];
-    const filtered = existing.filter(e => e.id !== actorId);
+    const filtered = existing.filter(e => e?.id !== actorId);
     return this.actor.update({ [`system.ordnanceActors.${slotType}`]: filtered });
+  }
+
+  static async _onClearOrdnanceSlot(event, target) {
+    if (!this.actor?.isOwner) return;
+    const index = parseInt(target.dataset.slotIndex, 10);
+    if (isNaN(index)) return;
+    const existing = [...(this.actor.system.activeOrdnance ?? [])];
+    existing[index] = null;
+    let end = existing.length;
+    while (end > 0 && !existing[end - 1]) end--;
+    return this.actor.update({ "system.activeOrdnance": existing.slice(0, end) });
   }
 
   static async _onDebugSetCondition(event, target) {
@@ -715,8 +827,27 @@ export class ShipSheet extends IMActorSheet {
     this.element.querySelectorAll("[data-slot-count]").forEach(input => {
       input.addEventListener("change", ev => {
         const path = ev.target.dataset.slotCount;
+        // Crew size is handled by its own dedicated handler below.
+        if (path === "system.crewSize") return;
         const value = Math.max(0, Number(ev.target.value) || 0);
         this.actor.update({ [path]: value });
+      });
+    });
+
+    // ── Crew size: update then close/reopen so the new tab layout is clean ──
+    this.element.querySelectorAll("[data-slot-count='system.crewSize']").forEach(sel => {
+      sel.addEventListener("change", async ev => {
+        const value = Math.max(3, Math.min(6, Number(ev.target.value) || 6));
+        await this.actor.update({ "system.crewSize": value });
+        await this.close();
+        this.actor.sheet.render(true);
+      });
+    });
+
+    // ── Strike craft toggle ──────────────────────────────────────────────────
+    this.element.querySelectorAll("[data-ship-config='system.useStrikeCraft']").forEach(sel => {
+      sel.addEventListener("change", ev => {
+        this.actor.update({ "system.useStrikeCraft": ev.target.value === "yes" });
       });
     });
 
@@ -745,6 +876,22 @@ export class ShipSheet extends IMActorSheet {
       });
     });
 
+    // ── Ordnance slot selection (overview tab) ──────────────────────────────
+    this.element.querySelectorAll("[data-ordnance-slot-index]").forEach(sel => {
+      sel.addEventListener("change", async ev => {
+        const index = parseInt(sel.dataset.ordnanceSlotIndex, 10);
+        const val   = sel.value; // "torpedo:actorId", "strikeCraft:actorId", or ""
+        if (!val) return;
+        const colonIdx = val.indexOf(":");
+        const type    = val.slice(0, colonIdx);
+        const actorId = val.slice(colonIdx + 1);
+        const existing = [...(this.actor.system.activeOrdnance ?? [])];
+        while (existing.length <= index) existing.push(null);
+        existing[index] = { type, actorId };
+        await this.actor.update({ "system.activeOrdnance": existing });
+      });
+    });
+
     // ── Shield arc: scroll / click / right-click to adjust ──────────────────
     this.element.querySelectorAll(".imsc-arc-val[data-sector]").forEach(el => {
       el.addEventListener("click", ev => {
@@ -763,6 +910,17 @@ export class ShipSheet extends IMActorSheet {
 
     // Delegate helm wiring to pilot role module
     helmOnRender(this);
+
+    // ── Ordnance launch-side checkboxes ──────────────────────────────────────
+    this.element.querySelectorAll("[data-launch-side][data-launch-dir]").forEach(cb => {
+      cb.addEventListener("change", async ev => {
+        const side = ev.currentTarget.dataset.launchSide;   // "torpedo" | "strikeCraft"
+        const dir  = ev.currentTarget.dataset.launchDir;    // "bow" | "port" | "starboard" | "stern"
+        await this.actor.update({
+          [`system.ordnanceLaunchSides.${side}.${dir}`]: ev.currentTarget.checked,
+        });
+      });
+    });
 
     // ── Ordnance commitment pills: right-click to cancel new commitments ─────
     this.element.querySelectorAll(".imsc-commitment-pill--new[data-index]").forEach(pill => {
@@ -1009,7 +1167,9 @@ export class ShipSheet extends IMActorSheet {
   changeTab(tab, group, options = {}) {
     super.changeTab(tab, group, options);
     if (group === "primary") {
-      if (tab !== "pilot") HelmPreview.hide();
+      // In 6-man the helm is on "pilot"; in 3-man it is on "enginseer3man".
+      const isHelmTab = tab === "pilot" || tab === "enginseer3man";
+      if (!isHelmTab) HelmPreview.hide();
       else this._updateHelmPreview();
 
       const arcBroadcast = !!(this.actor.system.resources?.gunner?.arcOverlayActive);

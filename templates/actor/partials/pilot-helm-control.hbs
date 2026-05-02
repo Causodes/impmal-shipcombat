@@ -1,19 +1,27 @@
 {{!-- Pilot: Helm Control (standard action — SL alloc + bearing + power) --}}
-<div class="sheet-list">
+<div class="sheet-list imsc-role-section">
+    {{#if helm.ramAllocLocked}}
+    <div class="imsc-section-overlay imsc-section-overlay--taken">
+        <div class="imsc-overlay-lock-indicator">
+            <i class="fa-solid fa-lock fa-lg"></i>
+            <span>{{localize "IMSC.Ram.HelmLocked"}}</span>
+        </div>
+    </div>
+    {{/if}}
     <div class="list-header row-content">
         <div class="list-name">{{localize "IMSC.Helm.Title"}}</div>
     </div>
     <div class="list-content imsc-helm-panel">
 
         <div class="imsc-helm-stats">
-            <div class="imsc-helm-stat" data-tooltip="{{localize "IMSC.Helm.PilotingSLTooltip"}}">
-                <span class="imsc-helm-stat-label">{{localize "IMSC.Helm.PilotingSL"}}</span>
+            <div class="imsc-helm-stat" data-tooltip="{{helm.helmSLTooltip}}">
+                <span class="imsc-helm-stat-label">{{helm.helmSLLabel}}</span>
                 {{#if helm.hasRolledPiloting}}
                     <span class="imsc-helm-stat-value imsc-sl-badge">{{helm.remainingSL}}</span>
                 {{else}}
                     <button class="imsc-roll-piloting-btn" data-action="rollPiloting"
                             {{#if helm.allocLocked}}disabled{{/if}}>
-                        <i class="fa-solid fa-dice"></i> {{localize "IMSC.Helm.RollPiloting"}}
+                        <i class="fa-solid fa-dice"></i> {{helm.helmRollLabel}}
                     </button>
                 {{/if}}
             </div>
@@ -42,7 +50,7 @@
                 <div class="imsc-alloc-row">
                     <button class="imsc-alloc-btn" data-action="allocBonus" data-stat="evasion" data-delta="-1"
                             {{#if helm.allocLocked}}disabled{{/if}}>&minus;</button>
-                    <span class="imsc-helm-stat-value">{{helm.evasionPct}}%</span>
+                    <span class="imsc-helm-stat-value">{{helm.allocEvasion}}</span>
                     <button class="imsc-alloc-btn" data-action="allocBonus" data-stat="evasion" data-delta="1"
                             {{#if helm.allocLocked}}disabled{{/if}}>+</button>
                 </div>
@@ -58,7 +66,7 @@
             <div class="imsc-helm-bearing">
                 <span class="imsc-bearing-label">{{localize "IMSC.Helm.Port"}} {{helm.maxBearing}}°</span>
                 <input type="range" class="imsc-bearing-slider" data-helm-bearing
-                       min="-{{helm.maxBearing}}" max="{{helm.maxBearing}}" step="5" value="{{helm.bearing}}">
+                       min="-{{helm.maxBearing}}" max="{{helm.maxBearing}}" step="1" value="{{helm.bearing}}">
                 <span class="imsc-bearing-label">{{localize "IMSC.Helm.Starboard"}} {{helm.maxBearing}}°</span>
             </div>
             <div class="imsc-bearing-readout">
@@ -92,6 +100,10 @@
                 <i class="fa-solid fa-check"></i> {{localize "IMSC.Helm.Confirm"}}
             </button>
             <span class="imsc-helm-note">{{localize "IMSC.Helm.ConfirmNote"}}</span>
+            <button type="button" class="imsc-helm-confirm imsc-ram-btn" data-action="pilotRam"
+                    data-tooltip="{{localize "IMSC.Helm.RamTooltip"}}" {{#unless helm.hasRamTargets}}disabled{{/unless}}>
+                <i class="fa-solid fa-burst"></i> {{localize "IMSC.Helm.Ram"}}
+            </button>
         </div>
 
     </div>

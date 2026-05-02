@@ -1,0 +1,28 @@
+{{!-- tabs/3/enginseer.hbs — Enginseer / Helmsman merged station tab (<= 3 players) --}}
+{{!-- Handles Enginseer + Pilot roles. Helm allocation uses Engineering (Tech) skill. --}}
+{{!-- Overcharged Power Core actions (Overdrive / Strafe / Retrograde) are not included --}}
+{{!-- at this crew size; the single core the Enginseer receives goes to reactor management. --}}
+<section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
+
+    {{> "modules/impmal-shipcombat/templates/actor/partials/enginseer-claim-prompt.hbs"}}
+
+    {{#if (or isGM (lookup (lookup roles "enginseer") "isMyRole"))}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/enginseer-captain-boost.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/enginseer-status-bar.hbs"}}
+
+    {{!-- VOID SHIELD MANAGEMENT --}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/captain-voidshields.hbs"}}
+
+    {{!-- HELM CONTROL (directly under voidshields; roll uses Engineering in 3-man) --}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/pilot-helm-control.hbs"}}
+
+    {{!-- REACTOR MANAGEMENT --}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/enginseer-core-distribution.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/enginseer-heat-management.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/enginseer-fire-suppression.hbs"}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/enginseer-hull-repair.hbs"}}
+    {{/if}}
+
+    {{> 'modules/impmal-shipcombat/templates/actor/partials/complete-turn.hbs' tabRoleId="enginseer" turnDone=(lookup @root.sys.turnDone "enginseer")}}
+
+</section>

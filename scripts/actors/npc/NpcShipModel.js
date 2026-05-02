@@ -149,6 +149,7 @@ export class NpcShipModel extends warhammer.models.BaseWarhammerActorModel {
       starboard: new fields.NumberField({ initial: 1, min: 0, integer: true }),
       prow:      new fields.NumberField({ initial: 1, min: 0, integer: true }),
       dorsal:    new fields.NumberField({ initial: 1, min: 0, integer: true }),
+      stern:     new fields.NumberField({ initial: 0, min: 0, integer: true }),
     });
 
     schema.equipmentSlots = new fields.SchemaField({
@@ -171,6 +172,17 @@ export class NpcShipModel extends warhammer.models.BaseWarhammerActorModel {
       torpedo:     new fields.ArrayField(new fields.ObjectField()),
       strikeCraft: new fields.ArrayField(new fields.ObjectField()),
     });
+    // ── Allowed spawn sides for ordnance launches ─────────────────────────────
+    const _sidesSchema = () => new fields.SchemaField({
+      bow:       new fields.BooleanField({ initial: true }),
+      port:      new fields.BooleanField({ initial: true }),
+      starboard: new fields.BooleanField({ initial: true }),
+      stern:     new fields.BooleanField({ initial: false }),
+    });
+    schema.ordnanceLaunchSides = new fields.SchemaField({
+      torpedo:    _sidesSchema(),
+      strikeCraft: _sidesSchema(),
+    });
 
     // ── Resources (helm + gunner state, mirrors player ship for UI compat) ──
     schema.resources = new fields.SchemaField({
@@ -184,6 +196,8 @@ export class NpcShipModel extends warhammer.models.BaseWarhammerActorModel {
         overdrive:        new fields.BooleanField({ initial: false }),
         helmResetId:      new fields.NumberField({ initial: 0, min: 0, integer: true }),
         pilotingMessageId: new fields.StringField({ initial: "" }),
+        prowGunLocked:    new fields.BooleanField({ initial: false }),
+        ramAllocLocked:   new fields.BooleanField({ initial: false }),
       }),
       gunner: new fields.SchemaField({
         ammo:     new fields.NumberField({ initial: 0,  min: 0, integer: true }),

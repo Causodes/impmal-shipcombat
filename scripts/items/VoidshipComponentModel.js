@@ -43,6 +43,7 @@ export class VoidshipComponentModel extends warhammer.models.BaseWarhammerItemMo
         flank:  "IMSC.Slot.Flank",
         prow:   "IMSC.Slot.Prow",
         dorsal: "IMSC.Slot.Dorsal",
+        stern:  "IMSC.Slot.Stern",
       },
     });
     // For flank weapons: which bay they are installed in on the ship.

@@ -3,6 +3,8 @@
  */
 import { emitToGM } from "../socket.js";
 
+async function _onEndShipTurn() { emitToGM("endShipTurn", {}); }
+
 async function _onAdvanceRound() { emitToGM("advanceRound", {}); }
 
 async function _onEndCombat() {
@@ -31,6 +33,7 @@ async function _onAdjustHull(event, target) {
 }
 
 export const OVERVIEW_ACTIONS = {
+  endShipTurn:  _onEndShipTurn,
   advanceRound: _onAdvanceRound,
   endCombat:    _onEndCombat,
   fullReset:    _onFullReset,

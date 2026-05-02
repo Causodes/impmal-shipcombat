@@ -1604,7 +1604,7 @@ function _startSweepLoop(el, sheet) {
     let canvas = el;
     if (!canvas.isConnected) {
       canvas = _activeSheet.element?.querySelector?.("canvas[data-auspex-radar]");
-      if (!canvas) { _animFrameId = null; return; }
+      if (!canvas) { _animFrameId = requestAnimationFrame(_loop); return; }
       el = canvas;           // update closure reference
       _wireClick(canvas);    // re-bind click on new element
     }

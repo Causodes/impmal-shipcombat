@@ -95,6 +95,7 @@ export const THEME = Object.freeze({
     shieldBlue:   [ 68, 170, 255, 1],  // 0x44aaff
     helmGhost:    [  0, 255, 136, 1],  // 0x00ff88
     attackVector: [255,  68,  68, 1],  // 0xff4444
+    helmRam:      [255,  48,  48, 1],  // 0xff3030 – ram-course preview (red)
   },
 
   // ── Weapon-trait tag borders & text ─────────────────────────────────────

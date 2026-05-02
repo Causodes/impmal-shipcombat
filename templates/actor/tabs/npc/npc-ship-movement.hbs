@@ -62,7 +62,7 @@
                 <div class="imsc-helm-bearing">
                     <span class="imsc-bearing-label">{{localize "IMSC.Helm.Port"}} {{helm.maxBearing}}°</span>
                     <input type="range" class="imsc-bearing-slider" data-helm-bearing
-                           min="-{{helm.maxBearing}}" max="{{helm.maxBearing}}" step="5" value="{{helm.bearing}}">
+                           min="-{{helm.maxBearing}}" max="{{helm.maxBearing}}" step="1" value="{{helm.bearing}}">
                     <span class="imsc-bearing-label">{{localize "IMSC.Helm.Starboard"}} {{helm.maxBearing}}°</span>
                 </div>
                 <div class="imsc-bearing-readout">
@@ -76,7 +76,7 @@
                 <div class="imsc-power-bar" data-helm-power-bar data-minmove-pct="{{helm.minMovePct}}">
                     <div class="imsc-power-minmove-line"></div>
                     <input type="range" class="imsc-power-range" data-helm-fuel
-                           min="0" max="{{helm.powerMax}}" step="5">
+                           min="0" max="{{helm.powerMax}}" step="1">
                 </div>
                 <div class="imsc-power-labels">
                     <span>0%</span>
@@ -91,6 +91,10 @@
                     <i class="fa-solid fa-check"></i> {{localize "IMSC.Helm.Confirm"}}
                 </button>
                 <span class="imsc-helm-note">{{localize "IMSC.Helm.ConfirmNote"}}</span>
+                <button type="button" class="imsc-helm-confirm imsc-ram-btn" data-action="npcRam"
+                        data-tooltip="{{localize "IMSC.Helm.RamTooltip"}}" {{#unless helm.hasRamTargets}}disabled{{/unless}}>
+                    <i class="fa-solid fa-burst"></i> {{localize "IMSC.Helm.Ram"}}
+                </button>
             </div>
 
         </div>

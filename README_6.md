@@ -32,7 +32,7 @@ Roll Presence (Leadership) once per round. Allocate the SL to:
 
 ### Standing Orders Deck
 
-22-card deck shuffled at the start of combat. Draw 3 cards per round (modified by Inspire SL). Hand cap is 6 (modified by Inspire SL for that round). Cards fall into four categories:
+23-card deck shuffled at the start of combat. Draw 3 cards per round (modified by Inspire SL). Hand cap is 6 (modified by Inspire SL for that round). Cards fall into four categories:
 
 - **Boost**: grant Power Cores or bonuses to a specific role; played by dragging or clicking Play on the card
 - **Shipwide**: broad tactical effects that apply to the whole vessel
@@ -116,8 +116,18 @@ A **minimum move obligation** applies each round: you must move at least half of
 | Action | Effect |
 |--------|--------|
 | Full Plasma Burn | +100% power bar capacity this round |
+| Flip and Burn | Rotate 180° in place, then burn sternward at half effective speed; requires ≥50% power remaining |
 | Strafe | Translate sideways without changing heading |
 | Retrograde | Fire bow thrusters; cancel forward momentum or push sternward |
+
+### Ramming
+
+Click the **Ram** button in the Helm Control panel (greyed out if no valid targets are in range with Lock ≥ 1). A popup lists all reachable enemies. Select a target and confirm.
+
+- The ship moves to the target position
+- Hull damage is dealt to both ships based on ramming speed; the struck quadrant is determined by the impact angle
+- The ramming ship soaks incoming damage with its bow armour
+- Post-ram: bow ordnance is locked and helm allocation is locked for the remainder of the round
 
 ---
 
@@ -149,7 +159,7 @@ After the Gunner fires, the Augur may perform one BDA correction:
 | Adjust Bearing | +10 to hit on the next attack against this target |
 | Target Weak Point | +SL armour penetration on the next attack |
 | Fire for Effect | Crit threshold reduced by SL percentage points (e.g. SL 3: 10% → 7% of hull max) |
-| Break Off, Reallocate | Drop target to Lock 0; grant 20% max AP; Gunner may retarget next turn |
+| Break Off, Reallocate | Drop target to Lock 0; grant 20% max AP |
 
 ### Targeted Utility Actions (require Lock 1)
 

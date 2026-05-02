@@ -107,7 +107,32 @@
   pointer-events: none;
 }
 
-/* Range input sits on top of the div zones, track is fully transparent */
+/* Flip and Burn: striped red zone injected into the power bar on hover */
+.imsc-flip-burn-zone {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  /* left / width set dynamically by JS */
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(200, 30, 30, 0.72) 0px,
+    rgba(200, 30, 30, 0.72) 4px,
+    transparent               4px,
+    transparent               8px
+  );
+  pointer-events: none;
+  z-index: 2;
+  animation: imsc-flip-burn-pulse 0.8s ease-in-out infinite alternate;
+  border-left: 2px solid rgba(220, 40, 40, 0.9);
+  border-right: 2px solid rgba(220, 40, 40, 0.9);
+}
+
+@keyframes imsc-flip-burn-pulse {
+  from { opacity: 0.55; }
+  to   { opacity: 1.0;  }
+}
+
+/* Range input sits on top of all div zones (including flip-burn overlay at z-index 2) */
 .imsc-power-range {
   position: relative;
   display: block;
@@ -119,7 +144,7 @@
   appearance: none;
   background: transparent;
   cursor: pointer;
-  z-index: 1;
+  z-index: 3;
 }
 .imsc-power-range::-webkit-slider-runnable-track {
   height: 1.75rem;
@@ -150,6 +175,7 @@
 }
 
 .imsc-power-labels {
+  position: relative;
   display: flex;
   justify-content: space-between;
   font-size: 0.7rem;
@@ -157,6 +183,9 @@
   margin-top: 0.1rem;
 }
 .imsc-power-readout {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   font-weight: bold;
   opacity: 1;
   font-size: 0.8rem;
@@ -209,6 +238,29 @@
   font-weight: bold;
 }
 
+/* Ram button: warning-red colouring to distinguish from normal confirm */
+.imsc-ram-btn {
+  margin-left: auto;
+  border-color: #c0392b !important;
+  color: #ff6b6b !important;
+}
+.imsc-ram-btn:hover {
+  background: rgba(192, 57, 43, 0.25) !important;
+  color: #ff9999 !important;
+}
+.imsc-ram-btn:disabled,
+.imsc-ram-btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: #666 !important;
+  color: #666 !important;
+}
+.imsc-ram-btn:disabled:hover,
+.imsc-ram-btn[disabled]:hover {
+  background: transparent !important;
+  color: #666 !important;
+}
+
 .imsc-helm-note {
   font-size: 0.75rem;
   opacity: 0.6;
@@ -242,10 +294,50 @@
 
 /* ── Overdrive confirm panel (matches strafe/retrograde panels) ──────────── */
 
-.imsc-overdrive-panel {
+.imsc-overdrive-panel,
+.imsc-flipburn-panel {
   margin-top: 0.5rem;
   padding-top: 0.5rem;
   border-top: 1px solid var(--color-border-light, rgba(255,255,255,0.15));
+}
+
+/* ── Overcharge action section: style normalisation ──────────────────────────
+ *
+ * The warhammer-lib + impmal-theme impose several defaults that clash with
+ * the pilot overcharge sections:
+ *
+ *  1. .list-header gets a blue bottom-border — already fine, keep it.
+ *  2. .list-row .row-content:hover fires the blue glow / scan animation — the
+ *     row-content here is non-interactive (just an action title), so suppress
+ *     the hover effect inside imsc-role-section.
+ *  3. .list-content .row-content gets forced height: 2rem — constrains the
+ *     title row; unset to let it size naturally.
+ *  4. .description has line-height: 1rem and no padding — cramped; override
+ *     to match the compact card style used on enginseer / ordnance tabs.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+/* Suppress hover scan on non-interactive title rows */
+.imsc-role-section .list-row .row-content:hover,
+.imsc-role-section .list-row .row-content:hover::before,
+.imsc-role-section .list-row .row-content:hover::after {
+  background: none !important;
+  animation: none !important;
+}
+
+/* Free the title row from the fixed 2rem height constraint */
+.imsc-role-section .list-content .row-content {
+  height: auto;
+  min-height: 1.8rem;
+  padding: 0.2rem 0.4rem;
+  align-items: center;
+}
+
+/* Description text — readable padding, comfortable line-height */
+.imsc-role-section .description {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  padding: 0.2rem 0.5rem 0.4rem;
+  opacity: 0.82;
 }
 
 

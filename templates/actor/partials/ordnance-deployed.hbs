@@ -32,6 +32,7 @@
         {{/each}}
 
         {{!-- Strike Craft --}}
+        {{#if @root.useStrikeCraft}}
         {{#each ordnanceCtx.deployedCraft}}
         <div class="imsc-deployed-row imsc-deployed--craft {{#if turnComplete}}imsc-deployed--done{{/if}}"
              data-token-id="{{tokenId}}">
@@ -56,5 +57,6 @@
             </div>
         </div>
         {{/each}}
+        {{/if}}
     </div>
 </div>

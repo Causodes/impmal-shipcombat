@@ -16,7 +16,7 @@ const SKILL_MAP = {
   leadership:  { key: "presence",  name: "Leadership" },
   engineering: { key: "tech",       name: "Engineering" },
   pilot:       { key: "piloting",   name: "Major Voidship" },
-  sensors:     { key: "presence",  name: "Leadership" },
+  sensors:     { key: "intuition",  name: "Surroundings" },
   ordnance:    { key: "athletics",  name: "Might" },
   gunner:      { key: "ranged",     name: "Ordnance" },
   navigation:  { key: "navigation", name: "Warp" },

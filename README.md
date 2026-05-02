@@ -4,9 +4,10 @@ A FoundryVTT module for **Imperium Maledictum** that adds a full voidship combat
 
 See the role-specific reference documents for full details on what each station does:
 
-- [README_6.md](README_6.md)
-- [README_5.md](README_5.md)
-- [README_4.md](README_4.md)
+- [README_3.md](README_3.md) — 3-player crew
+- [README_4.md](README_4.md) — 4-player crew
+- [README_5.md](README_5.md) — 5-player crew
+- [README_6.md](README_6.md) — 6-player crew
 
 ---
 
@@ -39,26 +40,38 @@ Players can view and claim roles as well as view and equip various voidship comp
 
 The Configuration tab is where role count, weapon configuration, and the ship component inventory is managed. It is only accessible to players with Owner-level permission and to the GM.
 
+### Ship Configuration
+
+| Setting | Values | Notes |
+|---------|--------|-------|
+| Active Roles | 3 – 6 | Number of active player stations; see crew reference READMEs for per-size layouts |
+| Strike Craft | Yes / No | Show or hide the Strike Craft ordnance column and actor template drop target |
+| Movement | Simplified / Realistic | Simplified is the current model (bow-aligned travel, immediate bearing changes). Realistic (Newtonian) is planned for a future update and is currently disabled |
+
+### Torpedo / Strike Craft Launch Directions
+
+Pill toggles for each direction (Bow, Port, Starboard, Stern) control which sides are valid launch origins for torpedoes and strike craft. At least one direction must be active; if all are deselected for a type the launch action returns an error.
+
 ### Hull Max
 
 **Hull maximum is set directly on the ship actor** — it is the only stat not derived from a component. Set it in the header bar at the top of the sheet.
 
-### Component Slots
+### Weapon Slots
 
-All other ship stats are read from installed **Voidship Component** items. Only equipped components are read.
-
-**Weapon slot counts** (how many batteries fit at each position) are configured per mount position:
+Set the slot count for each weapon position. Only positions with at least one slot are shown in the active station tabs.
 
 | Position | Notes |
 |----------|-------|
 | Prow | Forward-facing fixed mount |
 | Dorsal | Forward-facing fixed mount |
-| Port | Port broadside (Flank) |
-| Starboard | Starboard broadside (Flank) |
+| Port | Port broadside |
+| Starboard | Starboard broadside |
+| Stern | Rear-facing fixed mount |
+| Ordnance | Number of simultaneously loadable ordnance bays |
 
-Set the slot count for each position, then drag weapon components into the matching drop targets.
+### Equipment Slots (Component Inventory)
 
-**Equipment slots** (one component installed at a time per slot type):
+All ship stats other than hull max are derived from installed **Voidship Component** items. Only components with the equipped flag active are read.
 
 | Slot | Drives |
 |------|--------|
@@ -78,9 +91,15 @@ Torpedoes and strike craft are separate **actors** (types `impmal-shipcombat.tor
 - **Torpedo Actors** — drag one or more torpedo actors here; the Ordnance Master selects which type to arm/launch each round
 - **Strike Craft Actors** — drag one or more strike craft actors here; same selection logic
 
-Each template actor carries all stats for that ordnance type: speed, maneuverability, fuel, warhead damage and blast radius (torpedoes), hull, auspex rating, weapon load (strike craft). When a torpedo or flight is launched, a new token is spawned on the canvas using the template actor's stats. The original template actor is never modified during play. 
+Each template actor carries all stats for that ordnance type: speed, maneuverability, fuel, warhead damage and blast radius (torpedoes), hull, auspex rating, weapon load (strike craft). When a torpedo or flight is launched, a new token is spawned on the canvas using the template actor's stats. The original template actor is never modified during play.
 
 The health of an ordnance actor template should be 0/1; this will be multiplied accordingly by the Ordnance Bay's salvo/flight size stat. Upon taking damage from any source, an ordnance actor will lose exactly 1 hitpoint; multiple hits from a salvo will deduct multiple hitpoints.
+
+---
+
+## Minimum Move
+
+To simulate momentum in space, all craft have a minimum move obligation. This obligation is represented by the yellow portion of the Power slider on the movement controls. This is equal to half the distance the craft traveled its previous turn (half of speed for the first turn of combat). A craft must move this distance; if the craft has moved less than its minimum move by the end of the craft's turn, it will automatically drift forward to the minimum move distance.
 
 ---
 
@@ -96,7 +115,7 @@ Armour negates 1 point of damage per point of armour.
 
 ## Internal Fire
 
-Deals passive hull damage each round and reduces available manpower (if applicable).
+Deals passive hull damage each round and reduces available manpower.
 
 ---
 

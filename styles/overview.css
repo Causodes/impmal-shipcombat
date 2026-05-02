@@ -237,6 +237,29 @@ section.tab[data-tab="overview"] {
 .imsc-overview-cond-pill--high   .imsc-overview-cond-name { color: #c0392b; }
 
 
+/* ── End Turn button ────────────────────────────────────────────────────── */
+.imsc-end-turn-row {
+  padding: 0.4rem 0.25rem 0.25rem;
+}
+
+.imsc-end-turn-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.3rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.imsc-end-turn-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+
 /* ── Installed Components Summary ────────────────────────────────────────── */
 .imsc-ov-components {
   margin-top: 0.4rem;
@@ -427,6 +450,27 @@ section.tab[data-tab="overview"] {
   font-size: 0.65rem;
   margin-top: 0.2rem;
   opacity: 0.65;
+}
+
+/* ── Ordnance big-box layout ─────────────────────────────────────────────── */
+.imsc-ov-ordnance-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.2rem;
+  padding: 0.25rem 0.5rem 0.35rem;
+}
+
+.imsc-ov-ordnance-box .imsc-ov-comp-row {
+  background: rgba(0,0,0,0.15);
+  border-radius: 3px;
+  padding: 0.15rem 0.3rem;
+  min-height: 1.8rem;
+  margin-bottom: 0;
+}
+
+.imsc-ov-ordnance-add {
+  grid-column: 1 / -1;
+  margin-top: 0.05rem;
 }
 
 /* ── Equipment slot icon picker (legacy/unused) ──────────────────────────── */

@@ -199,10 +199,14 @@ export const ORDNANCE_MASTER_ACTIONS = {
   // Row 1: Torpedo operations
   armTorpedo:     { id: "armTorpedo",     label: "IMSC.Ordnance.ArmTorpedo",     desc: "IMSC.Ordnance.ArmTorpedoDesc",     crew: 8, duration: 3, icon: "fa-solid fa-bomb",              completionBenefit: true },
   launchTorpedo:  { id: "launchTorpedo",  label: "IMSC.Ordnance.LaunchTorpedo",  desc: "IMSC.Ordnance.LaunchTorpedoDesc",  crew: 4, duration: 2, icon: "fa-solid fa-rocket",            noCancel: true },
-  // Row 2: Strike Craft operations (prep → launch → recovery)
-  armCraft:       { id: "armCraft",       label: "IMSC.Ordnance.ArmCraft",       desc: "IMSC.Ordnance.ArmCraftDesc",       crew: 9, duration: 3, icon: "fa-solid fa-jet-fighter-up",    completionBenefit: true },
-  launchCraft:    { id: "launchCraft",    label: "IMSC.Ordnance.LaunchCraft",    desc: "IMSC.Ordnance.LaunchCraftDesc",    crew: 9, duration: 3, icon: "fa-solid fa-jet-fighter",        noCancel: true },
-  recallCraft:    { id: "recallCraft",    label: "IMSC.Ordnance.RecallCraft",    desc: "IMSC.Ordnance.RecallCraftDesc",    crew: 6, duration: 3, icon: "fa-solid fa-plane-arrival",      noCancel: true },
+  // Row 2a: Strike Craft operations (prep → launch → recovery) — shown only when useStrikeCraft
+  armCraft:       { id: "armCraft",       label: "IMSC.Ordnance.ArmCraft",       desc: "IMSC.Ordnance.ArmCraftDesc",       crew: 9, duration: 3, icon: "fa-solid fa-jet-fighter-up",    completionBenefit: true, requiresStrikeCraft: true },
+  launchCraft:    { id: "launchCraft",    label: "IMSC.Ordnance.LaunchCraft",    desc: "IMSC.Ordnance.LaunchCraftDesc",    crew: 9, duration: 3, icon: "fa-solid fa-jet-fighter",        noCancel: true,          requiresStrikeCraft: true },
+  recallCraft:    { id: "recallCraft",    label: "IMSC.Ordnance.RecallCraft",    desc: "IMSC.Ordnance.RecallCraftDesc",    crew: 6, duration: 3, icon: "fa-solid fa-plane-arrival",      noCancel: true,          requiresStrikeCraft: true },
+  // Row 2b: Torpedo-only replacements — shown only when !useStrikeCraft
+  torpedoSalvo:   { id: "torpedoSalvo",   label: "IMSC.Ordnance.TorpedoSalvo",   desc: "IMSC.Ordnance.TorpedoSalvoDesc",   crew: 9, duration: 4, icon: "fa-solid fa-rocket-launch",     noCancel: true,          hideWithStrikeCraft: true },
+  bayOptimization:{ id: "bayOptimization",label: "IMSC.Ordnance.BayOptimization",desc: "IMSC.Ordnance.BayOptimizationDesc", crew: 8, duration: 1, icon: "fa-solid fa-gears",              completionBenefit: true, hideWithStrikeCraft: true },
+  emergencyLaunch:{ id: "emergencyLaunch",label: "IMSC.Ordnance.EmergencyLaunch",desc: "IMSC.Ordnance.EmergencyLaunchDesc", crew: 5, duration: 1, icon: "fa-solid fa-fire-flame-curved",  noCancel: true,          hideWithStrikeCraft: true },
   // Row 3: Support operations
   loadAmmo:       { id: "loadAmmo",       label: "IMSC.Ordnance.LoadAmmo",       desc: "IMSC.Ordnance.LoadAmmoDesc",       crew: 6, duration: 2, icon: "fa-solid fa-boxes-stacked",     completionBenefit: true },
   loadPayload:    { id: "loadPayload",    label: "IMSC.Ordnance.LoadPayload",    desc: "IMSC.Ordnance.LoadPayloadDesc",    crew: 6, duration: 2, icon: "fa-solid fa-box",               completionBenefit: true },
@@ -221,6 +225,9 @@ export const ORDNANCE_4MAN_COSTS = {
   armCraft:        { crew: 7, duration: 2 },
   launchCraft:     { crew: 7, duration: 2 },
   recallCraft:     { crew: 4, duration: 2 },
+  torpedoSalvo:    { crew: 7, duration: 2 },
+  bayOptimization: { crew: 6, duration: 1 },
+  emergencyLaunch: { crew: 4, duration: 1 },
   loadAmmo:        { crew: 4, duration: 1 },
   loadPayload:     { crew: 4, duration: 1 },
   generatePower:   { crew: 4, duration: 1 },
@@ -239,6 +246,14 @@ export const ORDNANCE_MASTER_CORE_ACTIONS = [
     icon: "fa-solid fa-helicopter",
     effect: "Convert half destroyed craft to recovering, OR 1 recovering to armed",
     tradeoff: "Cannot launch strike craft this round",
+    requiresStrikeCraft: true,
+  },
+  {
+    id: "rapidRearm",
+    label: "IMSC.Ordnance.RapidRearm",
+    desc: "IMSC.Ordnance.RapidRearmDesc",
+    icon: "fa-solid fa-circle-bolt",
+    hideWithStrikeCraft: true,
   },
   {
     id: "shockLoadingRotation",
@@ -485,7 +500,7 @@ export const CAPTAIN_CORE_ACTIONS = [
 ];
 
 // ─── Captain: Card Deck ───────────────────────────────────────────────────────
-// 22-card deck. copies defaults to 1. Gambits set stance via pendingStance.
+// 23-card deck. copies defaults to 1. Gambits set stance via pendingStance.
 
 export const CAPTAIN_CARDS = [
   // BOOST  -  10 unique cards targeting specific roles
@@ -519,10 +534,11 @@ export const CAPTAIN_CARDS = [
  * Cards with copies > 1 appear that many times. Uses Fisher-Yates shuffle.
  * @returns {string[]}
  */
-export function buildCaptainDeck(excludeRoles = []) {
+export function buildCaptainDeck(excludeRoles = [], excludeCards = []) {
   const deck = [];
   for (const card of CAPTAIN_CARDS) {
     if (excludeRoles.includes(card.targetRole ?? "")) continue;
+    if (excludeCards.includes(card.id)) continue;
     for (let i = 0; i < (card.copies ?? 1); i++) deck.push(card.id);
   }
   for (let i = deck.length - 1; i > 0; i--) {

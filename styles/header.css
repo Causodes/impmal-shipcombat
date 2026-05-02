@@ -159,6 +159,128 @@ input[data-slot-count]:focus {
   gap: 0.5rem;
 }
 
+/* ── Ship Configuration grid ────────────────────────────────────────────── */
+.imsc-ship-config-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.4rem 0.5rem;
+}
+
+.imsc-config-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.imsc-config-label {
+  flex: 0 0 9rem;
+  font-weight: 600;
+  font-size: 0.85em;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+.imsc-config-label--wide {
+  flex: 0 0 13rem;
+}
+
+.imsc-config-value {
+  font-size: 0.85em;
+}
+
+.imsc-config-select {
+  font-family: inherit;
+  font-size: 0.82em;
+  color: inherit;
+  background: rgba(0,0,0,0.35);
+  border: none;
+  border-radius: 3px;
+  padding: 1px 4px;
+  height: 1.4em;
+  line-height: 1.4;
+  cursor: pointer;
+  max-width: 9rem;
+}
+
+.imsc-config-select:hover:not(:disabled) {
+  background: rgba(255,255,255,0.15);
+}
+
+.imsc-config-select:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Separator between basic config rows and launch-side toggles */
+.imsc-config-sep {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin: 0.1rem 0;
+}
+
+/* ── Ordnance launch-side toggle pills ───────────────────────────────────── */
+.imsc-launch-sides {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.imsc-launch-side-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 0.78em;
+  font-weight: 600;
+  cursor: pointer;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.3);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* Hide the native checkbox — the label IS the control */
+.imsc-launch-side-toggle input[type=checkbox] {
+  display: none;
+}
+
+/* Active (checked) state */
+.imsc-launch-side-toggle:has(input:checked) {
+  background: rgba(74,158,255,0.15);
+  border-color: rgba(74,158,255,0.45);
+  color: #6fb5ff;
+}
+
+/* Hover (only when not disabled) */
+.imsc-launch-side-toggle:not(:has(input:disabled)):hover {
+  border-color: rgba(255,255,255,0.22);
+  color: rgba(255,255,255,0.65);
+}
+
+/* Disabled state */
+.imsc-launch-side-toggle:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.imsc-crewsize-select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: rgba(0,0,0,0.35);
+  border: none;
+  border-radius: 3px;
+  padding: 1px 4px;
+  height: 1.4em;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
 /* ── Weapon Battery 2×2 slot grid ───────────────────────────────────────── */
 .imsc-weapon-slot-grid {
   display: grid;

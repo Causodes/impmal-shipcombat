@@ -173,6 +173,8 @@ Hooks.once("init", async () => {
     // ── Role tab compositors — 4-player ──────────────────────────────────
     `modules/${MODULE_ID}/templates/actor/tabs/4/captain.hbs`,
     `modules/${MODULE_ID}/templates/actor/tabs/4/gunner.hbs`,
+    // ── Role tab compositors — 3-player ──────────────────────────────────
+    `modules/${MODULE_ID}/templates/actor/tabs/3/enginseer.hbs`,
     // ── Shared partials ───────────────────────────────────────────────────
     `modules/${MODULE_ID}/templates/actor/partials/complete-turn.hbs`,
     `modules/${MODULE_ID}/templates/actor/partials/core-status-banner.hbs`,
@@ -511,13 +513,16 @@ Hooks.on("updateCombat", async (combat, changes) => {
         const bearing      = ship.system.resources?.pilot?.bearing ?? 0;
 
         if (minMove > 0) {
-          const projected = HelmPreview.projectPosition(token, bearing, 0, speed, minMove);
+          const autoMinMovePct = Math.round(minMove / (minMove + speed) * 100);
+          const projected = HelmPreview.projectPosition(token, bearing, autoMinMovePct, speed, minMove);
           if (projected) {
             await ShipCombatState.confirmMovement({
-              fuelUsed: 0,
-              newX: projected.x,
-              newY: projected.y,
-              newRotation: projected.rotation,
+              fuelUsed:         autoMinMovePct,
+              driftUsed:        0,
+              speed:            speed + minMove,
+              newX:             projected.x,
+              newY:             projected.y,
+              newRotation:      projected.rotation,
               gridSquaresMoved: minMove,
             });
           }
@@ -528,11 +533,7 @@ Hooks.on("updateCombat", async (combat, changes) => {
 
   // ── Ship's turn STARTED: apply effects and reset all allocations ───────────
   if (currentCombatantId === shipCombatant.id) {
-    // 1. Carry forward prevTurnMove computed from last turn's fuel before reset
-    const fuelBurned   = ship.system.resources?.pilot?.fuelBurned ?? 0;
-    const speed        = ship.system.movement?.speed ?? 6;
-    const prevTurnMove = (fuelBurned / 100) * speed;
-    await ShipCombatState.update({ "resources.pilot.prevTurnMove": prevTurnMove });
+    // 1. prevTurnMove was set correctly by confirmMovement and persists through resetHelmState.
 
     // 2. Per-round condition effects  -  capture fire BEFORE updates so Hull High
     //    doesn't also apply the new fire as hull damage in the same tick

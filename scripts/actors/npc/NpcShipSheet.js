@@ -19,6 +19,7 @@ import { heatColor } from "../../theme.js";
 import { enrichWeaponForGunner } from "../../roles/gunner.js";
 import { TargetingPopup } from "../../apps/TargetingPopup.js";
 import { RecoverCraftPopup } from "../../apps/StrikeCraftPopups.js";
+import { RamTargetPopup } from "../../apps/RamTargetPopup.js";
 
 /**
  * Animate a token along waypoints (same curved path as the player ship).
@@ -45,6 +46,7 @@ const WEAPON_SECTIONS = [
   { id: "starboard", label: "IMSC.Slot.Starboard" },
   { id: "prow",      label: "IMSC.Slot.Prow" },
   { id: "dorsal",    label: "IMSC.Slot.Dorsal" },
+  { id: "stern",     label: "IMSC.Slot.Stern" },
 ];
 
 const SECTOR_ABBR = { bow: "BOW", stern: "STN", port: "PRT", starboard: "STBD" };
@@ -67,6 +69,7 @@ export class NpcShipSheet extends IMActorSheet {
       npcAllocBonus:      _onNpcAllocBonus,
       npcConfirmHelm:     _onNpcConfirmHelm,
       npcResetHelm:       _onNpcResetHelm,
+      npcRam:             _onNpcRam,
       // Gunner tab
       npcFireWeapon:       _onNpcFireWeapon,
       // Ordnance tab
@@ -165,6 +168,14 @@ export class NpcShipSheet extends IMActorSheet {
 
     // Helm context
     const helm = buildHelmContext(sys);
+    helm.hasRamTargets = !!(
+      canvas?.ready &&
+      canvas?.tokens?.placeables?.some(t =>
+        t.document.actor?.id !== this.actor.id &&
+        !t.document.hidden &&
+        t.document.actor != null
+      )
+    );
 
     Object.assign(context, {
       sys,
@@ -204,6 +215,23 @@ export class NpcShipSheet extends IMActorSheet {
       hasAnyCondition: CRIT_LOCATIONS.some(loc => !!(sys.conditions?.[loc.id]?.tier)),
 
       shipClassifications: SHIP_CLASSIFICATIONS,
+      useStrikeCraft: true,
+      ordnanceLaunchSides: (() => {
+        const SIDE_LABELS = {
+          bow: game.i18n.localize("IMSC.Sector.Bow"),
+          port: game.i18n.localize("IMSC.Sector.Port"),
+          starboard: game.i18n.localize("IMSC.Sector.Starboard"),
+          stern: game.i18n.localize("IMSC.Sector.Stern"),
+        };
+        const SIDE_ICONS = { bow: "fa-arrow-up", port: "fa-arrow-left", starboard: "fa-arrow-right", stern: "fa-arrow-down" };
+        const toArr = src => Object.entries(SIDE_LABELS).map(([key, label]) => ({
+          key, label, icon: SIDE_ICONS[key], value: src?.[key] ?? (key !== "stern"),
+        }));
+        return {
+          torpedo:    toArr(sys.ordnanceLaunchSides?.torpedo),
+          strikeCraft: toArr(sys.ordnanceLaunchSides?.strikeCraft),
+        };
+      })(),
     });
 
     // ── Ordnance tab context ──────────────────────────────────────────────
@@ -253,6 +281,17 @@ export class NpcShipSheet extends IMActorSheet {
 
     // ── Helm slider wiring (Movement tab) ──────────────────────────────────
     _npcHelmOnRender(this);
+
+    // ── Ordnance launch-side checkboxes ──────────────────────────────────────
+    this.element.querySelectorAll("[data-launch-side][data-launch-dir]").forEach(cb => {
+      cb.addEventListener("change", async ev => {
+        const side = ev.currentTarget.dataset.launchSide;
+        const dir  = ev.currentTarget.dataset.launchDir;
+        await this.actor.update({
+          [`system.ordnanceLaunchSides.${side}.${dir}`]: ev.currentTarget.checked,
+        });
+      });
+    });
 
     // ── Shield arc: scroll / click / right-click to adjust ──────────────────
     this.element.querySelectorAll(".imsc-arc-val[data-sector]").forEach(el => {
@@ -715,14 +754,39 @@ async function _onNpcConfirmHelm() {
   }
 
   // Update actor resources
-  const totalMoved = fuelSlider > 0 ? Math.max(driftUnits, Math.round((fuelSlider / 100) * speed)) : driftUnits;
+  const totalMoved = Math.round((fuelSlider / 100) * (speed + driftUnits));
   await this.actor.update({
     "system.resources.pilot.fuelBurned": fuelSlider,
-    "system.resources.pilot.prevTurnMove": (prevTurnMove || 0) + totalMoved,
+    "system.resources.pilot.prevTurnMove": totalMoved,
     "system.resources.pilot.bearing": bearing,
   });
 
   HelmPreview.hide();
+}
+
+/** Open the ram target picker for NPC ships. */
+async function _onNpcRam() {
+  const token = this.actor.getActiveTokens()?.[0];
+  if (!token || !canvas?.ready) return;
+  const sys = this.actor.system;
+  const fuelBurned       = sys.resources?.pilot?.fuelBurned ?? 0;
+  const prevTurnMove     = sys.resources?.pilot?.prevTurnMove ?? 0;
+  const minMoveGridUnits = fuelBurned === 0 ? Math.ceil(prevTurnMove / 2) : 0;
+  const baseSpeed   = sys.movement?.speed ?? 6;
+  const allocSpeed  = sys.resources?.pilot?.allocSpeed ?? 0;
+  const effSpeed    = Math.max(0, baseSpeed + allocSpeed);
+  const powerMax    = 100;
+  const powerRemaining = Math.max(0, powerMax - fuelBurned);
+  const baseMano    = sys.movement?.maneuverability ?? 2;
+  const allocMano   = sys.resources?.pilot?.allocMano ?? 0;
+  const maxBearingDeg = Math.max(0, baseMano + allocMano) * 15;
+  const shipBasis   = HelmPreview._tokenBasis(token);
+  const popup = new RamTargetPopup({
+    ship: this.actor,
+    effSpeed, powerMax, powerRemaining,
+    maxBearingDeg, minMoveGridUnits, fuelBurned, shipBasis,
+  });
+  popup.render(true);
 }
 
 /** Reset NPC helm for a new turn. */
@@ -944,16 +1008,29 @@ function _onFluxToCharge() {
 
 // ── NPC ordnance spawn helpers ────────────────────────────────────────────
 
-async function _promptNpcSide() {
+async function _promptNpcSide(allowedSides) {
+  const ALL_SIDES = [
+    { key: "port",      label: game.i18n.localize("IMSC.Sector.Port"),      icon: "fa-solid fa-arrow-left" },
+    { key: "bow",       label: game.i18n.localize("IMSC.Sector.Bow"),        icon: "fa-solid fa-arrow-up" },
+    { key: "starboard", label: game.i18n.localize("IMSC.Sector.Starboard"), icon: "fa-solid fa-arrow-right" },
+    { key: "stern",     label: game.i18n.localize("IMSC.Sector.Stern"),      icon: "fa-solid fa-arrow-down" },
+  ];
+  let filtered;
+  if (!allowedSides) {
+    filtered = ALL_SIDES.filter(s => s.key !== "stern");
+  } else {
+    filtered = ALL_SIDES.filter(s => allowedSides[s.key] === true);
+  }
+  if (filtered.length === 0) {
+    ui.notifications.error(game.i18n.localize("IMSC.Ordnance.NoLaunchSides"));
+    return null;
+  }
+  if (filtered.length === 1) return filtered[0].key;
   return new Promise(resolve => {
     const d = new foundry.applications.api.DialogV2({
       window: { title: game.i18n.localize("IMSC.Ordnance.ChooseSide") },
       content: `<p>${game.i18n.localize("IMSC.Ordnance.ChooseSideDesc")}</p>`,
-      buttons: [
-        { action: "port",      label: game.i18n.localize("IMSC.Sector.Port"),      icon: "fa-solid fa-arrow-left" },
-        { action: "bow",       label: game.i18n.localize("IMSC.Sector.Bow"),        icon: "fa-solid fa-arrow-up" },
-        { action: "starboard", label: game.i18n.localize("IMSC.Sector.Starboard"), icon: "fa-solid fa-arrow-right" },
-      ],
+      buttons: filtered.map(s => ({ action: s.key, label: s.label, icon: s.icon })),
       close: () => resolve(null),
       submit: result => resolve(result),
     });
@@ -989,6 +1066,22 @@ function _npcComputeBowSpawn(token) {
     x:        Math.round(cx + Math.cos(headingRad) * offset - grid * 0.25),
     y:        Math.round(cy + Math.sin(headingRad) * offset - grid * 0.25),
     rotation: shipRotDeg,
+  };
+}
+
+function _npcComputeSternSpawn(token) {
+  if (!token) return { x: 0, y: 0, rotation: 0 };
+  const grid = canvas.grid?.size ?? 100;
+  const offset = grid * 1.5;
+  const shipRotDeg = token.document?.rotation ?? 0;
+  const headingRad = (shipRotDeg - 90) * (Math.PI / 180);
+  const sternRad = headingRad + Math.PI;
+  const cx = token.center?.x ?? (token.x + grid / 2);
+  const cy = token.center?.y ?? (token.y + grid / 2);
+  return {
+    x:        Math.round(cx + Math.cos(sternRad) * offset - grid / 2),
+    y:        Math.round(cy + Math.sin(sternRad) * offset - grid / 2),
+    rotation: (shipRotDeg + 180) % 360,
   };
 }
 
@@ -1087,6 +1180,10 @@ async function _npcLaunchOrdnance(type) {
   const templates = this.actor.system.ordnanceActors?.[slotKey] ?? [];
   const tmpl      = templates[0]; // always use first template
 
+  if (this.actor.system.resources?.pilot?.prowGunLocked) {
+    return ui.notifications.warn(game.i18n.localize("IMSC.Ram.BowLaunchLocked"));
+  }
+
   if (!tmpl) {
     return ui.notifications.warn(game.i18n.localize("IMSC.NpcShip.NoTemplate"));
   }
@@ -1099,12 +1196,13 @@ async function _npcLaunchOrdnance(type) {
   const parentShipTokenId = shipToken.id;
 
   // Prompt for launch direction
-  const side = await _promptNpcSide();
+  const allowedSides = this.actor.system.ordnanceLaunchSides?.[type === "strikeCraft" ? "strikeCraft" : "torpedo"];
+  const side = await _promptNpcSide(allowedSides);
   if (!side) return; // cancelled
 
   // Compute spawn position based on direction
-  const spawn = side === "bow"
-    ? _npcComputeBowSpawn(shipToken)
+  const spawn = side === "bow" ? _npcComputeBowSpawn(shipToken)
+    : side === "stern" ? _npcComputeSternSpawn(shipToken)
     : _npcComputePerpendicularSpawn(shipToken, side);
 
   // Clone template actor data

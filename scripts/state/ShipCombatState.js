@@ -387,7 +387,7 @@ export class ShipCombatState {
         const currentAux   = data.resources?.enginseer?.auxiliaryPower ?? 0;
         // AP Shutdown (Core Systems High): AP cannot increase
         if (data.conditions?.coreSystems?.tier !== "high") {
-          updates["resources.enginseer.auxiliaryPower"] = Math.min(auxCap, (updates["resources.enginseer.auxiliaryPower"] ?? currentAux) + 5);
+          updates["resources.enginseer.auxiliaryPower"] = Math.min(auxCap, (updates["resources.enginseer.auxiliaryPower"] ?? currentAux) + reactorStats.reserveMultiplier);
         }
       }
       if (actionId === "recallCraft") {
@@ -397,6 +397,14 @@ export class ShipCombatState {
           const armed = data.resources?.ordnance?.armedCraft ?? 0;
           updates["resources.ordnance.armedCraft"] = (updates["resources.ordnance.armedCraft"] ?? armed) + 1;
         }
+      }
+      if (actionId === "bayOptimization") {
+        // Accelerate all remaining commitments by 1 extra turn
+        const nextCommitments = updates["resources.ordnance.commitments"] ?? [...(data.resources?.ordnance?.commitments ?? [])];
+        updates["resources.ordnance.commitments"] = nextCommitments.map(c => ({
+          ...c,
+          turnsRemaining: Math.max(0, (c.turnsRemaining ?? 1) - 1),
+        }));
       }
     }
 
@@ -727,6 +735,8 @@ export class ShipCombatState {
       "resources.pilot.pilotingMessageId": "",
       "resources.pilot.helmResetId":        prevResetId + 1,
       "resources.pilot.bearing":            0,
+      "resources.pilot.prowGunLocked":      false,
+      "resources.pilot.ramAllocLocked":     false,
     });
   }
 
@@ -827,6 +837,8 @@ export class ShipCombatState {
     updates["resources.pilot.overdrive"]          = false;
     updates["resources.pilot.apThrustBonus"]      = 0;
     updates["resources.pilot.hardOverActive"]     = false;
+    updates["resources.pilot.prowGunLocked"]      = false;
+    updates["resources.pilot.ramAllocLocked"]     = false;
     // ── Sensors per-round tracking ──
     updates["resources.sensors.sensorPriorityActive"]  = false;
     // ── Ordnance per-round tracking ──
@@ -847,7 +859,8 @@ export class ShipCombatState {
     updates["conditions.weaponsSensors"] = { ...condClear };
     // ── Captain: re-initialize deck and triage ──
     const _excl5man = (data.crewSize ?? 6) <= 4 ? ["ordnance", "sensors"] : (data.crewSize ?? 6) <= 5 ? ["ordnance"] : [];
-    const captainDeck = buildCaptainDeck(_excl5man);
+    const _exclCards = (data.crewSize ?? 6) <= 3 ? ["pressTheAttack"] : [];
+    const captainDeck = buildCaptainDeck(_excl5man, _exclCards);
     const captainHand = captainDeck.splice(0, 3);
     updates["resources.captain.stance"]               = "none";
     updates["resources.captain.pendingStance"]        = "";
@@ -1022,7 +1035,8 @@ export class ShipCombatState {
     const max = this.getReactorStats().coreOutput;
     const shieldCfg = this.getShieldStats();
     const _excl5man = (data.crewSize ?? 6) <= 4 ? ["ordnance", "sensors"] : (data.crewSize ?? 6) <= 5 ? ["ordnance"] : [];
-    const captainDeck = buildCaptainDeck(_excl5man);
+    const _exclCards = (data.crewSize ?? 6) <= 3 ? ["pressTheAttack"] : [];
+    const captainDeck = buildCaptainDeck(_excl5man, _exclCards);
     const captainHand = captainDeck.splice(0, 3);
     const updates = {
       active: true, round: 1, internalFire: 0,
@@ -1082,6 +1096,15 @@ export class ShipCombatState {
 
   static async endCombat() {
     return this.update({ active: false });
+  }
+
+  /**
+   * Advance the Foundry combat tracker by one turn (ends this ship's turn).
+   * Should only be called when all active roles have marked turnDone.
+   */
+  static async endShipTurn() {
+    if (!game.combat) return;
+    await game.combat.nextTurn();
   }
 
 
@@ -1464,6 +1487,8 @@ ShipCombatState.consumePilotCore = PilotState.consumePilotCore;
 ShipCombatState.pilotRetrograde  = PilotState.pilotRetrograde;
 ShipCombatState.pilotOverdrive   = PilotState.pilotOverdrive;
 ShipCombatState.pilotStrafe      = PilotState.pilotStrafe;
+ShipCombatState.pilotFlipAndBurn = PilotState.pilotFlipAndBurn;
+ShipCombatState.pilotRam         = PilotState.pilotRam;
 ShipCombatState.confirmMovement  = PilotState.confirmMovement;
 ShipCombatState.apToThrust       = PilotState.apToThrust;
 

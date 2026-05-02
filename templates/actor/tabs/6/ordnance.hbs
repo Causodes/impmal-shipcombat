@@ -8,7 +8,11 @@
     {{> "modules/impmal-shipcombat/templates/actor/partials/ordnance-main-actions.hbs"}}
     {{> "modules/impmal-shipcombat/templates/actor/partials/ordnance-payload.hbs"}}
     {{> "modules/impmal-shipcombat/templates/actor/partials/ordnance-core-actions.hbs"}}
+    {{#if useStrikeCraft}}
     {{> "modules/impmal-shipcombat/templates/actor/partials/ordnance-deployed.hbs"}}
+    {{else}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/deployed-torpedoes.hbs"}}
+    {{/if}}
 
     {{> 'modules/impmal-shipcombat/templates/actor/partials/complete-turn.hbs' tabRoleId="ordnance" turnDone=(lookup @root.sys.turnDone "ordnance")}}
 

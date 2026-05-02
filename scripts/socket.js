@@ -9,11 +9,11 @@ export function setupSocket() {
     "assignRole",
     "markOvercharge", "toggleTurnDone", "updateResource",
     "assignWeapon", "unassignComponent", "assignEquipment",
-    "startCombat", "endCombat", "advanceRound",
+    "startCombat", "endCombat", "advanceRound", "endShipTurn",
     "confirmMovement", "resetHelmState", "fullReset",
     "emergencyVent", "reduceInternalFire", "setInternalFire",
     "stagePowerCore", "unstagePowerCore", "dispatchStagedCores",
-    "pilotRetrograde", "pilotOverdrive", "pilotStrafe", "apToThrust",
+    "pilotRetrograde", "pilotOverdrive", "pilotStrafe", "pilotFlipAndBurn", "pilotRam", "apToThrust",
     "commitShieldCores", "uncommitShieldCore", "commitAuxCore", "uncommitAuxCore", "spendBankedCores", "adjustShieldZone", "fluxToCharge",
     "fireWeapon",
     "repairHull",
@@ -91,6 +91,10 @@ async function _handleAction(action, payload = {}) {
 
     case "advanceRound":
       await ShipCombatState.advanceRound();
+      break;
+
+    case "endShipTurn":
+      await ShipCombatState.endShipTurn();
       break;
 
 
@@ -176,6 +180,56 @@ async function _handleAction(action, payload = {}) {
         if (token) {
           emitToAll("animateTokenPath", {
             tokenUuid:     token.document.uuid,
+            waypoints:     payload.waypoints,
+            finalX:        payload.newX,
+            finalY:        payload.newY,
+            finalRotation: payload.newRotation,
+          });
+        }
+      }
+      break;
+
+    case "pilotFlipAndBurn":
+      await ShipCombatState.pilotFlipAndBurn(payload.userId, payload.halfSpeedUnits, payload.newX, payload.newY, payload.newRotation, payload.waypoints);
+      if (payload.waypoints?.length) {
+        const ship2 = ShipCombatState.ship;
+        const token2 = ship2?.getActiveTokens()?.[0];
+        if (token2) {
+          emitToAll("animateTokenPath", {
+            tokenUuid:     token2.document.uuid,
+            waypoints:     payload.waypoints,
+            finalX:        payload.newX,
+            finalY:        payload.newY,
+            finalRotation: payload.newRotation,
+          });
+        }
+      }
+      break;
+
+    case "pilotRam":
+      await ShipCombatState.pilotRam(
+        payload.userId,
+        payload.targetTokenId,
+        payload.fuelUsed,
+        payload.driftUsed ?? 0,
+        payload.speed,
+        payload.newX,
+        payload.newY,
+        payload.newRotation,
+        payload.waypoints,
+        payload.attackAngle ?? 0,
+        payload.powerMax ?? 100,
+        payload.rammingActorId ?? null,
+      );
+      if (payload.waypoints?.length) {
+        // Animate path for the ramming token (player ship or NPC)
+        const rammingActor = payload.rammingActorId
+          ? game.actors?.get(payload.rammingActorId)
+          : ShipCombatState.ship;
+        const tokenRam = rammingActor?.getActiveTokens?.()?.[0];
+        if (tokenRam) {
+          emitToAll("animateTokenPath", {
+            tokenUuid:     tokenRam.document.uuid,
             waypoints:     payload.waypoints,
             finalX:        payload.newX,
             finalY:        payload.newY,

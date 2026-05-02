@@ -1,6 +1,11 @@
 {{!-- Gunner: Weapon Batteries --}}
 {{#each weaponSections}}
-<div class="sheet-list imsc-weapon-battery-section">
+<div class="sheet-list imsc-weapon-battery-section{{#if (and @root.helm.prowGunLocked (imscEq this.id "prow"))}} imsc-prow-locked{{/if}}">
+    {{#if (and @root.helm.prowGunLocked (imscEq this.id "prow"))}}
+    <div class="imsc-prow-locked-overlay">
+        <i class="fa-solid fa-ban"></i> {{localize "IMSC.Ram.ProwGunLocked"}}
+    </div>
+    {{/if}}
     <div class="list-header row-content">
         <div class="list-name">{{this.labelLocalized}}</div>
     </div>

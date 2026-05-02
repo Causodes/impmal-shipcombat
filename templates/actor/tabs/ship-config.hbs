@@ -1,24 +1,91 @@
 <section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
 
-    {{!-- Crew Size --}}
+    {{!-- Ship Configuration --}}
     <div class="sheet-list">
         <div class="list-header row-content">
-            <div class="list-name imsc-inline-field">
-                {{localize "IMSC.Label.ActiveRoles"}}
-                {{#if isOwner}}
-                <select data-slot-count="system.crewSize" class="imsc-crewsize-select">
-                    {{#each crewSizeOptions}}
-                    <option value="{{value}}" {{#if selected}}selected{{/if}}>{{value}}</option>
-                    {{/each}}
-                </select>
-                {{else}}
-                <span>{{crewSize}}</span>
+            <div class="list-name">{{localize "IMSC.Label.ShipConfiguration"}}</div>
+        </div>
+        <div class="list-content">
+            <div class="imsc-ship-config-grid">
+
+                {{!-- Crew Size (Active Roles) --}}
+                <div class="imsc-config-row">
+                    <label class="imsc-config-label">{{localize "IMSC.Config.CrewSize"}}</label>
+                    {{#if isOwner}}
+                    <select data-slot-count="system.crewSize" class="imsc-config-select">
+                        {{#each crewSizeOptions}}
+                        <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+                        {{/each}}
+                    </select>
+                    {{else}}
+                    <span class="imsc-config-value">{{crewSize}}</span>
+                    {{/if}}
+                </div>
+
+                {{!-- Strike Craft --}}
+                <div class="imsc-config-row">
+                    <label class="imsc-config-label">{{localize "IMSC.Config.StrikeCraft"}}</label>
+                    {{#if isOwner}}
+                    <select class="imsc-config-select" data-ship-config="system.useStrikeCraft">
+                        <option value="yes" {{#if useStrikeCraft}}selected{{/if}}>{{localize "IMSC.Config.Yes"}}</option>
+                        <option value="no" {{#unless useStrikeCraft}}selected{{/unless}}>{{localize "IMSC.Config.No"}}</option>
+                    </select>
+                    {{else}}
+                    <span class="imsc-config-value">{{#if useStrikeCraft}}{{localize "IMSC.Config.Yes"}}{{else}}{{localize "IMSC.Config.No"}}{{/if}}</span>
+                    {{/if}}
+                </div>
+
+                {{!-- Movement Mode --}}
+                <div class="imsc-config-row">
+                    <label class="imsc-config-label">{{localize "IMSC.Config.Movement"}}</label>
+                    {{#if isOwner}}
+                    <select class="imsc-config-select" disabled data-tooltip="{{localize 'IMSC.Config.ComingSoon'}}">
+                        <option value="simplified">{{localize "IMSC.Config.MovementSimplified"}}</option>
+                        <option value="realistic">{{localize "IMSC.Config.MovementRealistic"}}</option>
+                    </select>
+                    {{else}}
+                    <span class="imsc-config-value">—</span>
+                    {{/if}}
+                </div>
+
+                {{!-- Ordnance Launch Directions --}}
+                <hr class="imsc-config-sep">
+
+                {{!-- Torpedo launch sides --}}
+                <div class="imsc-config-row">
+                    <label class="imsc-config-label imsc-config-label--wide">{{localize "IMSC.Ordnance.LaunchSidesTitle"}}</label>
+                    <div class="imsc-launch-sides">
+                        {{#each ordnanceLaunchSides.torpedo}}
+                        <label class="imsc-launch-side-toggle" data-for-dir="{{this.key}}">
+                            <input type="checkbox" data-launch-side="torpedo" data-launch-dir="{{this.key}}"
+                                   {{#if this.value}}checked{{/if}} {{#unless @root.isOwner}}disabled{{/unless}}>
+                            <i class="fa-solid {{this.icon}}"></i>
+                            <span>{{this.label}}</span>
+                        </label>
+                        {{/each}}
+                    </div>
+                </div>
+
+                {{!-- Strike Craft launch sides --}}
+                {{#if useStrikeCraft}}
+                <div class="imsc-config-row">
+                    <label class="imsc-config-label imsc-config-label--wide">{{localize "IMSC.Ordnance.LaunchSidesStrikeCraftTitle"}}</label>
+                    <div class="imsc-launch-sides">
+                        {{#each ordnanceLaunchSides.strikeCraft}}
+                        <label class="imsc-launch-side-toggle" data-for-dir="{{this.key}}">
+                            <input type="checkbox" data-launch-side="strikeCraft" data-launch-dir="{{this.key}}"
+                                   {{#if this.value}}checked{{/if}} {{#unless @root.isOwner}}disabled{{/unless}}>
+                            <i class="fa-solid {{this.icon}}"></i>
+                            <span>{{this.label}}</span>
+                        </label>
+                        {{/each}}
+                    </div>
+                </div>
                 {{/if}}
+
             </div>
         </div>
     </div>
-
-    {{!-- Weapon Battery Slot Counts --}}
     <div class="sheet-list">
         <div class="list-header row-content">
             <div class="list-name">{{localize "IMSC.Label.WeaponSlots"}}</div>
@@ -35,6 +102,14 @@
                     {{/if}}
                 </div>
                 {{/each}}
+                <div class="imsc-weapon-slot-cell">
+                    <div class="imsc-weapon-slot-label">{{localize "IMSC.Slot.Ordnance"}}</div>
+                    {{#if isOwner}}
+                    <input type="number" min="0" value="{{ordnanceSlotCount}}" data-slot-count="system.ordnanceSlots.ordnance" class="imsc-slot-input imsc-weapon-slot-input">
+                    {{else}}
+                    <span class="imsc-weapon-slot-val">{{ordnanceSlotCount}}</span>
+                    {{/if}}
+                </div>
             </div>
         </div>
     </div>
@@ -61,13 +136,14 @@
                     </div>
                 </div>
                 {{/each}}
-                {{#if @root.isOwner}}
+                {{#if isOwner}}
                 <div class="droppable" data-ordnance-drop="torpedo" data-tooltip="{{localize 'IMSC.Hint.DropOrdnanceActor'}}"><i class="fa-solid fa-plus"></i></div>
                 {{/if}}
             </div>
         </div>
 
         {{!-- Strike Craft Actors --}}
+        {{#if useStrikeCraft}}
         <div class="sheet-list vehicle-actors droppable" data-ordnance-drop="strikeCraft">
             <div class="list-header row-content">
                 <div class="list-name">{{localize "IMSC.Label.StrikeCraftActors"}}</div>
@@ -87,11 +163,12 @@
                     </div>
                 </div>
                 {{/each}}
-                {{#if @root.isOwner}}
+                {{#if isOwner}}
                 <div class="droppable" data-ordnance-drop="strikeCraft" data-tooltip="{{localize 'IMSC.Hint.DropOrdnanceActor'}}"><i class="fa-solid fa-plus"></i></div>
                 {{/if}}
             </div>
         </div>
+        {{/if}}
     </div>
 
     {{!-- Component Inventory --}}

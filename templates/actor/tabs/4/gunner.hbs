@@ -76,7 +76,11 @@
     {{> "modules/impmal-shipcombat/templates/actor/partials/gunner-weapon-batteries.hbs"}}
 
     {{!-- DEPLOYED ORDNANCE TRACKER --}}
+    {{#if useStrikeCraft}}
     {{> "modules/impmal-shipcombat/templates/actor/partials/ordnance-deployed.hbs"}}
+    {{else}}
+    {{> "modules/impmal-shipcombat/templates/actor/partials/deployed-torpedoes.hbs"}}
+    {{/if}}
     {{/if}}
 
     {{> 'modules/impmal-shipcombat/templates/actor/partials/complete-turn.hbs' tabRoleId="gunner" turnDone=(lookup @root.sys.turnDone "gunner")}}

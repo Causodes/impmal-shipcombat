@@ -22,9 +22,10 @@ export class ShipModel extends warhammer.models.BaseWarhammerActorModel {
     const schema = super.defineSchema();
 
     // ── Combat meta ─────────────────────────────────────────────────────────
-    schema.active    = new fields.BooleanField({ initial: false });
-    schema.round     = new fields.NumberField({ initial: 0, min: 0, integer: true });
-    schema.crewSize  = new fields.NumberField({ initial: 6, min: 3, max: 6, integer: true });
+    schema.active         = new fields.BooleanField({ initial: false });
+    schema.round          = new fields.NumberField({ initial: 0, min: 0, integer: true });
+    schema.crewSize       = new fields.NumberField({ initial: 6, min: 3, max: 6, integer: true });
+    schema.useStrikeCraft = new fields.BooleanField({ initial: true });
 
     // ── Bridge crew assignments { [userId]: roleId } ─────────────────────
     schema.roles         = new fields.ObjectField({ initial: {} });
@@ -32,6 +33,20 @@ export class ShipModel extends warhammer.models.BaseWarhammerActorModel {
     schema.crewActors    = new fields.ObjectField({ initial: {} });
     // ── Ordnance actor templates { torpedo: [{ uuid, id, name, img }], strikeCraft: [...] }
     schema.ordnanceActors = new fields.ObjectField({ initial: { torpedo: [], strikeCraft: [] } });
+    // ── Allowed spawn sides for ordnance launches ─────────────────────────────
+    const _sidesSchema = () => new fields.SchemaField({
+      bow:       new fields.BooleanField({ initial: true }),
+      port:      new fields.BooleanField({ initial: true }),
+      starboard: new fields.BooleanField({ initial: true }),
+      stern:     new fields.BooleanField({ initial: false }),
+    });
+    schema.ordnanceLaunchSides = new fields.SchemaField({
+      torpedo:    _sidesSchema(),
+      strikeCraft: _sidesSchema(),
+    });
+    // ── Active ordnance loadout: which inventory templates are currently loaded in bay slots
+    // Each entry: { type: "torpedo"|"strikeCraft", actorId: string }
+    schema.activeOrdnance = new fields.ArrayField(new fields.ObjectField(), { initial: [] });
     schema.assignedCores  = new fields.ObjectField({ initial: {} });
     schema.turnDone       = new fields.ObjectField({ initial: {} });
     schema.overchargeUsed = new fields.ObjectField({ initial: {} });
@@ -104,6 +119,7 @@ export class ShipModel extends warhammer.models.BaseWarhammerActorModel {
       starboard: new fields.NumberField({ initial: 1, min: 0, integer: true }),
       prow:      new fields.NumberField({ initial: 1, min: 0, integer: true }),
       dorsal:    new fields.NumberField({ initial: 1, min: 0, integer: true }),
+      stern:     new fields.NumberField({ initial: 0, min: 0, integer: true }),
     });
 
     schema.equipmentSlots = new fields.SchemaField({
@@ -116,6 +132,7 @@ export class ShipModel extends warhammer.models.BaseWarhammerActorModel {
     });
 
     schema.ordnanceSlots = new fields.SchemaField({
+      ordnance: new fields.NumberField({ initial: 1, min: 0, integer: true }),
     });
 
     // ── Notes ────────────────────────────────────────────────────────────

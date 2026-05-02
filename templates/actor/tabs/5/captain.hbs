@@ -38,7 +38,9 @@
     </div>
 
     {{> "modules/impmal-shipcombat/templates/actor/partials/combined-core-actions.hbs"}}
+    {{#if useStrikeCraft}}
     {{> "modules/impmal-shipcombat/templates/actor/partials/deployed-strike-craft.hbs"}}
+    {{/if}}
 
     {{!-- ══════ ORDERS SECTIONS ══════ --}}
     {{> "modules/impmal-shipcombat/templates/actor/partials/captain-hand.hbs"}}

@@ -9,6 +9,8 @@
 import { emitToGM } from "../socket.js";
 import { HelmPreview } from "../canvas/HelmPreview.js";
 import { SystemAdapter } from "../systems/SystemAdapter.js";
+import { RamTargetPopup } from "../apps/RamTargetPopup.js";
+import { ShipCombatState } from "../state/ShipCombatState.js";
 
 // ── Action handlers (static, `this` = sheet instance) ──────────────────────
 
@@ -49,26 +51,46 @@ async function _onAllocBonus(event, target) {
 
 async function _onRollPiloting() {
   const sys = this.actor.system;
+  const crewSize = sys.crewSize ?? 6;
+  const is3man = crewSize <= 3;
+  // In 3-man mode the Enginseer handles helm; roll Engineering instead of Piloting.
+  // Look up the enginseer crewActor first; fall back to pilot slot for 4-6 man.
   let crewActor = null;
 
-  const pilotRef = sys.crewActors?.pilot;
-  if (pilotRef?.uuid) {
-    try { crewActor = await fromUuid(pilotRef.uuid); } catch { /* ignore */ }
-  }
-
-  if (!crewActor) {
-    const entry = Object.entries(sys.roles ?? {}).find(([, r]) => r === "pilot");
-    if (entry) {
-      const user = game.users.get(entry[0]);
-      crewActor = user?.character ?? null;
+  if (is3man) {
+    const enginRef = sys.crewActors?.enginseer;
+    if (enginRef?.uuid) {
+      try { crewActor = await fromUuid(enginRef.uuid); } catch { /* ignore */ }
+    }
+    if (!crewActor) {
+      const entry = Object.entries(sys.roles ?? {}).find(([, r]) => r === "enginseer");
+      if (entry) {
+        const user = game.users.get(entry[0]);
+        crewActor = user?.character ?? null;
+      }
+    }
+    if (!crewActor) {
+      return ui.notifications.warn(game.i18n.localize("IMSC.Warning.NoPilotAssigned"));
+    }
+  } else {
+    const pilotRef = sys.crewActors?.pilot;
+    if (pilotRef?.uuid) {
+      try { crewActor = await fromUuid(pilotRef.uuid); } catch { /* ignore */ }
+    }
+    if (!crewActor) {
+      const entry = Object.entries(sys.roles ?? {}).find(([, r]) => r === "pilot");
+      if (entry) {
+        const user = game.users.get(entry[0]);
+        crewActor = user?.character ?? null;
+      }
+    }
+    if (!crewActor) {
+      return ui.notifications.warn(game.i18n.localize("IMSC.Warning.NoPilotAssigned"));
     }
   }
 
-  if (!crewActor) {
-    return ui.notifications.warn(game.i18n.localize("IMSC.Warning.NoPilotAssigned"));
-  }
-
-  const result = await SystemAdapter.current.rollSkillTest(crewActor, "pilot");
+  const skillKey = is3man ? "engineering" : "pilot";
+  const result = await SystemAdapter.current.rollSkillTest(crewActor, skillKey);
   if (!result) return;
 
   const sl = Math.max(0, result.SL);
@@ -106,7 +128,7 @@ async function _onConfirmHelm() {
   const isFirstCommit = fuelBurned === 0;
   const driftUnits = isFirstCommit ? minMove : 0;
 
-  if (thrustPct <= 0 && driftUnits === 0) {
+  if (thrustPct <= 0) {
     ui.notifications.warn(game.i18n.localize("IMSC.Helm.WarnNoFuel"));
     return;
   }
@@ -119,8 +141,8 @@ async function _onConfirmHelm() {
 
   emitToGM("confirmMovement", {
     fuelUsed:       fuelSlider,
-    driftUsed:      driftUnits,
-    speed,
+    driftUsed:      0,
+    speed:          speed + driftUnits,
     newX:           projected.x,
     newY:           projected.y,
     newRotation:    projected.rotation,
@@ -224,23 +246,143 @@ async function _onPilotStrafe() {
   });
 }
 
+async function _onPilotFlipAndBurn() {
+  const sys = this.actor.system;
+  if (!((sys.resources?.pilot?.coreCount ?? 0) > 0)) return;
+
+  const token = this.actor.getActiveTokens()?.[0];
+  if (!token) {
+    ui.notifications.warn(game.i18n.localize("IMSC.Warning.NoShip"));
+    return;
+  }
+
+  // Requires ≥50% power remaining
+  const fuelBurned    = sys.resources?.pilot?.fuelBurned    ?? 0;
+  const overdrive     = sys.resources?.pilot?.overdrive     ?? false;
+  const apThrustBonus = sys.resources?.pilot?.apThrustBonus ?? 0;
+  const powerMax      = (overdrive ? 200 : 100) + apThrustBonus;
+  if ((powerMax - fuelBurned) < 50) {
+    ui.notifications.warn(game.i18n.localize("IMSC.Warning.FlipBurnNeedsPower"));
+    return;
+  }
+
+  const confirmed = await foundry.applications.api.DialogV2.confirm({
+    window:  { title: game.i18n.localize("IMSC.Dialog.FlipAndBurnTitle") },
+    content: `<p>${game.i18n.localize("IMSC.Dialog.FlipAndBurnBody")}</p>`,
+  });
+  if (!confirmed) return;
+
+  const baseSpeed      = sys.movement?.speed ?? 6;
+  const allocSpeed     = sys.resources?.pilot?.allocSpeed ?? 0;
+  const effSpeed       = Math.max(0, baseSpeed + allocSpeed);
+  const halfSpeedUnits = Math.max(1, Math.round(effSpeed * 0.5));
+
+  const projected = HelmPreview.projectFlipAndBurn(token, halfSpeedUnits);
+  if (!projected) return;
+
+  const waypoints = HelmPreview.projectFlipAndBurnWaypoints(token, halfSpeedUnits);
+  HelmPreview.hide();
+
+  emitToGM("pilotFlipAndBurn", {
+    userId:         game.user.id,
+    halfSpeedUnits,
+    newX:           projected.x,
+    newY:           projected.y,
+    newRotation:    projected.rotation,
+    waypoints,
+  });
+}
+
+async function _onPilotRam() {
+  const token = this.actor.getActiveTokens()?.[0];
+  if (!token || !canvas?.ready) {
+    ui.notifications.warn(game.i18n.localize("IMSC.Warning.NoShip"));
+    return;
+  }
+
+  const sys            = this.actor.system;
+  const fuelBurned     = sys.resources?.pilot?.fuelBurned ?? 0;
+  const isFirstCommit  = fuelBurned === 0;
+  const prevTurnMove   = sys.resources?.pilot?.prevTurnMove ?? 0;
+  const minMove        = Math.ceil(prevTurnMove / 2);
+  const minMoveGridUnits = isFirstCommit ? minMove : 0;
+
+  const baseSpeed      = sys.movement?.speed ?? 6;
+  const allocSpeed     = sys.resources?.pilot?.allocSpeed ?? 0;
+  const overdrive      = sys.resources?.pilot?.overdrive ?? false;
+  const apThrustBonus  = sys.resources?.pilot?.apThrustBonus ?? 0;
+  const effSpeed       = Math.max(0, baseSpeed + allocSpeed);
+  const powerMax       = (overdrive ? 200 : 100) + apThrustBonus;
+  const powerRemaining = Math.max(0, powerMax - fuelBurned);
+
+  const baseMano       = sys.movement?.maneuverability ?? 2;
+  const allocMano      = sys.resources?.pilot?.allocMano ?? 0;
+  const effMano        = Math.max(0, baseMano + allocMano);
+  const maxBearingDeg  = effMano * 15;
+
+  const shipBasis = HelmPreview._tokenBasis(token);
+
+  // Quick pre-check: does at least one reachable lock≥1 target exist?
+  const candidates = canvas.tokens.placeables.filter(t =>
+    t !== token && !t.document.hidden,
+  );
+  const gridSize = canvas.grid.size;
+  const tokenW   = token.document.width  * gridSize;
+  const tokenH   = token.document.height * gridSize;
+  const cx       = token.x + tokenW / 2;
+  const cy       = token.y + tokenH / 2;
+
+  let hasAny = false;
+  for (const tgt of candidates) {
+    const tW  = tgt.document.width  * gridSize;
+    const tH  = tgt.document.height * gridSize;
+    const tx  = tgt.x + tW / 2;
+    const ty  = tgt.y + tH / 2;
+    const reach = HelmPreview.canReach(shipBasis, tx, ty, effSpeed, maxBearingDeg, powerRemaining, powerMax, minMoveGridUnits);
+    if (!reach) continue;
+    const distSquares = Math.sqrt(Math.pow((tx - cx) / gridSize, 2) + Math.pow((ty - cy) / gridSize, 2));
+    const lockTier = ShipCombatState.getEffectiveLockTier(tgt.id, distSquares);
+    if (lockTier >= 1) { hasAny = true; break; }
+  }
+
+  if (!hasAny) {
+    ui.notifications.warn(game.i18n.localize("IMSC.Warning.NoRamTargets"));
+    return;
+  }
+
+  const popup = new RamTargetPopup({
+    ship:            this.actor,
+    effSpeed,
+    powerMax,
+    powerRemaining,
+    maxBearingDeg,
+    minMoveGridUnits,
+    fuelBurned,
+    shipBasis,
+  });
+  popup.render(true);
+}
+
 // ── Exported action map (merged into ShipSheet.DEFAULT_OPTIONS.actions) ────
 
 export const PILOT_ACTIONS = {
-  allocBonus:      _onAllocBonus,
-  rollPiloting:    _onRollPiloting,
-  resetHelm:       _onResetHelm,
-  confirmHelm:     _onConfirmHelm,
-  pilotRetrograde: _onPilotRetrograde,
-  pilotOverdrive:  _onPilotOverdrive,
-  pilotStrafe:     _onPilotStrafe,
-  apToThrust:      _onApToThrust,
+  allocBonus:       _onAllocBonus,
+  rollPiloting:     _onRollPiloting,
+  resetHelm:        _onResetHelm,
+  confirmHelm:      _onConfirmHelm,
+  pilotRetrograde:  _onPilotRetrograde,
+  pilotOverdrive:   _onPilotOverdrive,
+  pilotStrafe:      _onPilotStrafe,
+  pilotFlipAndBurn: _onPilotFlipAndBurn,
+  apToThrust:       _onApToThrust,
+  pilotRam:         _onPilotRam,
 };
 
 // ── Helm context builder ────────────────────────────────────────────────────
 
 export function buildHelmContext(sys, opts = {}) {
   const { engineComponent } = opts;
+  const is3man = (sys.crewSize ?? 6) <= 3;
   const baseSpeed = sys.movement?.speed ?? 6;
   const baseMano  = sys.movement?.maneuverability ?? 2;
   const pilotingSL  = sys.resources?.pilot?.pilotingSL  ?? 0;
@@ -304,11 +446,15 @@ export function buildHelmContext(sys, opts = {}) {
     effectiveSpeed:  effSpeed,
     effectiveMano:   effMano,
     remainingSL:     Math.max(0, pilotingSL - allocSpeed - allocMano - allocEvasion),
-    allocLocked:     fuelBurned > 0,
+    allocLocked:     fuelBurned > 0 || (sys.resources?.pilot?.ramAllocLocked ?? false),
     hasRolledPiloting: !!pilotingMessageId,
+    is3man,
+    helmSLLabel:     game.i18n.localize(is3man ? "IMSC.Helm.EngineeringSL"        : "IMSC.Helm.PilotingSL"),
+    helmSLTooltip:   game.i18n.localize(is3man ? "IMSC.Helm.EngineeringSLTooltip" : "IMSC.Helm.PilotingSLTooltip"),
+    helmRollLabel:   game.i18n.localize(is3man ? "IMSC.Helm.RollEngineering"      : "IMSC.Helm.RollPiloting"),
     minMove,
     prevTurnMove,
-    minMovePct:      (powerMax > 0 && effSpeed > 0) ? Math.max(0, Math.round(minMove / effSpeed * (10000 / powerMax))) : 0,
+    minMovePct:      (powerMax > 0 && (minMove + effSpeed) > 0) ? Math.max(0, Math.round(minMove / (minMove + effSpeed) * 100)) : 0,
     maxBearing:      effMano * 15,
     fuelBurned,
     fuelSlider:      fuelBurned,
@@ -320,12 +466,23 @@ export function buildHelmContext(sys, opts = {}) {
     retroMax:        Math.max(1, baseSpeed),
     overchargeAction: sys.resources?.pilot?.overchargeAction ?? "",
     // Per-action flags for template button gating (replaced overchargedUsed boolean)
-    overdriveUsed: (sys.resources?.pilot?.coreActionsPlayed ?? []).includes("overdrive"),
-    strafeUsed:    (sys.resources?.pilot?.coreActionsPlayed ?? []).includes("strafe"),
-    retroUsed:     (sys.resources?.pilot?.coreActionsPlayed ?? []).includes("retro"),
+    overdriveUsed:    (sys.resources?.pilot?.coreActionsPlayed ?? []).includes("overdrive"),
+    strafeUsed:       (sys.resources?.pilot?.coreActionsPlayed ?? []).includes("strafe"),
+    retroUsed:        (sys.resources?.pilot?.coreActionsPlayed ?? []).includes("retro"),
+    flipAndBurnUsed:  (sys.resources?.pilot?.coreActionsPlayed ?? []).includes("flipBurn"),
+    flipAndBurnAvailable: (() => {
+      const powerMax = ((sys.resources?.pilot?.overdrive ?? false) ? 200 : 100)
+        + (sys.resources?.pilot?.apThrustBonus ?? 0);
+      return (powerMax - (sys.resources?.pilot?.fuelBurned ?? 0)) >= 50;
+    })(),
     coreActionsPlayedLabels: (() => {
       const played = sys.resources?.pilot?.coreActionsPlayed ?? [];
-      const LABELS = { overdrive: "IMSC.Action.PilotOverdrive", strafe: "IMSC.Action.PilotStrafe", retro: "IMSC.Action.PilotOverchargeRetro" };
+      const LABELS = {
+        overdrive: "IMSC.Action.PilotOverdrive",
+        strafe:    "IMSC.Action.PilotStrafe",
+        retro:     "IMSC.Action.PilotOverchargeRetro",
+        flipBurn:  "IMSC.Action.PilotFlipAndBurn",
+      };
       return played.map(id => game.i18n.localize(LABELS[id] ?? id));
     })(),
     // Condition / stance info for UI
@@ -346,6 +503,8 @@ export function buildHelmContext(sys, opts = {}) {
     auxPowerPct: auxPowerCapacity > 0 ? Math.min(100, (auxiliaryPower / auxPowerCapacity) * 100) : 0,
     powerPerAP,
     apThrustBonus,
+    prowGunLocked:   sys.resources?.pilot?.prowGunLocked  ?? false,
+    ramAllocLocked:  sys.resources?.pilot?.ramAllocLocked ?? false,
   };
 }
 
@@ -516,6 +675,47 @@ export function helmOnRender(sheet) {
 
   // Show projected drift immediately on render (no slider interaction needed)
   sheet._updateHelmPreview();
+
+  // ── Flip and Burn preview (hover on panel) ──────────────────────────────
+  const flipBurnPanel = sheet.element.querySelector("[data-flip-burn-panel]");
+  if (flipBurnPanel && token && canvas?.ready) {
+    const baseSpdFB  = sys.movement?.speed ?? 6;
+    const allocSpdFB = sys.resources?.pilot?.allocSpeed ?? 0;
+    const effSpdFB   = Math.max(0, baseSpdFB + allocSpdFB);
+    const halfDist   = Math.max(1, Math.round(effSpdFB * 0.5));
+
+    // Inject the striped overlay zone into the power bar (once per render)
+    const powerBar = sheet.element.querySelector("[data-helm-power-bar]");
+    let flipZone = powerBar?.querySelector(".imsc-flip-burn-zone");
+    if (powerBar && !flipZone) {
+      flipZone = document.createElement("div");
+      flipZone.className = "imsc-flip-burn-zone";
+      flipZone.style.display = "none";
+      powerBar.appendChild(flipZone);
+    }
+
+    const _showFlipZone = () => {
+      if (!flipZone || !canvas?.ready) return;
+      const fuelBurnedNow = sheet.actor.system.resources?.pilot?.fuelBurned ?? 0;
+      const overdriveNow  = sheet.actor.system.resources?.pilot?.overdrive  ?? false;
+      const apBonusNow    = sheet.actor.system.resources?.pilot?.apThrustBonus ?? 0;
+      const powerMaxNow   = (overdriveNow ? 200 : 100) + apBonusNow;
+      const leftPct  = (fuelBurnedNow / powerMaxNow) * 100;
+      const widthPct = Math.min(50 / powerMaxNow * 100, 100 - leftPct);
+      flipZone.style.left    = `${leftPct}%`;
+      flipZone.style.width   = `${widthPct}%`;
+      flipZone.style.display = "";
+      HelmPreview.showFlipAndBurn(token, halfDist);
+    };
+
+    const _hideFlipZone = () => {
+      if (flipZone) flipZone.style.display = "none";
+      HelmPreview.hide();
+    };
+
+    flipBurnPanel.addEventListener("mouseenter", _showFlipZone);
+    flipBurnPanel.addEventListener("mouseleave", _hideFlipZone);
+  }
 }
 
 // ── Helm preview updater ────────────────────────────────────────────────────
@@ -541,7 +741,7 @@ export function helmUpdatePreview(sheet) {
   const thrustPct     = fuelSlider - fuelBurned;
   const driftUnits    = isFirstCommit ? minMove : 0;
 
-  if (thrustPct <= 0 && driftUnits === 0) {
+  if (thrustPct <= 0) {
     HelmPreview.hide();
     return;
   }
