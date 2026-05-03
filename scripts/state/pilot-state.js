@@ -414,15 +414,16 @@ export async function pilotRam(
     }
   }
 
-  // ── 14. Chat message ───────────────────────────────────────────────────────
+  // ── 14. Clear helm preview ghost ──────────────────────────────────────────
+  const { HelmPreview: HP } = await import("../canvas/HelmPreview.js").catch(() => ({ HelmPreview: null }));
+  if (HP) HP.hide();
+
+  // ── 15. Chat message ───────────────────────────────────────────────────────
   const thrustPct = Math.round(thrustFraction * 100);
   const attackAngleDeg = Math.round(Math.abs(incoming) * (180 / Math.PI));
   const rammingName = rammingActor.name ?? "Unknown";
-  const rammingTokenDoc = rammingToken?.document;
-  const rammingImg  = rammingTokenDoc?.texture?.src ?? rammingActor.img ?? "";
-  const rammedImg   = rammedToken?.document?.texture?.src ?? rammedActor.img ?? "";
   const quadLabel   = hitSectorRammed.charAt(0).toUpperCase() + hitSectorRammed.slice(1);
-  const publicContent = `
+  const chatContent = `
     <div class="imsc-ram-chat">
       <div class="imsc-ram-chat-header">
         <i class="fa-solid fa-burst" style="color:#ff6b6b"></i>
@@ -435,13 +436,8 @@ export async function pilotRam(
         thrust:   thrustPct,
       })}</p>
       <p style="font-size:0.85em;color:#e8a87c"><i class="fa-solid fa-ban"></i> ${game.i18n.localize("IMSC.Ram.ChatLockouts")}</p>
-    </div>`;
-  const gmContent = `
-    <div class="imsc-ram-chat">
-      <div class="imsc-ram-chat-header">
-        <i class="fa-solid fa-burst" style="color:#ff6b6b"></i>
-        <strong>${game.i18n.localize("IMSC.Ram.ChatDamageTitle")}</strong>
-      </div>
+      <hr style="border-color:#444;margin:0.4em 0">
+      <strong style="font-size:0.9em">${game.i18n.localize("IMSC.Ram.ChatDamageTitle")}</strong>
       <table class="imsc-ram-dmg-table">
         <tr><td>${rammingName}</td><td style="color:#ff6b6b">${damageToRamming} hull damage</td></tr>
         <tr><td>${rammedActor.name}</td><td style="color:#ff6b6b">${damageToRammed} hull damage</td></tr>
@@ -450,11 +446,7 @@ export async function pilotRam(
     </div>`;
 
   await ChatMessage.create({
-    content: publicContent,
+    content: chatContent,
     speaker: { alias: rammingName },
-  });
-  await ChatMessage.create({
-    content: gmContent,
-    speaker: { alias: game.i18n.localize("IMSC.Ram.ChatGMAlias") },
   });
 }

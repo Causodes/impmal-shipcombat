@@ -77,7 +77,7 @@ export async function launchBDAFromChat(ship, message) {
   // Sensor Blind (weaponsSensors medium/high): −10 to Augur tests
   const wsCond    = ship.system.conditions?.weaponsSensors?.tier;
   const sensorMod = (wsCond === "medium" || wsCond === "high") ? -10 : 0;
-  const result = await SystemAdapter.current.rollSkillTest(crewActor, "sensors", sensorMod ? { modifier: sensorMod } : {});
+  const result = await SystemAdapter.current.rollSkillTest(crewActor, ship.system.roleSkillOverrides?.sensors ?? "sensors", sensorMod ? { modifier: sensorMod } : {});
   if (!result) return; // Cancelled by user
 
   const rawSL            = result.SL ?? 0;

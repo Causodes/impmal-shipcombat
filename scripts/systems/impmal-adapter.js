@@ -10,6 +10,33 @@
 
 import { SystemAdapter } from "./SystemAdapter.js";
 
+// ── Spec cache (loaded lazily from the impmal-core compendium) ──────────────
+let _allSpecsCache = null;
+
+/**
+ * Returns every Specialisation item from the impmal-core.items compendium as a
+ * flat array of { value, skillKey, specName, label } objects, sorted by label.
+ * The value is "skillKey|specName" – the same format stored in roleSkillOverrides.
+ * Result is cached after the first successful load.
+ */
+export async function loadAllSpecialisations() {
+  if (_allSpecsCache) return _allSpecsCache;
+  const pack = game.packs.get("impmal-core.items");
+  if (!pack) return (_allSpecsCache = []);
+  const docs = await pack.getDocuments({ type: "specialisation" });
+  const skillLabels = game.impmal?.config?.skills ?? {};
+  _allSpecsCache = docs
+    .filter(d => d.system?.skill)
+    .map(d => ({
+      value:    `${d.system.skill}|${d.name}`,
+      skillKey: d.system.skill,
+      specName: d.name,
+      label:    `${game.i18n.localize(skillLabels[d.system.skill] ?? d.system.skill)} (${d.name})`,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+  return _allSpecsCache;
+}
+
 // ── Skill map ────────────────────────────────────────────────────────────────
 // Abstract role-skill identifiers → impmal's { key, name } pattern.
 const SKILL_MAP = {
@@ -47,9 +74,15 @@ export class ImpmalAdapter extends SystemAdapter {
   /* ── Skill tests ───────────────────────────────────────────────────────── */
 
   resolveSkill(roleSkill) {
-    const entry = SKILL_MAP[roleSkill];
-    if (!entry) throw new Error(`ImpmalAdapter: unknown roleSkill "${roleSkill}"`);
-    return { ...entry };
+    if (SKILL_MAP[roleSkill]) return { ...SKILL_MAP[roleSkill] };
+    // Also accept pipe-separated "skillKey|specName" format (from roleSkillOverrides).
+    if (roleSkill?.includes("|")) {
+      const idx  = roleSkill.indexOf("|");
+      const key  = roleSkill.slice(0, idx);
+      const name = roleSkill.slice(idx + 1);
+      return { key, name };
+    }
+    throw new Error(`ImpmalAdapter: unknown roleSkill "${roleSkill}"`);
   }
 
   async rollSkillTest(crewActor, roleSkill, options = {}) {

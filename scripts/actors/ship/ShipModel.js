@@ -27,9 +27,13 @@ export class ShipModel extends warhammer.models.BaseWarhammerActorModel {
     schema.crewSize       = new fields.NumberField({ initial: 6, min: 3, max: 6, integer: true });
     schema.useStrikeCraft = new fields.BooleanField({ initial: true });
     schema.crewScale      = new fields.StringField({ initial: "warship", choices: ["warship", "smallcraft"] });
+    // ── Per-role custom title overrides { [roleId]: "Custom Title" }
+    schema.roleTitles     = new fields.ObjectField({ initial: {} });
 
     // ── Bridge crew assignments { [userId]: roleId } ─────────────────────
     schema.roles         = new fields.ObjectField({ initial: {} });
+    // ── Per-role skill override: "skillKey|specName" values (e.g. "presence|Leadership")
+    schema.roleSkillOverrides = new fields.ObjectField({ initial: {} });
     // ── Vehicle-style actor references { [roleId]: { uuid, id, name, img } }
     schema.crewActors    = new fields.ObjectField({ initial: {} });
     // ── Ordnance actor templates { torpedo: [{ uuid, id, name, img }], strikeCraft: [...] }

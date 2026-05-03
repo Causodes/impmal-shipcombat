@@ -98,7 +98,7 @@ async function _onOverclock() {
   }
 
   const tier = _getOverclockModifier(heat);
-  const result = await SystemAdapter.current.rollSkillTest(crewActor, "engineering", { modifier: tier.modifier });
+  const result = await SystemAdapter.current.rollSkillTest(crewActor, sys.roleSkillOverrides?.enginseer ?? "engineering", { modifier: tier.modifier });
   if (!result) return;
 
   // Heat always increases regardless of result
@@ -157,7 +157,7 @@ async function _onManageHeat() {
   // Spend banked cores
   emitToGM("spendBankedCores", { count: coresStaged });
 
-  const test2 = await SystemAdapter.current.rollSkillTest(crewActor, "engineering");
+  const test2 = await SystemAdapter.current.rollSkillTest(crewActor, sys.roleSkillOverrides?.enginseer ?? "engineering");
   if (!test2) return;
 
   const sl = Math.max(0, test2.SL);
@@ -217,7 +217,7 @@ async function _onSuppressFire() {
   emitToGM("spendBankedCores", { count: coresSpent });
 
   // Engineering test
-  const test3 = await SystemAdapter.current.rollSkillTest(crewActor, "engineering");
+  const test3 = await SystemAdapter.current.rollSkillTest(crewActor, sys.roleSkillOverrides?.enginseer ?? "engineering");
   if (!test3) return;
 
   const sl = Math.max(0, test3.SL);
@@ -298,7 +298,7 @@ async function _onRepairHull() {
   emitToGM("spendBankedCores", { count: plasmaSpent });
 
   // Engineering test
-  const result = await SystemAdapter.current.rollSkillTest(crewActor, "engineering");
+  const result = await SystemAdapter.current.rollSkillTest(crewActor, sys.roleSkillOverrides?.enginseer ?? "engineering");
   if (!result) return;
 
   const sl = Math.max(0, result.SL);

@@ -97,6 +97,17 @@ export async function spawnOrdnance({ type, parentShipTokenId, x, y, rotation, t
     );
   }
 
+  // In realistic mode, seed initial velocity: half own speed (in launch heading) + ship velocity.
+  if (game.settings?.get(MODULE_ID, "movementMode") === "realistic") {
+    const shipPilot  = shipActor?.system?.resources?.pilot ?? {};
+    const shipVx     = shipPilot.velocityX ?? 0;
+    const shipVy     = shipPilot.velocityY ?? 0;
+    const ownSpeed   = actorData.system?.movement?.speed ?? 0;
+    const headingRad = (rotation - 90) * (Math.PI / 180);
+    foundry.utils.setProperty(actorData, "system.helm.velocityX", shipVx + Math.cos(headingRad) * (ownSpeed / 2));
+    foundry.utils.setProperty(actorData, "system.helm.velocityY", shipVy + Math.sin(headingRad) * (ownSpeed / 2));
+  }
+
   const actor = await Actor.create(actorData);
   if (!actor) return;
 

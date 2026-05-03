@@ -410,29 +410,22 @@
 }
 
 /* ── NPC Ordnance Tab ─────────────────────────────────────────────────────── */
-.imsc-npc-ordnance-tab {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  padding: 0.4rem 0.6rem;
-}
-.imsc-ord-template-img {
-  width: 1.5rem;
-  height: 1.5rem;
-  object-fit: cover;
-  border-radius: 3px;
-  border: 1px solid rgba(255,255,255,0.1);
-  flex-shrink: 0;
-}
-.imsc-ord-template-row .row-content {
-  gap: 0.5rem;
-}
 .imsc-ord-drop-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
   color: rgba(255,255,255,0.35);
   font-style: italic;
   font-size: 0.75rem;
-  gap: 0.4rem;
 }
+
+/* Ordnance loadout chip – stretches to fill available row width */
+.imsc-ord-chip {
+  flex: 1;
+  max-width: none;
+}
+
 .imsc-ord-type-badge {
   margin-left: auto;
   opacity: 0.5;
@@ -464,7 +457,7 @@
   padding: 0.2rem 0.1rem;
   font-size: 0.85rem;
 }
-.imsc-npc-launch-row .imsc-npc-action-pill {
+.imsc-npc-launch-row .imsc-battery-fire-btn {
   margin-left: auto;
 }
 

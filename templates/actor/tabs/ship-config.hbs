@@ -8,6 +8,8 @@
         <div class="list-content">
             <div class="imsc-ship-config-grid">
 
+                <div class="imsc-ship-config-left">
+
                 {{!-- Crew Size (Active Roles) --}}
                 <div class="imsc-config-row">
                     <label class="imsc-config-label">{{localize "IMSC.Config.CrewSize"}}</label>
@@ -35,7 +37,7 @@
                     {{/if}}
                 </div>
 
-                {{!-- Crew Scale --}}
+                {{!-- Manpower Flavour (formerly Crew Scale) --}}
                 <div class="imsc-config-row">
                     <label class="imsc-config-label">{{localize "IMSC.Config.CrewScale"}}</label>
                     {{#if isOwner}}
@@ -48,21 +50,9 @@
                     {{/if}}
                 </div>
 
-                {{!-- Movement Mode --}}
-                <div class="imsc-config-row">
-                    <label class="imsc-config-label">{{localize "IMSC.Config.Movement"}}</label>
-                    {{#if isOwner}}
-                    <select class="imsc-config-select" disabled data-tooltip="{{localize 'IMSC.Config.ComingSoon'}}">
-                        <option value="simplified">{{localize "IMSC.Config.MovementSimplified"}}</option>
-                        <option value="realistic">{{localize "IMSC.Config.MovementRealistic"}}</option>
-                    </select>
-                    {{else}}
-                    <span class="imsc-config-value">—</span>
-                    {{/if}}
-                </div>
+                </div>{{!-- .imsc-ship-config-left --}}
 
-                {{!-- Ordnance Launch Directions --}}
-                <hr class="imsc-config-sep">
+                <div class="imsc-ship-config-right">
 
                 {{!-- Torpedo launch sides --}}
                 <div class="imsc-config-row imsc-config-row--launch">
@@ -95,6 +85,8 @@
                     </div>
                 </div>
                 {{/if}}
+
+                </div>{{!-- .imsc-ship-config-right --}}
 
             </div>
         </div>

@@ -14,6 +14,7 @@ import { CAPTAIN_ACTIONS, buildCaptainContext } from "../../roles/captain.js";
 import { HelmPreview } from "../../canvas/HelmPreview.js";
 import { WeaponArcOverlay } from "../../canvas/WeaponArcOverlay.js";
 import { AuspexRadar } from "../../canvas/AuspexRadar.js";
+import { loadAllSpecialisations } from "../../systems/impmal-adapter.js";
 
 // ── Constants ─────────────────────────────────────────────────────────────
 const ROLE_IDS = Object.keys(ROLES);
@@ -67,6 +68,60 @@ function getRoleMainSkillData(actor, roleId) {
 
 function getComponentSlot(item) {
   return item.system?.slot ?? "prow";
+}
+
+/**
+ * Resolve the roll button label for a role, respecting any skill override.
+ * Returns e.g. "Roll Tech (Engineering)" when overridden, or the default localized
+ * fallback string when no override is set.
+ */
+function _resolveRollLabel(sys, roleId, fallbackLocKey) {
+  const override = sys.roleSkillOverrides?.[roleId];
+  if (override?.includes("|")) {
+    const idx  = override.indexOf("|");
+    const spec = override.slice(idx + 1);
+    const key  = override.slice(0, idx);
+    const skillLabels = game.impmal?.config?.skills ?? {};
+    const skillName = game.i18n.localize(skillLabels[key] ?? key);
+    return `Roll ${spec || skillName}`;
+  }
+  return game.i18n.localize(fallbackLocKey);
+}
+
+function _resolveSlLabel(sys, roleId, fallbackLocKey) {
+  const override = sys.roleSkillOverrides?.[roleId];
+  if (override?.includes("|")) {
+    const idx  = override.indexOf("|");
+    const spec = override.slice(idx + 1);
+    const key  = override.slice(0, idx);
+    const skillLabels = game.impmal?.config?.skills ?? {};
+    const skillName = game.i18n.localize(skillLabels[key] ?? key);
+    return `${spec || skillName} SL`;
+  }
+  return game.i18n.localize(fallbackLocKey);
+}
+
+const ROLE_SL_TOOLTIP_CFG = {
+  captain:  { slName: "Command",         allocs: ["Inspire", "Resolve", "Initiative"] },
+  gunner:   { slName: "Gunnery",         allocs: ["Accuracy", "Penetration", "Firepower"] },
+  ordnance: { slName: "Ordnance Master", allocs: ["Efficiency", "Expedience"] },
+};
+
+function _resolveSlTooltip(sys, roleId, fallbackLocKey) {
+  const override = sys.roleSkillOverrides?.[roleId];
+  const cfg = ROLE_SL_TOOLTIP_CFG[roleId];
+  if (!cfg || !override?.includes("|")) return game.i18n.localize(fallbackLocKey);
+  const idx  = override.indexOf("|");
+  const key  = override.slice(0, idx);
+  const spec = override.slice(idx + 1);
+  const skillLabels = game.impmal?.config?.skills ?? {};
+  const skillName   = game.i18n.localize(skillLabels[key] ?? key);
+  const skillDisplay = spec ? `${skillName} (${spec})` : skillName;
+  const allocs = cfg.allocs;
+  const allocStr = allocs.length === 2
+    ? `${allocs[0]} and ${allocs[1]}`
+    : `${allocs.slice(0, -1).join(", ")}, and ${allocs[allocs.length - 1]}`;
+  return `Roll ${skillDisplay} to generate ${cfg.slName} SL for ${allocStr} allocation.`;
 }
 
 function buildSectionedItems(definitions, items, slotConfig, keyFn = getComponentSlot) {
@@ -279,6 +334,29 @@ export class ShipSheet extends IMActorSheet {
     for (const key of Object.keys(tabs)) {
       if (!allowed.has(key)) delete tabs[key];
     }
+    // Override tab labels for role tabs with custom roleTitles when set.
+    // The template uses {{localize tab.label}}; setting tab.label to a plain
+    // string causes localize() to return it unchanged (key not found → passthrough).
+    const tabToRole = {
+      captain:      "captain",
+      captain4man:  "captain",
+      captain5man:  "captain",
+      enginseer:    "enginseer",
+      enginseer3man:"enginseer",
+      enginseer5man:"enginseer",
+      pilot:        "pilot",
+      sensors:      "sensors",
+      gunner:       "gunner",
+      gunner4man:   "gunner",
+      gunner5man:   "gunner",
+      ordnance:     "ordnance",
+    };
+    const roleTitles = this.actor.system?.roleTitles ?? {};
+    for (const [tabId, roleId] of Object.entries(tabToRole)) {
+      if (tabs[tabId] && roleTitles[roleId]) {
+        tabs[tabId].label = roleTitles[roleId];
+      }
+    }
     return tabs;
   }
 
@@ -293,6 +371,8 @@ export class ShipSheet extends IMActorSheet {
 
     const disabledRoles = this._getDisabledRoles();
     const crewSize = sys.crewSize ?? 6;
+
+    const allSkillOptions = await loadAllSpecialisations();
 
     const rolesArray = await Promise.all(ROLE_IDS.filter(id => !disabledRoles.has(id)).map(async roleId => {
       const role         = ROLES[roleId];
@@ -310,11 +390,28 @@ export class ShipSheet extends IMActorSheet {
       const overchargedUsed = sys.overchargeUsed?.[roleId] ?? false;
       const actionAvailable = !turnDone;
       const mainSkill = assignedActor ? getRoleMainSkillData(assignedActor, roleId) : { label: "", value: null };
+      const override = sys.roleSkillOverrides?.[roleId];
+      const roleDef  = ROLE_MAIN_SKILLS[roleId];
+      const defaultSkillVal = roleDef ? `${roleDef.skillKey}|${roleDef.specialisation}` : null;
+      const currentSkillOverride = override ?? defaultSkillVal;
+      // Build skill options annotated with the assigned actor's actual score for each spec.
+      const skillOptions = allSkillOptions.map(opt => {
+        let label = opt.label;
+        if (assignedActor) {
+          const skillData = assignedActor.system?.skills?.[opt.skillKey];
+          const specList  = Array.isArray(skillData?.specialisations) ? skillData.specialisations : [];
+          const specItem  = specList.find(s => _norm(s?.name) === _norm(opt.specName));
+          const score     = Number(specItem?.system?.total ?? skillData?.total ?? NaN);
+          if (Number.isFinite(score)) label = `${opt.label} [${score}]`;
+        }
+        return { ...opt, label, selected: opt.value === currentSkillOverride };
+      });
       const payloadId = sys.resources?.[roleId]?.payload ?? "";
       const payloadDef = payloadId ? PAYLOAD_TYPES[payloadId] : null;
       return {
         ...role,
-        labelLocalized:    game.i18n.localize(role.label),
+        labelLocalized:    sys.roleTitles?.[roleId] || game.i18n.localize(role.label),
+        defaultLabel:      game.i18n.localize(role.label),
         assignedUser,
         actorRef,
         assignedActor: assignedActor ? {
@@ -337,6 +434,8 @@ export class ShipSheet extends IMActorSheet {
         turnDone,
         actionAvailable,
         mainSkill,
+        currentSkillOverride,
+        skillOptions,
         standardAction:    { label: game.i18n.localize(actions.standard.label),    desc: game.i18n.localize(actions.standard.desc)    },
         overchargedAction: { label: game.i18n.localize(actions.overcharged.label), desc: game.i18n.localize(actions.overcharged.desc) },
         payloadId,
@@ -588,21 +687,39 @@ export class ShipSheet extends IMActorSheet {
         auspexStats:  ShipCombatState.getAuspexStats(this.actor),
         reactorStats: ShipCombatState.getReactorStats(this.actor),
       }),
-      gunnerCtx: buildGunnerContext(sys, {
-        reactorStats:     ShipCombatState.getReactorStats(this.actor),
-        ordnanceBayStats: ShipCombatState.getOrdnanceBayStats(this.actor),
-      }),
-      ordnanceCtx: buildOrdnanceContext(sys, {
-        shipActor: this.actor,
-        ordnanceBayStats: ShipCombatState.getOrdnanceBayStats(this.actor),
-        reactorStats:     ShipCombatState.getReactorStats(this.actor),
-        useStrikeCraft:   sys.useStrikeCraft !== false,
-        crewScale:        sys.crewScale ?? "warship",
-      }),
-      captainCtx: buildCaptainContext(sys, {
-        reactorStats: ShipCombatState.getReactorStats(this.actor),
-        shieldStats:  ShipCombatState.getShieldStats(this.actor),
-      }),
+      gunnerCtx: (() => {
+        const ctx = buildGunnerContext(sys, {
+          reactorStats:     ShipCombatState.getReactorStats(this.actor),
+          ordnanceBayStats: ShipCombatState.getOrdnanceBayStats(this.actor),
+        });
+        ctx.rollLabel = _resolveRollLabel(sys, "gunner", "IMSC.Gunner.RollOrdnance");
+        ctx.slLabel   = _resolveSlLabel(sys, "gunner", "IMSC.Gunner.OrdnanceSL");
+        ctx.slTooltip = _resolveSlTooltip(sys, "gunner", "IMSC.Gunner.OrdnanceSLTooltip");
+        return ctx;
+      })(),
+      ordnanceCtx: (() => {
+        const ctx = buildOrdnanceContext(sys, {
+          shipActor: this.actor,
+          ordnanceBayStats: ShipCombatState.getOrdnanceBayStats(this.actor),
+          reactorStats:     ShipCombatState.getReactorStats(this.actor),
+          useStrikeCraft:   sys.useStrikeCraft !== false,
+          crewScale:        sys.crewScale ?? "warship",
+        });
+        ctx.rollLabel = _resolveRollLabel(sys, "ordnance", "IMSC.Ordnance.RollRequisition");
+        ctx.slLabel   = _resolveSlLabel(sys, "ordnance", "IMSC.Ordnance.RequisitionSL");
+        ctx.slTooltip = _resolveSlTooltip(sys, "ordnance", "IMSC.Ordnance.RequisitionDesc");
+        return ctx;
+      })(),
+      captainCtx: (() => {
+        const ctx = buildCaptainContext(sys, {
+          reactorStats: ShipCombatState.getReactorStats(this.actor),
+          shieldStats:  ShipCombatState.getShieldStats(this.actor),
+        });
+        ctx.rollLabel = _resolveRollLabel(sys, "captain", "IMSC.Captain.RollLeadership");
+        ctx.slLabel   = _resolveSlLabel(sys, "captain", "IMSC.Captain.LeadershipSL");
+        ctx.slTooltip = _resolveSlTooltip(sys, "captain", "IMSC.Captain.LeadershipSLTooltip");
+        return ctx;
+      })(),
       isEngineerOrGM: game.user.isGM || myRole === "enginseer",
       shipClassifications: SHIP_CLASSIFICATIONS,
       componentInventoryBySlot: (() => {
@@ -888,6 +1005,36 @@ export class ShipSheet extends IMActorSheet {
     this.element.querySelectorAll("[data-ship-config='system.useStrikeCraft']").forEach(sel => {
       sel.addEventListener("change", ev => {
         this.actor.update({ "system.useStrikeCraft": ev.target.value === "yes" });
+      });
+    });
+
+    // ── Crew scale (Manpower Flavour) toggle ──────────────────────────────────
+    this.element.querySelectorAll("[data-ship-config='system.crewScale']").forEach(sel => {
+      sel.addEventListener("change", ev => {
+        this.actor.update({ "system.crewScale": ev.target.value });
+      });
+    });
+
+    // ── Role skill override dropdowns (Bridge Crew overview) ─────────────────
+    this.element.querySelectorAll("[data-role-skill-override]").forEach(sel => {
+      sel.addEventListener("change", async ev => {
+        const roleId = ev.target.dataset.roleSkillOverride;
+        await this.actor.update({ [`system.roleSkillOverrides.${roleId}`]: ev.target.value });
+      });
+    });
+
+    // ── Role title inputs (Bridge Crew overview) ─────────────────────────────
+    this.element.querySelectorAll("[data-role-title]").forEach(input => {
+      // Save on blur; suppress sheet re-render on every keystroke by handling Enter
+      input.addEventListener("blur", async ev => {
+        const roleId = ev.target.dataset.roleTitle;
+        const value  = ev.target.value.trim();
+        const defaultLabel = game.i18n.localize(ROLES[roleId]?.label ?? "");
+        // Store empty string when reverted to default (keeps doc clean)
+        await this.actor.update({ [`system.roleTitles.${roleId}`]: value === defaultLabel ? "" : value });
+      });
+      input.addEventListener("keydown", ev => {
+        if (ev.key === "Enter") { ev.preventDefault(); ev.target.blur(); }
       });
     });
 

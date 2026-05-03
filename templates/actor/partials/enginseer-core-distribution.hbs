@@ -2,7 +2,7 @@
 <div class="sheet-list imsc-role-section">
 
     {{#unless engineerCtx.coresSelected}}
-    <div class="imsc-section-overlay{{#if (imscOr engineerCtx.ventLocked (imscEq engineerCtx.actionsRemaining 0))}} imsc-section-overlay--taken{{/if}}">
+    <div class="imsc-section-overlay{{#if (imscOr engineerCtx.ventLocked (imscEq engineerCtx.actionsRemaining 0))}} imsc-section-overlay--taken{{else if engineerCtx.powerFluctuation}} imsc-section-overlay--critical{{/if}}">
         {{#if engineerCtx.ventLocked}}
             <div class="imsc-overlay-lock-indicator">
                 <i class="fa-solid fa-lock fa-lg"></i>
@@ -12,6 +12,12 @@
             <div class="imsc-overlay-lock-indicator">
                 <i class="fa-solid fa-ban fa-lg"></i>
                 <span>{{localize "IMSC.Enginseer.ActionTakenDesc"}}</span>
+            </div>
+        {{else if engineerCtx.powerFluctuation}}
+            <div class="imsc-overlay-lock-indicator imsc-overlay-lock-indicator--critical">
+                <i class="fa-solid fa-triangle-exclamation fa-lg"></i>
+                <span>{{localize "IMSC.Enginseer.CoreCritLocked"}}</span>
+                <span class="imsc-overlay-crit-desc">{{localize "IMSC.Enginseer.CoreCritLockedDesc"}}</span>
             </div>
         {{else}}
         <button class="imsc-section-overlay-btn" data-action="selectAction" data-action-type="cores">

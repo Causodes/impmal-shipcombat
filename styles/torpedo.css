@@ -262,6 +262,18 @@
   flex-shrink: 0;
 }
 
+/* Compact bars inside the torpedo movement area (used by imsc-helm-control-block in realistic mode) */
+.imsc-torpedo-movement .imsc-power-bar--compact {
+  height: 1rem;
+}
+.imsc-torpedo-movement .imsc-power-range {
+  height: 1rem;
+}
+/* Bearing slider row inside an imsc-helm-control-block (no label, just slider + readout) */
+.imsc-torpedo-movement .imsc-helm-control-block .imsc-torpedo-slider-row {
+  margin-bottom: 0;
+}
+
 /* ── Detonate Button ───────────────────────────────────────────────────── */
 .imsc-torpedo-detonate {
   text-align: center;

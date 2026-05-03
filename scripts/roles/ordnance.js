@@ -314,7 +314,7 @@ export function buildOrdnanceContext(sys, opts = {}) {
     const roleKey   = roleId.charAt(0).toUpperCase() + roleId.slice(1);
     payloadOptions[roleId] = {
       hasActive,
-      roleLabel: game.i18n.localize(`IMSC.Role.${roleKey}`),
+      roleLabel: sys.roleTitles?.[roleId] || game.i18n.localize(`IMSC.Role.${roleKey}`),
       items: payloads.map(p => ({
         ...p,
         labelLocalized: game.i18n.localize(p.label),
@@ -550,7 +550,7 @@ async function _onRollOrdnanceMaster(event, target) {
     return;
   }
 
-  const result = await SystemAdapter.current.rollSkillTest(crewActor, "ordnance");
+  const result = await SystemAdapter.current.rollSkillTest(crewActor, sys.roleSkillOverrides?.ordnance ?? "ordnance");
   if (!result) return;
 
   const sl = Math.max(0, result.SL ?? 0);

@@ -100,7 +100,7 @@ export function buildCaptainContext(sys, opts = {}) {
       category:        def.category,
       catLabel:        game.i18n.localize(`IMSC.Captain.Category.${def.category}`),
       targetRole:      def.targetRole ?? null,
-      targetRoleLabel: def.targetRole ? game.i18n.localize(ROLES[def.targetRole]?.label ?? "") : null,
+      targetRoleLabel: def.targetRole ? (sys.roleTitles?.[def.targetRole] || game.i18n.localize(ROLES[def.targetRole]?.label ?? "")) : null,
       targetRoleIcon:  def.targetRole ? (ROLES[def.targetRole]?.icon ?? null) : null,
       setsStance:      def.setsStance ?? null,
       icon:            _cardIcon(def.category),
@@ -369,7 +369,7 @@ async function _onRollLeadershipSL() {
     return;
   }
 
-  const result = await SystemAdapter.current.rollSkillTest(crewActor, "leadership");
+  const result = await SystemAdapter.current.rollSkillTest(crewActor, sys.roleSkillOverrides?.captain ?? "leadership");
   if (!result) return;
 
   const sl = Math.max(0, result.SL);

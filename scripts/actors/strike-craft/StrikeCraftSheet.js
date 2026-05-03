@@ -119,19 +119,34 @@ export class StrikeCraftSheet extends IMActorSheet {
     const speed = sys.movement.speed;
     const mano  = sys.movement.maneuverability;
     const helm  = sys.helm ?? {};
-    const minMove = Math.ceil(speed / 2);
-    const totalSquares = minMove + speed;
     const thrustPct = helm.thrustPct ?? 0;
+    const isRealistic = game.settings?.get(MODULE_ID, "movementMode") === "realistic";
+    const velocityMagCtx  = isRealistic ? Math.floor(Math.hypot(helm.velocityX ?? 0, helm.velocityY ?? 0)) : 0;
+    const minMove = isRealistic ? velocityMagCtx : Math.ceil(speed / 2);
+    const totalSquares = minMove + speed;
     const minMovePct = totalSquares > 0 ? Math.round(minMove / totalSquares * 100) : 0;
     context.helm = {
       speed,
       mano,
       minMove,
       minMovePct,
-      maxBearing: mano * 15,
-      bearing:    helm.bearing ?? 0,
+      maxBearing:           mano * 15,
+      bearingMax:           mano * 15,
+      bearing:              helm.bearing ?? 0,
       thrustPct,
-      powerMax:   100,
+      powerMax:             100,
+      isRealistic,
+      velocityX:            helm.velocityX ?? 0,
+      velocityY:            helm.velocityY ?? 0,
+      // bearingUsed intentionally always 0 for ordnance (same reason as torpedo).
+      bearingUsed:          0,
+      momentumUsed:         0,
+      bearingRemaining:     mano * 15,
+      bearingBudgetTooltip: (() => {
+        if (!isRealistic || typeof game === "undefined") return "";
+        const bMax = mano * 15;
+        return game.i18n.format("IMSC.Helm.BearingBudgetTooltip", { val: bMax, max: bMax });
+      })(),
     };
 
     // Parent ship power bar data
@@ -156,6 +171,57 @@ export class StrikeCraftSheet extends IMActorSheet {
     const html = this.element;
     if (!html) return;
 
+    const isRealistic   = context.helm.isRealistic;
+    const bearingMax    = context.helm.maxBearing;
+    // bearingUsed is always 0 for ordnance (see _prepareContext comment).
+    const bearingUsed   = 0;
+    const bearingRemain = bearingMax;
+    const momentumUsed  = 0;
+    const velocityMag   = isRealistic
+      ? Math.floor(Math.hypot(context.helm.velocityX, context.helm.velocityY)) : 0;
+    // When stopped (no velocity), lock carry at 100%; otherwise slider is free from 0
+    const momentumFloor = (isRealistic && velocityMag === 0) ? 100 : 0;
+
+    // Bearing budget bar
+    const bearingBudgetBar  = html.querySelector("[data-bearing-budget-bar]");
+    const bearingBudgetDisp = html.querySelector("[data-bearing-budget-display]");
+    const _syncBearingBudgetBar = (bearingAbs) => {
+      if (!bearingBudgetBar || !bearingMax) return;
+      const committed = (bearingUsed / bearingMax) * 100;
+      const extra     = (Math.min(bearingAbs, bearingRemain) / bearingMax) * 100;
+      bearingBudgetBar.style.setProperty("--committed", `${committed}%`);
+      bearingBudgetBar.style.setProperty("--extra",     `${extra}%`);
+      bearingBudgetBar.style.setProperty("--minmove",   "0%");
+      if (bearingBudgetDisp) {
+        bearingBudgetDisp.textContent = `${Math.round(bearingUsed + Math.min(bearingAbs, bearingRemain))}°`;
+      }
+    };
+    _syncBearingBudgetBar(Math.abs(context.helm.bearing ?? 0));
+
+    // Carry bar
+    const carryBarEl = html.querySelector("[data-helm-carry-bar]");
+    const carryInput = html.querySelector("[data-helm-carry]");
+    const carryDisp  = html.querySelector("[data-carry-display]");
+    const _syncCarryBar = (carryPct) => {
+      if (!carryBarEl) return;
+      carryBarEl.style.setProperty("--committed", `${momentumUsed}%`);
+      carryBarEl.style.setProperty("--extra",     `${Math.max(0, carryPct - momentumUsed)}%`);
+      carryBarEl.style.setProperty("--minmove",   "0%");
+      if (carryDisp) carryDisp.textContent = `${Math.round(carryPct)}%`;
+    };
+    if (carryInput) {
+      carryInput.value = String(momentumFloor);
+      carryInput.addEventListener("change", ev => { ev.stopPropagation(); ev.preventDefault(); }, true);
+      carryInput.addEventListener("input", ev => {
+        ev.stopPropagation();
+        const val = Math.max(momentumFloor, Math.min(100, Number(ev.target.value)));
+        if (val !== Number(ev.target.value)) ev.target.value = String(val);
+        _syncCarryBar(val);
+        _updateCraftPreview();
+      }, true);
+    }
+    _syncCarryBar(momentumFloor);
+
     // Helper: update ghost preview on canvas (like torpedo)
     const _updateCraftPreview = () => {
       const token = this.actor.getActiveTokens()?.[0];
@@ -171,23 +237,44 @@ export class StrikeCraftSheet extends IMActorSheet {
       const curFuel    = parseInt(html.querySelector("[data-helm-fuel]")?.value)    || 0;
       const deltaSquares = (curFuel - committedPct) / 100 * totalSquares;
 
-      if (deltaSquares <= 0) {
-        HelmPreview.hide();
-        return;
+      if (isRealistic) {
+        const vx = helm.velocityX ?? 0;
+        const vy = helm.velocityY ?? 0;
+        const velMag = Math.hypot(vx, vy);
+        const thrustArg = deltaSquares > 0 ? deltaSquares * 100 / speed : 0;
+        if (velMag === 0 && thrustArg === 0) { HelmPreview.hide(); return; }
+        const curCarry = parseInt(html.querySelector("[data-helm-carry]")?.value) || 0;
+        const projected = HelmPreview.projectPositionRealistic(token, curBearing, thrustArg, speed, vx, vy, curCarry);
+        if (!projected) { HelmPreview.hide(); return; }
+        HelmPreview.show(token, projected);
+        HelmPreview.updateLineRealistic(curBearing, thrustArg, speed, vx, vy, curCarry);
+      } else {
+        if (deltaSquares <= 0) { HelmPreview.hide(); return; }
+        const thrustArg = deltaSquares * 100 / speed;
+        const projected = HelmPreview.projectPosition(token, curBearing, thrustArg, speed, 0);
+        if (!projected) { HelmPreview.hide(); return; }
+        HelmPreview.show(token, projected);
+        HelmPreview.updateLine(curBearing, thrustArg, speed, 0);
       }
-      const thrustArg = deltaSquares * 100 / speed;
-      const projected = HelmPreview.projectPosition(token, curBearing, thrustArg, speed, 0);
-      if (!projected) { HelmPreview.hide(); return; }
-      HelmPreview.show(token, projected);
-      HelmPreview.updateLine(curBearing, thrustArg, speed, 0);
     };
 
     // Bearing slider live update
     const bearingSlider = html.querySelector("[data-helm-bearing]");
     const bearingDisplay = html.querySelector("[data-bearing-display]");
     if (bearingSlider) {
+      if (isRealistic) {
+        const sliderMax = Math.min(bearingRemain, 180);
+        bearingSlider.min = String(-sliderMax);
+        bearingSlider.max = String(sliderMax);
+      }
       bearingSlider.addEventListener("input", (e) => {
-        if (bearingDisplay) bearingDisplay.textContent = `${e.target.value}°`;
+        let val = Number(e.target.value);
+        if (isRealistic && bearingMax > 0 && Math.abs(val) > bearingRemain) {
+          val = Math.sign(val || 1) * bearingRemain;
+          e.target.value = String(val);
+        }
+        if (bearingDisplay) bearingDisplay.textContent = `${val}°`;
+        _syncBearingBudgetBar(Math.abs(val));
         _updateCraftPreview();
       });
     }
@@ -202,17 +289,27 @@ export class StrikeCraftSheet extends IMActorSheet {
 
     const _syncPowerBar = (selectedPct) => {
       if (!powerMax) return;
-      const ratio     = 100 / powerMax;
-      const committed = thrustPct * ratio;
-      const extra     = Math.max(0, selectedPct - thrustPct) * ratio;
-      // Hide delimiter once slider passes min-move, redisplay if it moves back.
-      const effectiveMinmove = selectedPct >= minMovePct ? 0 : (minMovePct / powerMax) * 100;
-      if (powerBarEl) {
-        powerBarEl.style.setProperty("--committed", `${committed}%`);
-        powerBarEl.style.setProperty("--extra",     `${extra}%`);
-        powerBarEl.style.setProperty("--minmove",   `${effectiveMinmove}%`);
-        const line = powerBarEl.querySelector(".imsc-power-minmove-line");
-        if (line) line.style.display = effectiveMinmove > 0 ? "" : "none";
+      if (isRealistic) {
+        // In realistic mode min-move is folded into momentum — simple single-fill bar
+        if (powerBarEl) {
+          powerBarEl.style.setProperty("--committed", "0%");
+          powerBarEl.style.setProperty("--extra",     `${(selectedPct / powerMax) * 100}%`);
+          powerBarEl.style.setProperty("--minmove",   "0%");
+          const line = powerBarEl.querySelector(".imsc-power-minmove-line");
+          if (line) line.style.display = "none";
+        }
+      } else {
+        const ratio     = 100 / powerMax;
+        const committed = thrustPct * ratio;
+        const extra     = Math.max(0, selectedPct - thrustPct) * ratio;
+        const effectiveMinmove = selectedPct >= minMovePct ? 0 : (minMovePct / powerMax) * 100;
+        if (powerBarEl) {
+          powerBarEl.style.setProperty("--committed", `${committed}%`);
+          powerBarEl.style.setProperty("--extra",     `${extra}%`);
+          powerBarEl.style.setProperty("--minmove",   `${effectiveMinmove}%`);
+          const line = powerBarEl.querySelector(".imsc-power-minmove-line");
+          if (line) line.style.display = effectiveMinmove > 0 ? "" : "none";
+        }
       }
       if (fuelDisplay) fuelDisplay.textContent = `${selectedPct}%`;
     };
@@ -258,30 +355,58 @@ export class StrikeCraftSheet extends IMActorSheet {
     }
 
     const thrustArg = deltaSquares * 100 / speed;
+    const isRealistic = game.settings?.get(MODULE_ID, "movementMode") === "realistic";
+    const carryPct   = parseInt(html?.querySelector("[data-helm-carry]")?.value) || 0;
 
     // Move the token on canvas via waypoints (curved interpolation)
     const token = this.actor.getActiveTokens()?.[0];
     if (token && canvas?.ready) {
-      const projected = HelmPreview.projectPosition(token, bearing, thrustArg, speed, 0);
-      if (projected) {
-        const waypoints = HelmPreview.projectWaypoints(token, bearing, thrustArg, speed, 0);
-        if (waypoints?.length > 1) {
-          await _animateTokenPath(token, waypoints, projected);
-        } else {
-          await token.document.update(
-            { x: projected.x, y: projected.y, rotation: projected.rotation },
-            { animate: true },
-          );
+      if (isRealistic) {
+        const vx = helm.velocityX ?? 0;
+        const vy = helm.velocityY ?? 0;
+        const projected = HelmPreview.projectPositionRealistic(token, bearing, thrustArg, speed, vx, vy, carryPct);
+        if (projected) {
+          const waypoints = HelmPreview.projectWaypointsRealistic(token, bearing, thrustArg, speed, vx, vy, carryPct);
+          if (waypoints?.length > 1) {
+            await _animateTokenPath(token, waypoints, projected);
+          } else {
+            await token.document.update(
+              { x: projected.x, y: projected.y, rotation: projected.rotation },
+              { animate: true },
+            );
+          }
+        }
+      } else {
+        const projected = HelmPreview.projectPosition(token, bearing, thrustArg, speed, 0);
+        if (projected) {
+          const waypoints = HelmPreview.projectWaypoints(token, bearing, thrustArg, speed, 0);
+          if (waypoints?.length > 1) {
+            await _animateTokenPath(token, waypoints, projected);
+          } else {
+            await token.document.update(
+              { x: projected.x, y: projected.y, rotation: projected.rotation },
+              { animate: true },
+            );
+          }
         }
       }
     }
 
     const prevTurnMove = helm.prevTurnMove ?? 0;
-    await this.actor.update({
-      "system.helm.thrustPct": newPct,
+    const updates = {
+      "system.helm.thrustPct":    newPct,
       "system.helm.prevTurnMove": (prevTurnMove || 0) + Math.round(deltaSquares),
-      "system.helm.bearing": bearing,
-    });
+      "system.helm.bearing":      bearing,
+      // bearingUsed and momentumUsed are NOT saved for ordnance (same reason as torpedo).
+    };
+    if (isRealistic && token) {
+      const h0 = (token.document.rotation - 90) * (Math.PI / 180);
+      const thrustDir = h0 + bearing * (Math.PI / 180);
+      const thrustMag = (thrustArg / 100) * speed;
+      updates["system.helm.velocityX"] = (helm.velocityX ?? 0) + Math.cos(thrustDir) * thrustMag;
+      updates["system.helm.velocityY"] = (helm.velocityY ?? 0) + Math.sin(thrustDir) * thrustMag;
+    }
+    await this.actor.update(updates);
 
     HelmPreview.hide();
   }

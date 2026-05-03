@@ -177,7 +177,7 @@ export class NpcShipModel extends warhammer.models.BaseWarhammerActorModel {
       bow:       new fields.BooleanField({ initial: true }),
       port:      new fields.BooleanField({ initial: true }),
       starboard: new fields.BooleanField({ initial: true }),
-      stern:     new fields.BooleanField({ initial: false }),
+      stern:     new fields.BooleanField({ initial: true }),
     });
     schema.ordnanceLaunchSides = new fields.SchemaField({
       torpedo:    _sidesSchema(),
@@ -190,9 +190,14 @@ export class NpcShipModel extends warhammer.models.BaseWarhammerActorModel {
         pilotingSL:       new fields.NumberField({ initial: 0, min: 0, integer: true }),
         allocSpeed:       new fields.NumberField({ initial: 0, min: 0, integer: true }),
         allocMano:        new fields.NumberField({ initial: 0, min: 0, integer: true }),
+        allocEvasion:     new fields.NumberField({ initial: 0, min: 0, integer: true }),
         fuelBurned:       new fields.NumberField({ initial: 0, min: 0, integer: true }),
         prevTurnMove:     new fields.NumberField({ initial: 0, min: 0, integer: true }),
         bearing:          new fields.NumberField({ initial: 0, integer: true }),
+        bearingUsed:      new fields.NumberField({ initial: 0, min: 0, integer: true }),
+        momentumUsed:     new fields.NumberField({ initial: 0, min: 0 }),
+        velocityX:        new fields.NumberField({ initial: 0 }),
+        velocityY:        new fields.NumberField({ initial: 0 }),
         overdrive:        new fields.BooleanField({ initial: false }),
         helmResetId:      new fields.NumberField({ initial: 0, min: 0, integer: true }),
         pilotingMessageId: new fields.StringField({ initial: "" }),
@@ -200,10 +205,16 @@ export class NpcShipModel extends warhammer.models.BaseWarhammerActorModel {
         ramAllocLocked:   new fields.BooleanField({ initial: false }),
       }),
       gunner: new fields.SchemaField({
-        ammo:     new fields.NumberField({ initial: 0,  min: 0, integer: true }),
-        power:    new fields.NumberField({ initial: 0,  min: 0, integer: true }),
-        ammoMax:  new fields.NumberField({ initial: 20, min: 1, integer: true }),
-        powerMax: new fields.NumberField({ initial: 20, min: 1, integer: true }),
+        ammo:             new fields.NumberField({ initial: 0,  min: 0, integer: true }),
+        power:            new fields.NumberField({ initial: 0,  min: 0, integer: true }),
+        ammoMax:          new fields.NumberField({ initial: 20, min: 1, integer: true }),
+        powerMax:         new fields.NumberField({ initial: 20, min: 1, integer: true }),
+        ordnanceSL:       new fields.NumberField({ initial: 0,  min: 0, integer: true }),
+        allocAccuracy:    new fields.NumberField({ initial: 0,  min: 0, integer: true }),
+        allocPenetration: new fields.NumberField({ initial: 0,  min: 0, integer: true }),
+        allocFirepower:   new fields.NumberField({ initial: 0,  min: 0, integer: true }),
+        ordnanceRolled:   new fields.BooleanField({ initial: false }),
+        slLocked:         new fields.BooleanField({ initial: false }),
       }),
     });
 
@@ -245,6 +256,10 @@ export class NpcShipModel extends warhammer.models.BaseWarhammerActorModel {
       this.movement.baseSpeed           = engine.system.speed           ?? this.movement.baseSpeed;
       this.movement.baseManeuverability = engine.system.maneuverability ?? this.movement.baseManeuverability;
     }
+
+    // Derive working speed/maneuverability from base values so header edits propagate immediately.
+    this.movement.speed           = this.movement.baseSpeed;
+    this.movement.maneuverability = this.movement.baseManeuverability;
 
     // Engine crit condition: −1/−2/−4 Speed
     const engineCondTier = this.conditions?.engines?.tier;

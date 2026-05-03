@@ -162,9 +162,28 @@ input[data-slot-count]:focus {
 /* ── Ship Configuration grid ────────────────────────────────────────────── */
 .imsc-ship-config-grid {
   display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+  padding: 0.4rem 0.5rem;
+  align-items: flex-start;
+}
+
+.imsc-ship-config-left {
+  display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  padding: 0.4rem 0.5rem;
+  flex: 0 0 auto;
+}
+
+.imsc-ship-config-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0.1rem;
+  padding-left: 1rem;
 }
 
 .imsc-config-row {
@@ -200,7 +219,8 @@ input[data-slot-count]:focus {
   height: 1.4em;
   line-height: 1.4;
   cursor: pointer;
-  max-width: 9rem;
+  min-width: 6rem;
+  max-width: 12rem;
 }
 
 .imsc-config-select:hover:not(:disabled) {

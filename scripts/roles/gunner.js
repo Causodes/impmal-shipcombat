@@ -78,7 +78,7 @@ async function _onRollOrdnance() {
   }
 
   const captainHitBonus = sys.resources?.gunner?.captainHitBonus ?? 0;
-  const result = await SystemAdapter.current.rollSkillTest(crewActor, "gunner",
+  const result = await SystemAdapter.current.rollSkillTest(crewActor, sys.roleSkillOverrides?.gunner ?? "gunner",
     captainHitBonus ? { modifier: captainHitBonus } : {});
   if (!result) return;
 

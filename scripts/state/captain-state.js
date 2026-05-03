@@ -117,7 +117,7 @@ export async function triageCondition({ locId }) {
   await ChatMessage.create({
     flavor: `${triageName}  -  ${locLabel}`,
     content: `<p>${game.i18n.format("IMSC.Captain.TriageResult", { location: locLabel, tier: newTier })}</p>`,
-    speaker: { alias: game.i18n.localize("IMSC.Role.Captain") },
+    speaker: { alias: this.ship?.system?.roleTitles?.captain || game.i18n.localize("IMSC.Role.Captain") },
     whisper: ChatMessage.getWhisperRecipients("GM"),
   });
 }
@@ -276,7 +276,7 @@ export async function playCard({ cardId, sector }) {
   <div class="imsc-captain-card-name"><i class="${cardIcon}"></i> ${cardLabel}</div>
   <div class="imsc-captain-card-desc">${descText}</div>${stanceLine}
 </div>`,
-    speaker: { alias: game.i18n.localize("IMSC.Role.Captain") },
+    speaker: { alias: this.ship?.system?.roleTitles?.captain || game.i18n.localize("IMSC.Role.Captain") },
   });
 }
 
@@ -402,7 +402,7 @@ export async function captainPayloadActivate({ payloadId } = {}) {
     await ChatMessage.create({
       flavor:  `${game.i18n.localize("IMSC.Payload.FireSuppression")}  -  ${locLabel}`,
       content: `<p>${game.i18n.format("IMSC.Captain.TriageResult", { location: locLabel, tier: newTier })}</p>`,
-      speaker: { alias: game.i18n.localize("IMSC.Role.Captain") },
+      speaker: { alias: this.ship?.system?.roleTitles?.captain || game.i18n.localize("IMSC.Role.Captain") },
     });
     return;
   }
@@ -497,6 +497,6 @@ export async function captainCoreAction({ actionId, tokenId, cardId, newPile } =
   await ChatMessage.create({
     flavor:  game.i18n.localize(actionDef?.label ?? actionId),
     content: `<p>${game.i18n.localize(actionDef?.desc ?? "")}</p>`,
-    speaker: { alias: game.i18n.localize("IMSC.Role.Captain") },
+    speaker: { alias: this.ship?.system?.roleTitles?.captain || game.i18n.localize("IMSC.Role.Captain") },
   });
 }

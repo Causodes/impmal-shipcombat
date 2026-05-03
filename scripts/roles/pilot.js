@@ -90,7 +90,9 @@ async function _onRollPiloting() {
     }
   }
 
-  const skillKey = is3man ? "engineering" : "pilot";
+  const skillKey = is3man
+    ? (sys.roleSkillOverrides?.enginseer ?? "engineering")
+    : (sys.roleSkillOverrides?.pilot     ?? "pilot");
   const result = await SystemAdapter.current.rollSkillTest(crewActor, skillKey);
   if (!result) return;
 
@@ -525,11 +527,32 @@ export function buildHelmContext(sys, opts = {}) {
     effectiveMano:   effMano,
     remainingSL:     Math.max(0, pilotingSL - allocSpeed - allocMano - allocEvasion),
     allocLocked:     fuelBurned > 0 || (sys.resources?.pilot?.ramAllocLocked ?? false),
+    slCapped:        !!pilotingMessageId && (pilotingSL - allocSpeed - allocMano - allocEvasion) <= 0,
     hasRolledPiloting: !!pilotingMessageId,
     is3man,
-    helmSLLabel:     game.i18n.localize(is3man ? "IMSC.Helm.EngineeringSL"        : "IMSC.Helm.PilotingSL"),
-    helmSLTooltip:   game.i18n.localize(is3man ? "IMSC.Helm.EngineeringSLTooltip" : "IMSC.Helm.PilotingSLTooltip"),
-    helmRollLabel:   game.i18n.localize(is3man ? "IMSC.Helm.RollEngineering"      : "IMSC.Helm.RollPiloting"),
+    helmSLLabel:     (() => {
+      const ov = is3man ? sys.roleSkillOverrides?.enginseer : sys.roleSkillOverrides?.pilot;
+      if (ov?.includes("|")) { const spec = ov.slice(ov.indexOf("|") + 1); return `${spec || ov.slice(0, ov.indexOf("|"))} SL`; }
+      return game.i18n.localize(is3man ? "IMSC.Helm.EngineeringSL" : "IMSC.Helm.PilotingSL");
+    })(),
+    helmSLTooltip:   (() => {
+      const ov = is3man ? sys.roleSkillOverrides?.enginseer : sys.roleSkillOverrides?.pilot;
+      if (ov?.includes("|")) {
+        const idx  = ov.indexOf("|");
+        const key  = ov.slice(0, idx);
+        const spec = ov.slice(idx + 1);
+        const skillLabels = game.impmal?.config?.skills ?? {};
+        const skillName   = game.i18n.localize(skillLabels[key] ?? key);
+        const skillDisplay = spec ? `${skillName} (${spec})` : skillName;
+        return `Roll ${skillDisplay} to generate Helm SL for Speed, Maneuverability, and Evasion allocation.`;
+      }
+      return game.i18n.localize(is3man ? "IMSC.Helm.EngineeringSLTooltip" : "IMSC.Helm.PilotingSLTooltip");
+    })(),
+    helmRollLabel:   (() => {
+      const ov = is3man ? sys.roleSkillOverrides?.enginseer : sys.roleSkillOverrides?.pilot;
+      if (ov?.includes("|")) { const spec = ov.slice(ov.indexOf("|") + 1); return `Roll ${spec || ov.slice(0, ov.indexOf("|"))}`; }
+      return game.i18n.localize(is3man ? "IMSC.Helm.RollEngineering" : "IMSC.Helm.RollPiloting");
+    })(),
     minMove,
     prevTurnMove,
     bearingUsed,
@@ -619,6 +642,12 @@ export function helmOnRender(sheet) {
   const apThrustBonus = sys.resources?.pilot?.apThrustBonus ?? 0;
   const powerMax     = (overdrive ? 200 : 100) + apThrustBonus;
 
+  // Compute velocity/mode early so momentum floor can be capped when the vessel is stopped
+  const isRealistic  = game.settings?.get(MODULE_ID, "movementMode") === "realistic";
+  const velocityMag  = isRealistic ? Math.floor(Math.hypot(
+    sys.resources?.pilot?.velocityX ?? 0,
+    sys.resources?.pilot?.velocityY ?? 0)) : 0;
+
   if (!sheet._helmState
       || sheet._helmState.round !== currentRound
       || sheet._helmState.helmResetId !== helmResetId) {
@@ -627,7 +656,7 @@ export function helmOnRender(sheet) {
       helmResetId,
       bearing:   sys.resources?.pilot?.bearing ?? 0,
       fuelSlider: fuelBurned,
-      carryPct:  sys.resources?.pilot?.momentumUsed ?? 0,
+      carryPct:  (isRealistic && velocityMag === 0) ? 100 : (sys.resources?.pilot?.momentumUsed ?? 0),
     };
   } else {
     sheet._helmState.bearing = sys.resources?.pilot?.bearing ?? 0;
@@ -638,8 +667,8 @@ export function helmOnRender(sheet) {
     if (sheet._helmState.fuelSlider > powerMax) {
       sheet._helmState.fuelSlider = powerMax;
     }
-    // Carry can't be less than what's already committed
-    const momentumFloor = sys.resources?.pilot?.momentumUsed ?? 0;
+    // Carry can't be less than what's already committed; when stopped, clamp to 100%
+    const momentumFloor = (isRealistic && velocityMag === 0) ? 100 : (sys.resources?.pilot?.momentumUsed ?? 0);
     if ((sheet._helmState.carryPct ?? 0) < momentumFloor) {
       sheet._helmState.carryPct = momentumFloor;
     }
@@ -660,13 +689,13 @@ export function helmOnRender(sheet) {
   const carryBarEl       = sheet.element.querySelector("[data-helm-carry-bar]");
 
   // Realistic-mode bearing budget values
-  const isRealistic   = game.settings?.get(MODULE_ID, "movementMode") === "realistic";
   const baseManoHOR   = sys.movement?.maneuverability ?? 2;
   const allocManoHOR  = sys.resources?.pilot?.allocMano ?? 0;
   const effManoHOR    = Math.max(0, baseManoHOR + allocManoHOR);
   const bearingMax    = effManoHOR * 15;
   const bearingUsed   = sys.resources?.pilot?.bearingUsed  ?? 0;
   const momentumUsed  = sys.resources?.pilot?.momentumUsed ?? 0;
+  const momentumFloor = (isRealistic && velocityMag === 0) ? 100 : momentumUsed;
   const bearingRemain = Math.max(0, bearingMax - bearingUsed);
 
   const _syncBearingBudgetBar = (bearingAbs) => {
@@ -777,11 +806,11 @@ export function helmOnRender(sheet) {
   };
 
   if (carryInput) {
-    carryInput.value = String(sheet._helmState.carryPct ?? momentumUsed);
+    carryInput.value = String(sheet._helmState.carryPct ?? momentumFloor);
     carryInput.addEventListener("change", ev => { ev.stopPropagation(); ev.preventDefault(); }, true);
     carryInput.addEventListener("input",  ev => {
       ev.stopPropagation();
-      const val = Math.max(momentumUsed, Math.min(100, Number(ev.target.value)));
+      const val = Math.max(momentumFloor, Math.min(100, Number(ev.target.value)));
       if (val !== Number(ev.target.value)) ev.target.value = String(val);
       sheet._helmState.carryPct = val;
       sheet._helmState.confirmed = false;
@@ -789,7 +818,7 @@ export function helmOnRender(sheet) {
       sheet._updateHelmPreview();
     }, true);
   }
-  _syncCarryBar(sheet._helmState.carryPct ?? momentumUsed);
+  _syncCarryBar(sheet._helmState.carryPct ?? momentumFloor);
 
   // ── Strafe controls ──────────────────────────────────────────────────────
   const token = sheet.actor.getActiveTokens()?.[0];

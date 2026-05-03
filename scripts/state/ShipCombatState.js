@@ -644,7 +644,7 @@ export class ShipCombatState {
     if (overcapCount > 0) {
       await ChatMessage.create({
         content: `<p>${game.i18n.format("IMSC.Captain.InspireDiscard", { count: overcapCount })}</p>`,
-        speaker: { alias: game.i18n.localize("IMSC.Role.Captain") },
+        speaker: { alias: this.ship?.system?.roleTitles?.captain || game.i18n.localize("IMSC.Role.Captain") },
         whisper: ChatMessage.getWhisperRecipients("GM"),
       });
     }

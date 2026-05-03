@@ -5,13 +5,13 @@
     </div>
     <div class="list-content">
         <div class="imsc-helm-stats">
-            <div class="imsc-helm-stat" data-tooltip="{{localize 'IMSC.Gunner.OrdnanceSLTooltip'}}">
-                <span class="imsc-helm-stat-label">{{localize "IMSC.Gunner.OrdnanceSL"}}</span>
+            <div class="imsc-helm-stat" data-tooltip="{{gunnerCtx.slTooltip}}">
+                <span class="imsc-helm-stat-label">{{gunnerCtx.slLabel}}</span>
                 {{#if gunnerCtx.ordnanceRolled}}
                     <span class="imsc-helm-stat-value imsc-sl-badge">{{gunnerCtx.remainingSL}}</span>
                 {{else}}
                     <button class="imsc-roll-piloting-btn" data-action="rollOrdnance">
-                        <i class="fa-solid fa-dice"></i> {{localize "IMSC.Gunner.RollOrdnance"}}
+                        <i class="fa-solid fa-dice"></i> {{gunnerCtx.rollLabel}}
                     </button>
                 {{/if}}
             </div>

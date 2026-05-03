@@ -474,6 +474,41 @@
   border-color: rgba(255, 255, 255, 0.1);
 }
 
+/* Core Systems Critical overlay – red critical variant */
+.imsc-section-overlay--critical {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0)    0px,
+      rgba(0, 0, 0, 0)    2px,
+      rgba(0, 0, 0, 0.38) 2px,
+      rgba(0, 0, 0, 0.38) 3px
+    ),
+    linear-gradient(
+      rgba(130, 12, 12, 0.54),
+      rgba(80,  5,  5,  0.48)
+    );
+  border: 1px solid rgba(180, 18, 18, 0.45);
+  box-shadow: inset 0 0 16px rgba(140, 0, 0, 0.28);
+}
+
+.imsc-overlay-lock-indicator--critical {
+  color: rgba(220, 170, 170, 0.80);
+  text-shadow: 0 0 8px rgba(200, 50, 50, 0.55);
+}
+
+.imsc-overlay-lock-indicator--critical i {
+  color: rgba(220, 90, 90, 0.75);
+  text-shadow: 0 0 10px rgba(200, 40, 40, 0.65);
+}
+
+.imsc-overlay-crit-desc {
+  font-size: 0.7rem;
+  font-weight: 400;
+  opacity: 0.75;
+  letter-spacing: 0.02em;
+}
+
 /* Lock indicator used in the Pilot overcharge overlay (no button, just a label) */
 .imsc-overlay-lock-indicator,
 .imsc-vent-lock-notice {

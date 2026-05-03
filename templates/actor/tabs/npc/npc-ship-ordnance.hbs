@@ -1,5 +1,4 @@
 <section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
-<div class="imsc-npc-ordnance-tab">
 
     {{!-- ═══ Torpedo Loadout ═══ --}}
     <div class="sheet-list">
@@ -8,38 +7,35 @@
         </div>
         <div class="list-content" data-ordnance-drop="1" data-ordnance-slot="torpedo">
             {{#if torpedoTemplates.length}}
+            <div class="imsc-ov-ordnance-box">
                 {{#each torpedoTemplates}}
-                <div class="list-row imsc-ord-template-row" data-template-id="{{id}}" data-ordnance-slot="torpedo">
-                    <div class="row-content">
-                        <div class="list-name">{{name}}</div>
-                        <div class="list-controls">
-                            <a data-action="npcOpenOrdTemplate" data-tooltip="{{localize 'IMSC.NpcShip.OpenSheet'}}">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </a>
-                            <a data-action="npcRemoveOrdTemplate" data-tooltip="{{localize 'IMSC.NpcShip.RemoveTemplate'}}">
-                                <i class="fa-solid fa-trash"></i>
-                            </a>
-                        </div>
-                    </div>
+                <div class="imsc-ov-comp-row" data-template-id="{{id}}" data-ordnance-slot="torpedo">
+                    <a class="imsc-ov-comp-chip imsc-ord-chip" data-action="npcOpenOrdTemplate"
+                       data-tooltip="{{localize 'IMSC.NpcShip.OpenSheet'}}">
+                        {{#if img}}<img src="{{img}}">{{/if}}<span>{{name}}</span>
+                    </a>
+                    <a class="imsc-ov-unassign" data-action="npcRemoveOrdTemplate"
+                       data-tooltip="{{localize 'IMSC.NpcShip.RemoveTemplate'}}">
+                        <i class="fa-solid fa-xmark"></i>
+                    </a>
                 </div>
                 {{/each}}
+            </div>
             {{else}}
-            <div class="list-row">
-                <div class="row-content imsc-ord-drop-hint">
-                    <i class="fa-solid fa-circle-down"></i> {{localize "IMSC.NpcShip.DropTorpedoHint"}}
-                </div>
+            <div class="imsc-ord-drop-hint">
+                <i class="fa-solid fa-circle-down"></i> {{localize "IMSC.NpcShip.DropTorpedoHint"}}
             </div>
             {{/if}}
         </div>
         {{#if torpedoTemplates.length}}
         <div class="imsc-npc-launch-row">
-            <label class="imsc-npc-launch-label">{{localize "IMSC.NpcShip.TorpedoCount"}}</label>
+            <span class="imsc-npc-launch-label">{{localize "IMSC.NpcShip.TorpedoCount"}}</span>
             <input type="number" class="imsc-npc-launch-count"
                    data-config="torpedoCount"
                    data-template-id="{{torpedoTemplates.[0].id}}"
                    value="{{torpedoTemplates.[0].torpedoCount}}"
                    min="1" max="20">
-            <button class="imsc-npc-action-pill" data-action="npcLaunchTorpedo">
+            <button class="imsc-battery-fire-btn" data-action="npcLaunchTorpedo">
                 <i class="fa-solid fa-rocket"></i> {{localize "IMSC.NpcShip.LaunchTorpedo"}}
             </button>
         </div>
@@ -53,38 +49,35 @@
         </div>
         <div class="list-content" data-ordnance-drop="1" data-ordnance-slot="strikeCraft">
             {{#if craftTemplates.length}}
+            <div class="imsc-ov-ordnance-box">
                 {{#each craftTemplates}}
-                <div class="list-row imsc-ord-template-row" data-template-id="{{id}}" data-ordnance-slot="strikeCraft">
-                    <div class="row-content">
-                        <div class="list-name">{{name}}</div>
-                        <div class="list-controls">
-                            <a data-action="npcOpenOrdTemplate" data-tooltip="{{localize 'IMSC.NpcShip.OpenSheet'}}">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </a>
-                            <a data-action="npcRemoveOrdTemplate" data-tooltip="{{localize 'IMSC.NpcShip.RemoveTemplate'}}">
-                                <i class="fa-solid fa-trash"></i>
-                            </a>
-                        </div>
-                    </div>
+                <div class="imsc-ov-comp-row" data-template-id="{{id}}" data-ordnance-slot="strikeCraft">
+                    <a class="imsc-ov-comp-chip imsc-ord-chip" data-action="npcOpenOrdTemplate"
+                       data-tooltip="{{localize 'IMSC.NpcShip.OpenSheet'}}">
+                        {{#if img}}<img src="{{img}}">{{/if}}<span>{{name}}</span>
+                    </a>
+                    <a class="imsc-ov-unassign" data-action="npcRemoveOrdTemplate"
+                       data-tooltip="{{localize 'IMSC.NpcShip.RemoveTemplate'}}">
+                        <i class="fa-solid fa-xmark"></i>
+                    </a>
                 </div>
                 {{/each}}
+            </div>
             {{else}}
-            <div class="list-row">
-                <div class="row-content imsc-ord-drop-hint">
-                    <i class="fa-solid fa-circle-down"></i> {{localize "IMSC.NpcShip.DropCraftHint"}}
-                </div>
+            <div class="imsc-ord-drop-hint">
+                <i class="fa-solid fa-circle-down"></i> {{localize "IMSC.NpcShip.DropCraftHint"}}
             </div>
             {{/if}}
         </div>
         {{#if craftTemplates.length}}
         <div class="imsc-npc-launch-row">
-            <label class="imsc-npc-launch-label">{{localize "IMSC.NpcShip.SquadronSize"}}</label>
+            <span class="imsc-npc-launch-label">{{localize "IMSC.NpcShip.SquadronSize"}}</span>
             <input type="number" class="imsc-npc-launch-count"
                    data-config="squadronSize"
                    data-template-id="{{craftTemplates.[0].id}}"
                    value="{{craftTemplates.[0].squadronSize}}"
                    min="1" max="20">
-            <button class="imsc-npc-action-pill" data-action="npcLaunchStrikeCraft">
+            <button class="imsc-battery-fire-btn" data-action="npcLaunchStrikeCraft">
                 <i class="fa-solid fa-jet-fighter"></i> {{localize "IMSC.NpcShip.LaunchStrikeCraft"}}
             </button>
         </div>
@@ -156,5 +149,4 @@
         {{/if}}
     </div>
 
-</div>
 </section>

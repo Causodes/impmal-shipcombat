@@ -11,13 +11,13 @@
         <div class="imsc-helm-stats">
 
             {{!-- Presence (Leadership) roll --}}
-            <div class="imsc-helm-stat" data-tooltip="{{localize 'IMSC.Captain.LeadershipSLTooltip'}}">
-                <span class="imsc-helm-stat-label">{{localize "IMSC.Captain.LeadershipSL"}}</span>
+            <div class="imsc-helm-stat" data-tooltip="{{captainCtx.slTooltip}}">
+                <span class="imsc-helm-stat-label">{{captainCtx.slLabel}}</span>
                 {{#if captainCtx.leadershipRolled}}
                     <span class="imsc-helm-stat-value imsc-sl-badge">{{captainCtx.remainingLeadershipSL}}</span>
                 {{else}}
                     <button class="imsc-roll-piloting-btn" data-action="rollLeadershipSL">
-                        <i class="fa-solid fa-dice"></i> {{localize "IMSC.Captain.RollLeadership"}}
+                        <i class="fa-solid fa-dice"></i> {{captainCtx.rollLabel}}
                     </button>
                 {{/if}}
             </div>

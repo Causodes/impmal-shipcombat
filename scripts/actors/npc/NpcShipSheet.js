@@ -69,9 +69,10 @@ export class NpcShipSheet extends IMActorSheet {
       npcRollInitiative:  _onNpcRollInitiative,
       npcAllocBonus:      _onNpcAllocBonus,
       npcConfirmHelm:     _onNpcConfirmHelm,
-      npcResetHelm:       _onNpcResetHelm,
       npcRam:             _onNpcRam,
       // Gunner tab
+      npcRollOrdnance:     _onNpcRollOrdnance,
+      npcAllocGunnerSL:    _onNpcAllocGunnerSL,
       npcFireWeapon:       _onNpcFireWeapon,
       // Ordnance tab
       npcLaunchTorpedo:    _onNpcLaunchTorpedo,
@@ -168,7 +169,11 @@ export class NpcShipSheet extends IMActorSheet {
     };
 
     // Helm context
-    const helm = buildHelmContext(sys);
+    const npcShipToken = this.actor.getActiveTokens()?.[0];
+    const helm = buildHelmContext(sys, {
+      velocityBearingMode: this._velocityBearingMode ?? "relative",
+      shipRotation: npcShipToken?.document?.rotation ?? 0,
+    });
     helm.hasRamTargets = (() => {
       if (!canvas?.ready) return false;
       const token = this.actor.getActiveTokens()?.[0];
@@ -257,7 +262,7 @@ export class NpcShipSheet extends IMActorSheet {
         };
         const SIDE_ICONS = { bow: "fa-arrow-up", port: "fa-arrow-left", starboard: "fa-arrow-right", stern: "fa-arrow-down" };
         const toArr = src => Object.entries(SIDE_LABELS).map(([key, label]) => ({
-          key, label, icon: SIDE_ICONS[key], value: src?.[key] ?? (key !== "stern"),
+          key, label, icon: SIDE_ICONS[key], value: src?.[key] ?? true,
         }));
         return {
           torpedo:    toArr(sys.ordnanceLaunchSides?.torpedo),
@@ -582,6 +587,14 @@ function _buildNpcGunnerContext(sys) {
   const powerMax = sys.resources?.gunner?.powerMax ?? POWER_MAX;
   const heatMax  = sys.heatMax ?? HEAT_MAX;
 
+  const ordnanceSL       = sys.resources?.gunner?.ordnanceSL ?? 0;
+  const allocAccuracy    = sys.resources?.gunner?.allocAccuracy ?? 0;
+  const allocPenetration = sys.resources?.gunner?.allocPenetration ?? 0;
+  const allocFirepower   = sys.resources?.gunner?.allocFirepower ?? 0;
+  const ordnanceRolled   = sys.resources?.gunner?.ordnanceRolled ?? false;
+  const slLocked         = sys.resources?.gunner?.slLocked ?? false;
+  const remainingSL      = ordnanceSL - allocAccuracy - allocPenetration - allocFirepower;
+
   return {
     ammo,
     ammoMax,
@@ -596,6 +609,18 @@ function _buildNpcGunnerContext(sys) {
     hasCoreAssigned: false,
     isCoreSpent:     false,
     canConsumeCore:  false,
+    // SL allocation
+    ordnanceSL,
+    ordnanceRolled,
+    allocAccuracy,
+    allocPenetration,
+    allocFirepower,
+    slLocked,
+    remainingSL,
+    allocLocked:  slLocked || !ordnanceRolled,
+    slLabel:   game.i18n.localize("IMSC.Gunner.OrdnanceSL"),
+    rollLabel: game.i18n.localize("IMSC.Gunner.RollOrdnance"),
+    slTooltip: game.i18n.localize("IMSC.Gunner.OrdnanceSLTooltip"),
   };
 }
 
@@ -604,31 +629,90 @@ function _buildNpcGunnerContext(sys) {
 // ══════════════════════════════════════════════════════════════════════════════
 
 function _npcHelmOnRender(sheet) {
-  const sys        = sheet.actor.system;
-  const fuelBurned = sys.resources?.pilot?.fuelBurned ?? 0;
+  const sys          = sheet.actor.system;
+  const fuelBurned   = sys.resources?.pilot?.fuelBurned ?? 0;
   const currentRound = sys.round ?? 0;
   const helmResetId  = sys.resources?.pilot?.helmResetId ?? 0;
   const overdrive    = sys.resources?.pilot?.overdrive ?? false;
   const powerMax     = overdrive ? 200 : 100;
 
+  // Realistic-mode bearing budget values
+  const isRealistic   = game.settings?.get(MODULE_ID, "movementMode") === "realistic";
+  const baseMano      = sys.movement?.maneuverability ?? 2;
+  const allocMano     = sys.resources?.pilot?.allocMano ?? 0;
+  const effMano       = Math.max(0, baseMano + allocMano);
+  const bearingMax    = effMano * 15;
+  const bearingUsed   = sys.resources?.pilot?.bearingUsed  ?? 0;
+  const momentumUsed  = sys.resources?.pilot?.momentumUsed ?? 0;
+  const bearingRemain = Math.max(0, bearingMax - bearingUsed);
+  // Floor is 0 when vessel is stopped (minMove=0) — slider can go freely from 0–100%
+  const velocityMag   = isRealistic ? Math.floor(Math.hypot(
+    sys.resources?.pilot?.velocityX ?? 0,
+    sys.resources?.pilot?.velocityY ?? 0)) : 0;
+  const momentumFloor = (isRealistic && velocityMag === 0) ? 100 : momentumUsed;
+
   // Initialise or reset helm state per round
   if (!sheet._helmState
       || sheet._helmState.round !== currentRound
       || sheet._helmState.helmResetId !== helmResetId) {
-    sheet._helmState = { round: currentRound, helmResetId, bearing: sys.resources?.pilot?.bearing ?? 0, fuelSlider: fuelBurned };
+    sheet._helmState = {
+      round:      currentRound,
+      helmResetId,
+      bearing:    sys.resources?.pilot?.bearing ?? 0,
+      fuelSlider: fuelBurned,
+      carryPct:   momentumFloor,
+    };
   } else {
     sheet._helmState.bearing = sys.resources?.pilot?.bearing ?? 0;
     if (sheet._helmState.fuelSlider < fuelBurned) sheet._helmState.fuelSlider = fuelBurned;
-    if (sheet._helmState.fuelSlider > powerMax) sheet._helmState.fuelSlider = powerMax;
+    if (sheet._helmState.fuelSlider > powerMax)   sheet._helmState.fuelSlider = powerMax;
+    const momentumFloorElse = (isRealistic && velocityMag === 0) ? 100 : momentumUsed;
+    if ((sheet._helmState.carryPct ?? 0) < momentumFloorElse) sheet._helmState.carryPct = momentumFloorElse;
   }
 
-  const powerBarEl    = sheet.element.querySelector("[data-helm-power-bar]");
-  const powerInput    = sheet.element.querySelector("[data-helm-fuel]");
-  const bearingSlider = sheet.element.querySelector("[data-helm-bearing]");
-  const bearingDisp   = sheet.element.querySelector("[data-bearing-display]");
-  const fuelDisp      = sheet.element.querySelector("[data-fuel-display]");
+  const powerBarEl       = sheet.element.querySelector("[data-helm-power-bar]");
+  const powerInput       = sheet.element.querySelector("[data-helm-fuel]");
+  const bearingSlider    = sheet.element.querySelector("[data-helm-bearing]");
+  const bearingDisp      = sheet.element.querySelector("[data-bearing-display]");
+  const fuelDisp         = sheet.element.querySelector("[data-fuel-display]");
+  const bearingBudgetBar = sheet.element.querySelector("[data-bearing-budget-bar]");
+  const carryInput       = sheet.element.querySelector("[data-helm-carry]");
+  const carryDisp        = sheet.element.querySelector("[data-carry-display]");
+  const carryBarEl       = sheet.element.querySelector("[data-helm-carry-bar]");
 
-  // Min-move marker position: written as data-minmove-pct on the power bar by the template
+  // ── Bearing budget bar sync ─────────────────────────────────────────────
+  const _syncBearingBudgetBar = (bearingAbs) => {
+    if (!bearingBudgetBar || !bearingMax) return;
+    const committed = (bearingUsed / bearingMax) * 100;
+    const extra     = (Math.min(bearingAbs, bearingRemain) / bearingMax) * 100;
+    bearingBudgetBar.style.setProperty("--committed", `${committed}%`);
+    bearingBudgetBar.style.setProperty("--extra",     `${extra}%`);
+    bearingBudgetBar.style.setProperty("--minmove",   "0%");
+    const bearingBudgetDisp = sheet.element.querySelector("[data-bearing-budget-display]");
+    if (bearingBudgetDisp) {
+      bearingBudgetDisp.textContent = `${Math.round(bearingUsed + Math.min(bearingAbs, bearingRemain))}°`;
+    }
+  };
+  _syncBearingBudgetBar(Math.abs(sheet._helmState.bearing));
+
+  // ── Bearing slider init ─────────────────────────────────────────────────
+  if (bearingSlider) {
+    if (isRealistic) {
+      const sliderMax = Math.min(bearingRemain, 180);
+      bearingSlider.min = String(-sliderMax);
+      bearingSlider.max = String(sliderMax);
+      const clampedBearing = Math.max(-sliderMax, Math.min(sliderMax, sheet._helmState.bearing));
+      if (clampedBearing !== sheet._helmState.bearing) sheet._helmState.bearing = clampedBearing;
+      const minLbl = sheet.element.querySelector("[data-bearing-min-label]");
+      const maxLbl = sheet.element.querySelector("[data-bearing-max-label]");
+      if (minLbl) minLbl.textContent = `\u2212${sliderMax}\u00b0`;
+      if (maxLbl) maxLbl.textContent = `${sliderMax}\u00b0`;
+    }
+    bearingSlider.value = String(sheet._helmState.bearing);
+    if (bearingDisp) bearingDisp.textContent = `${sheet._helmState.bearing}°`;
+  }
+
+  // ── Power bar ───────────────────────────────────────────────────────────
   const minMovePct = parseInt(powerBarEl?.dataset?.minmovePct ?? "0") || 0;
 
   if (powerInput) {
@@ -641,9 +725,12 @@ function _npcHelmOnRender(sheet) {
     const committed = fuelBurned * ratio;
     const extra     = Math.max(0, selectedPct - fuelBurned) * ratio;
     if (powerBarEl) {
+      const effectiveMinmove = (selectedPct * ratio) >= minMovePct ? 0 : minMovePct;
       powerBarEl.style.setProperty("--committed", `${committed}%`);
       powerBarEl.style.setProperty("--extra",     `${extra}%`);
-      powerBarEl.style.setProperty("--minmove",   `${minMovePct}%`);
+      powerBarEl.style.setProperty("--minmove",   `${effectiveMinmove}%`);
+      const line = powerBarEl.querySelector(".imsc-power-minmove-line");
+      if (line) line.style.display = effectiveMinmove > 0 ? "" : "none";
     }
     if (fuelDisp) fuelDisp.textContent = `${selectedPct}%`;
   };
@@ -665,15 +752,58 @@ function _npcHelmOnRender(sheet) {
   if (bearingSlider) {
     bearingSlider.addEventListener("change", ev => ev.stopPropagation());
     bearingSlider.addEventListener("input", ev => {
-      const val = Number(ev.target.value);
+      let val = Number(ev.target.value);
+      if (isRealistic && bearingMax > 0) {
+        if (Math.abs(val) > bearingRemain) {
+          val = Math.sign(val || 1) * bearingRemain;
+          ev.target.value = String(val);
+        }
+      }
       sheet._helmState.bearing = val;
       if (bearingDisp) bearingDisp.textContent = `${val}°`;
+      _syncBearingBudgetBar(Math.abs(val));
       sheet._updateHelmPreview();
-      // Persist bearing directly to actor (no socket needed for NPC)
       clearTimeout(sheet._bearingDebounce);
       sheet._bearingDebounce = setTimeout(() => {
         sheet.actor.update({ "system.resources.pilot.bearing": val });
       }, 300);
+    });
+  }
+
+  // ── Carry slider (Realistic mode) ───────────────────────────────────────
+  const _syncCarryBar = (carryPct) => {
+    if (!carryBarEl) return;
+    const committed = momentumUsed;
+    const extra     = Math.max(0, carryPct - momentumUsed);
+    carryBarEl.style.setProperty("--committed", `${committed}%`);
+    carryBarEl.style.setProperty("--extra",     `${extra}%`);
+    carryBarEl.style.setProperty("--minmove",   "0%");
+    if (carryDisp) carryDisp.textContent = `${Math.round(carryPct)}%`;
+  };
+
+  if (carryInput) {
+    carryInput.value = String(sheet._helmState.carryPct ?? momentumFloor);
+    carryInput.addEventListener("change", ev => { ev.stopPropagation(); ev.preventDefault(); }, true);
+    carryInput.addEventListener("input", ev => {
+      ev.stopPropagation();
+      const val = Math.max(momentumFloor, Math.min(100, Number(ev.target.value)));
+      if (val !== Number(ev.target.value)) ev.target.value = String(val);
+      sheet._helmState.carryPct = val;
+      _syncCarryBar(val);
+      sheet._updateHelmPreview();
+    }, true);
+  }
+  _syncCarryBar(sheet._helmState.carryPct ?? momentumFloor);
+
+  // ── Velocity bearing toggle (Realistic mode) ────────────────────────────
+  if (!sheet._velocityBearingMode) sheet._velocityBearingMode = "relative";
+  const velBearingToggle = sheet.element.querySelector("[data-vel-bearing-toggle]");
+  if (velBearingToggle) {
+    velBearingToggle.addEventListener("click", ev => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      sheet._velocityBearingMode = sheet._velocityBearingMode === "relative" ? "true" : "relative";
+      sheet.render();
     });
   }
 
@@ -731,15 +861,22 @@ async function _onNpcRollInitiative() {
   }
 }
 
-/** Allocate bonus to speed or maneuverability (unrestricted). */
+/** Allocate bonus to speed or maneuverability (clamped by pilotingSL). */
 function _onNpcAllocBonus(event, target) {
   const stat  = target.dataset.stat;
   const delta = parseInt(target.dataset.delta) || 0;
   const sys   = this.actor.system;
   const pilot = sys.resources?.pilot ?? {};
+  const pilotingSL   = pilot.pilotingSL   ?? 0;
   const allocSpeed   = pilot.allocSpeed   ?? 0;
   const allocMano    = pilot.allocMano    ?? 0;
   const allocEvasion = pilot.allocEvasion ?? 0;
+
+  // Clamp + allocations to available SL (only enforced once piloting has been rolled)
+  if (delta > 0 && pilot.pilotingMessageId) {
+    const totalAlloc = allocSpeed + allocMano + allocEvasion;
+    if (totalAlloc >= pilotingSL) return;
+  }
 
   if (stat === "speed") {
     this.actor.update({ "system.resources.pilot.allocSpeed":   Math.max(0, allocSpeed + delta) });
@@ -756,12 +893,57 @@ async function _onNpcConfirmHelm() {
   const fuelBurned = sys.resources?.pilot?.fuelBurned ?? 0;
   const fuelSlider = this._helmState?.fuelSlider ?? fuelBurned;
   const bearing    = this._helmState?.bearing ?? 0;
+  const speed      = (sys.movement?.speed ?? 0) + (sys.resources?.pilot?.allocSpeed ?? 0);
+  const isRealistic = game.settings.get(MODULE_ID, "movementMode") === "realistic";
+
+  if (isRealistic) {
+    const vx = sys.resources?.pilot?.velocityX ?? 0;
+    const vy = sys.resources?.pilot?.velocityY ?? 0;
+    const thrustPct = fuelSlider - fuelBurned;
+    const carryPct  = this._helmState?.carryPct ?? 0;
+    const velMag = Math.hypot(vx, vy);
+    if (thrustPct <= 0 && velMag === 0 && bearing === 0) {
+      return ui.notifications.warn(game.i18n.localize("IMSC.Helm.WarnNoFuel"));
+    }
+    const token = this.actor.getActiveTokens()?.[0];
+    if (token && canvas?.ready) {
+      const projected = HelmPreview.projectPositionRealistic(token, bearing, thrustPct, speed, vx, vy, carryPct);
+      if (projected) {
+        const waypoints = HelmPreview.projectWaypointsRealistic(token, bearing, thrustPct, speed, vx, vy, carryPct);
+        if (waypoints?.length > 1) {
+          await _animateTokenPath(token, waypoints, projected);
+        } else {
+          await token.document.update(
+            { x: projected.x, y: projected.y, rotation: projected.rotation },
+            { animate: true },
+          );
+        }
+      }
+    }
+    // Compute new velocity: old vel + thrust vector along heading + bearing
+    const h0 = ((token?.document?.rotation ?? 0) - 90) * (Math.PI / 180);
+    const thrustDir = h0 + bearing * (Math.PI / 180);
+    const thrustMag = (thrustPct / 100) * speed;
+    const newVx = vx + Math.cos(thrustDir) * thrustMag;
+    const newVy = vy + Math.sin(thrustDir) * thrustMag;
+    const totalMoved = Math.round(Math.hypot(newVx, newVy));
+    await this.actor.update({
+      "system.resources.pilot.fuelBurned":   fuelSlider,
+      "system.resources.pilot.prevTurnMove": totalMoved,
+      "system.resources.pilot.bearing":      bearing,
+      "system.resources.pilot.velocityX":    newVx,
+      "system.resources.pilot.velocityY":    newVy,
+      "system.resources.pilot.bearingUsed":  (sys.resources?.pilot?.bearingUsed ?? 0) + Math.abs(bearing),
+      "system.resources.pilot.momentumUsed": carryPct,
+    });
+    HelmPreview.hide();
+    return;
+  }
 
   if (fuelSlider <= fuelBurned) {
     return ui.notifications.warn(game.i18n.localize("IMSC.Helm.WarnNoFuel"));
   }
 
-  const speed        = (sys.movement?.speed ?? 0) + (sys.resources?.pilot?.allocSpeed ?? 0);
   const prevTurnMove = sys.resources?.pilot?.prevTurnMove ?? 0;
   const minMove      = Math.ceil(prevTurnMove / 2);
   const isFirstCommit = fuelBurned === 0;
@@ -821,28 +1003,55 @@ async function _onNpcRam() {
   popup.render(true);
 }
 
-/** Reset NPC helm for a new turn. */
-function _onNpcResetHelm() {
-  const id = (this.actor.system.resources?.pilot?.helmResetId ?? 0) + 1;
-  this.actor.update({
-    "system.resources.pilot.pilotingSL": 0,
-    "system.resources.pilot.allocSpeed": 0,
-    "system.resources.pilot.allocMano": 0,
-    "system.resources.pilot.allocEvasion": 0,
-    "system.resources.pilot.fuelBurned": 0,
-    "system.resources.pilot.bearing": 0,
-    "system.resources.pilot.overdrive": false,
-    "system.resources.pilot.helmResetId": id,
-    "system.resources.pilot.pilotingMessageId": "",
-    "system.engActionUsed": false,
-    "system.voidshieldFluxRemaining": this.actor.system.voidshieldFlux ?? 0,
-  });
-  HelmPreview.hide();
-}
-
 // ══════════════════════════════════════════════════════════════════════════════
 // Gunner tab action handlers
 // ══════════════════════════════════════════════════════════════════════════════
+
+/** Roll Gunnery attribute for NPC ship → set ordnance SL pool. */
+async function _onNpcRollOrdnance() {
+  const sys = this.actor.system;
+  if (sys.resources?.gunner?.ordnanceRolled) {
+    return ui.notifications.warn(game.i18n.localize("IMSC.Warning.AlreadyRolledOrdnance"));
+  }
+  const gunnery = sys.attributes?.gunnery ?? 40;
+  const roll    = await new Roll("1d100").evaluate();
+  const sl      = Math.max(0, Math.floor((gunnery - roll.total) / 10));
+  await roll.toMessage({
+    flavor:  `${game.i18n.localize("IMSC.NpcShip.Gunnery")} (${gunnery})`,
+    speaker: ChatMessage.getSpeaker({ actor: this.actor }),
+  });
+  await this.actor.update({
+    "system.resources.gunner.ordnanceSL":       sl,
+    "system.resources.gunner.ordnanceRolled":   true,
+    "system.resources.gunner.allocAccuracy":    0,
+    "system.resources.gunner.allocPenetration": 0,
+    "system.resources.gunner.allocFirepower":   0,
+    "system.resources.gunner.slLocked":         false,
+  });
+}
+
+/** Allocate NPC gunner SL between Accuracy, Penetration, and Firepower. */
+async function _onNpcAllocGunnerSL(event, target) {
+  const sys    = this.actor.system;
+  const gunner = sys.resources?.gunner ?? {};
+  if (gunner.slLocked || !gunner.ordnanceRolled) return;
+
+  const stat  = target.dataset.stat;
+  const delta = Number(target.dataset.delta);
+  const pool  = gunner.ordnanceSL ?? 0;
+  const acc   = gunner.allocAccuracy ?? 0;
+  const pen   = gunner.allocPenetration ?? 0;
+  const fp    = gunner.allocFirepower ?? 0;
+
+  let newAcc = acc, newPen = pen, newFp = fp;
+  if (stat === "accuracy")    newAcc = Math.max(0, acc + delta);
+  if (stat === "penetration") newPen = Math.max(0, pen + delta);
+  if (stat === "firepower")   newFp  = Math.max(0, fp  + delta);
+  if (newAcc + newPen + newFp > pool) return;
+
+  const keyMap = { accuracy: "allocAccuracy", penetration: "allocPenetration", firepower: "allocFirepower" };
+  await this.actor.update({ [`system.resources.gunner.${keyMap[stat]}`]: stat === "accuracy" ? newAcc : stat === "penetration" ? newPen : newFp });
+}
 
 /** Fire an NPC weapon  -  opens targeting popup. */
 async function _onNpcFireWeapon(event, target) {
@@ -950,27 +1159,47 @@ async function _onReduceHeat() {
 
 async function _onFullReset() {
   const sys = this.actor.system;
+  const helmResetId = (sys.resources?.pilot?.helmResetId ?? 0) + 1;
+  const isRealistic = game.settings?.get(MODULE_ID, "movementMode") === "realistic";
+  const baseSpeed   = sys.movement?.baseSpeed ?? sys.movement?.speed ?? 6;
   const updates = {
     "system.active": false,
     "system.round": 0,
     "system.hull.value": 0,
     "system.internalFire": 0,
     "system.engActionUsed": false,
-    "system.movement.speed":          sys.movement?.baseSpeed ?? 0,
-    "system.movement.maneuverability": sys.movement?.baseManeuverability ?? 0,
     "system.resources.pilot.pilotingSL": 0,
     "system.resources.pilot.allocSpeed": 0,
     "system.resources.pilot.allocMano": 0,
     "system.resources.pilot.allocEvasion": 0,
     "system.resources.pilot.fuelBurned": 0,
-    "system.resources.pilot.prevTurnMove": 0,
     "system.resources.pilot.bearing": 0,
-    "system.resources.pilot.helmResetId": 0,
+    "system.resources.pilot.overdrive": false,
+    "system.resources.pilot.helmResetId": helmResetId,
     "system.resources.pilot.pilotingMessageId": "",
+    "system.resources.pilot.bearingUsed": 0,
+    "system.resources.pilot.momentumUsed": 0,
     "system.resources.gunner.ammo": Math.round((sys.resources?.gunner?.ammoMax ?? 20) * 0.25),
     "system.resources.gunner.power": Math.round((sys.resources?.gunner?.powerMax ?? 20) * 0.5),
+    "system.resources.gunner.ordnanceSL":       0,
+    "system.resources.gunner.ordnanceRolled":   false,
+    "system.resources.gunner.allocAccuracy":    0,
+    "system.resources.gunner.allocPenetration": 0,
+    "system.resources.gunner.allocFirepower":   0,
+    "system.resources.gunner.slLocked":         false,
     "system.heat": 0,
   };
+  if (isRealistic) {
+    // Seed initial velocity: half base speed in current facing direction
+    const token    = this.actor.getActiveTokens()?.[0];
+    const rotation = token?.document?.rotation ?? 0;
+    const θ = rotation * Math.PI / 180;
+    updates["system.resources.pilot.velocityX"] = Math.sin(θ) * (baseSpeed / 2);
+    updates["system.resources.pilot.velocityY"] = -Math.cos(θ) * (baseSpeed / 2);
+  } else {
+    // Simplified: set prevTurnMove = baseSpeed so minMove = ceil(baseSpeed/2) on first turn
+    updates["system.resources.pilot.prevTurnMove"] = baseSpeed;
+  }
   for (const s of SECTORS) updates[`system.shields.${s}`] = sys.shieldMax?.[s] ?? 0;
   for (const s of SECTORS) updates[`system.armour.${s}`] = sys.armourBase?.[s] ?? 0;
   for (const s of SECTORS) updates[`system.armourRend.${s}`] = 0;
@@ -1049,7 +1278,7 @@ async function _promptNpcSide(allowedSides) {
   ];
   let filtered;
   if (!allowedSides) {
-    filtered = ALL_SIDES.filter(s => s.key !== "stern");
+    filtered = ALL_SIDES;
   } else {
     filtered = ALL_SIDES.filter(s => allowedSides[s.key] === true);
   }
@@ -1246,6 +1475,17 @@ async function _npcLaunchOrdnance(type) {
   if (actorData.system) actorData.system.turnComplete = (type === "torpedo");
   // Reset hull damage to 0 on spawn (0 = full, max = destroyed, same as ships)
   if (actorData.system?.hull) actorData.system.hull.value = 0;
+
+  // In realistic mode, seed initial velocity: half own speed (in launch heading) + ship velocity.
+  if (game.settings?.get(MODULE_ID, "movementMode") === "realistic") {
+    const launchSys  = this.actor.system;
+    const shipVx     = launchSys.resources?.pilot?.velocityX ?? 0;
+    const shipVy     = launchSys.resources?.pilot?.velocityY ?? 0;
+    const ownSpeed   = actorData.system?.movement?.speed ?? 0;
+    const headingRad = (spawn.rotation - 90) * (Math.PI / 180);
+    foundry.utils.setProperty(actorData, "system.helm.velocityX", shipVx + Math.cos(headingRad) * (ownSpeed / 2));
+    foundry.utils.setProperty(actorData, "system.helm.velocityY", shipVy + Math.sin(headingRad) * (ownSpeed / 2));
+  }
 
   const actor = await Actor.create(actorData);
   if (!actor) return;

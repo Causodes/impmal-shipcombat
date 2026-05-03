@@ -92,29 +92,6 @@ Cards fall into four categories:
 - **Reaction**: played in response to incoming threats (outside your normal turn)
 - **Gambit**: set a combat stance; takes effect at the start of the *next* round
 
-> **3-man deck (18 cards)** — excludes sensor-targeted boosts (Enhanced Auspex, Sensor Priority), ordnance-targeted boosts (Armament Order, Accelerated Loading), and Press the Attack (pilot-targeted boost; no separate Helmsman at this crew size).
->
-> | # | Card | Category | Target / Effect |
-> |---|------|----------|-----------------|
-> | 1 | Inspired Targeting | Boost | Gunner: +20 to hit on next fire roll this round |
-> | 2 | Guns Hot | Boost | Gunner: grant an additional Power Core |
-> | 3 | Overdrive Command | Boost | All roles: grant an additional Power Core; Enginseer may take an additional action |
-> | 4 | Double Shift | Boost | Enginseer: grant an additional action this round |
-> | 5 | Hard Over | Boost | Helmsman (Enginseer): base maneuverability doubled for this round |
-> | 6 | Emergency Reserves | Shipwide | Replenish AP by 50% immediately |
-> | 7 | Emergency Reserves | Shipwide | *(second copy)* |
-> | 8 | Hold the Line | Shipwide | Internal fire deals no hull damage and no manpower attrition this round |
-> | 9 | Venting Sequence | Shipwide | Vent 5 heat immediately; starts internal fire equal to heat vented; no core lockout |
-> | 10 | Harden Shields | Reaction | This round, weapons with Shield Bypass cannot bypass void shields |
-> | 11 | Harden Shields | Reaction | *(second copy)* |
-> | 12 | Armour Repair | Reaction | Fully restore rend damage on one sector, resetting effective armour to maximum |
-> | 13 | Aggressive Doctrine | Gambit | Stance: +10 to hit both ways, −1 Speed, −1 Maneuverability |
-> | 14 | Defensive Formation | Gambit | Stance: −10 to hit both ways, +1 Speed, +1 Maneuverability |
-> | 15 | Red Alert | Gambit | Stance: each role receives a free Power Core per round; +5 internal fire per round |
-> | 16 | Devastation Protocol | Gambit | Stance: all outgoing and incoming hits are automatic critical hits |
-> | 17 | Stand Down | Gambit | Clears the current combat stance, returning the ship to None |
-> | 18 | Stand Down | Gambit | *(second copy)* |
-
 ### Power Core Actions
 
 | Action | Effect |

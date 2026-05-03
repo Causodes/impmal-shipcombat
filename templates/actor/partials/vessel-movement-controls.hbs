@@ -1,11 +1,63 @@
 {{!-- Shared movement controls (bearing + power bar + confirm) for torpedo and strike-craft.
-     Requires helm context: helm.minMove, helm.maxBearing, helm.bearing, helm.powerMax --}}
+     Requires helm context: helm.minMove, helm.maxBearing, helm.bearing, helm.powerMax,
+     helm.isRealistic, helm.velocityX, helm.velocityY, helm.bearingUsed, helm.bearingMax,
+     helm.bearingRemaining, helm.momentumUsed, helm.bearingBudgetTooltip --}}
 <h4>Movement</h4>
 <div class="imsc-torpedo-movement-info">
+    {{#if helm.isRealistic}}
+    <span>Velocity: {{helm.minMove}} VU</span>
+    {{else}}
     <span>Min Move: {{helm.minMove}}</span>
+    {{/if}}
     <span>Max Bearing: ±{{helm.maxBearing}}°</span>
 </div>
 
+{{#if helm.isRealistic}}
+{{!-- REALISTIC: 3-block layout mirroring player helm mechanics, compact bars --}}
+<div class="imsc-helm-control-block">
+    <label class="imsc-helm-section-label">{{localize "IMSC.Helm.Bearing"}}</label>
+    <div class="imsc-torpedo-slider-row">
+        <input type="range" class="imsc-bearing-slider" data-helm-bearing
+               min="-180" max="180" step="1" value="{{helm.bearing}}">
+        <span data-bearing-display>{{helm.bearing}}°</span>
+    </div>
+    <label class="imsc-helm-section-label">{{localize "IMSC.Helm.BearingAdjustments"}}</label>
+    <div class="imsc-power-bar imsc-bearing-budget-bar imsc-power-bar--compact" data-bearing-budget-bar
+         data-bearing-max="{{helm.bearingMax}}" data-bearing-used="{{helm.bearingUsed}}"
+         data-tooltip="{{helm.bearingBudgetTooltip}}"></div>
+    <div class="imsc-power-labels">
+        <span>0°</span>
+        <span class="imsc-power-readout" data-bearing-budget-display>{{helm.bearingUsed}}°</span>
+        <span>{{helm.bearingMax}}°</span>
+    </div>
+</div>
+<div class="imsc-helm-control-block">
+    <label class="imsc-helm-section-label">{{localize "IMSC.Helm.Thrust"}}</label>
+    <div class="imsc-power-bar imsc-power-bar--compact" data-helm-power-bar data-minmove-pct="{{helm.minMovePct}}">
+        <div class="imsc-power-minmove-line"></div>
+        <input type="range" class="imsc-power-range" data-helm-fuel
+               min="0" max="{{helm.powerMax}}" step="1">
+    </div>
+    <div class="imsc-power-labels">
+        <span>0%</span>
+        <span class="imsc-power-readout" data-fuel-display></span>
+        <span>{{helm.powerMax}}%</span>
+    </div>
+</div>
+<div class="imsc-helm-control-block">
+    <label class="imsc-helm-section-label">{{localize "IMSC.Helm.Carry"}}</label>
+    <div class="imsc-power-bar imsc-momentum-bar imsc-power-bar--compact" data-helm-carry-bar>
+        <input type="range" class="imsc-power-range" data-helm-carry
+               min="0" max="100" step="1">
+    </div>
+    <div class="imsc-power-labels">
+        <span>0%</span>
+        <span class="imsc-power-readout" data-carry-display></span>
+        <span>100%</span>
+    </div>
+</div>
+{{else}}
+{{!-- NON-REALISTIC: original simplified layout --}}
 <div class="imsc-torpedo-slider-row">
     <label>Bearing</label>
     <input type="range" data-helm-bearing
@@ -13,7 +65,6 @@
            value="{{helm.bearing}}" step="1" />
     <span data-bearing-display>{{helm.bearing}}°</span>
 </div>
-
 <div class="imsc-torpedo-power-block">
     <label>{{localize "IMSC.Helm.Power"}}</label>
     <div class="imsc-power-bar imsc-power-bar--compact" data-helm-power-bar>
@@ -23,6 +74,7 @@
     </div>
     <span class="imsc-power-readout" data-fuel-display></span>
 </div>
+{{/if}}
 
 <div class="imsc-torpedo-movement-buttons">
     <button type="button" data-action="confirmHelm">

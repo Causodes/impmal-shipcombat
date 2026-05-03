@@ -29,12 +29,27 @@
                         <a data-action="unassignRole" data-role-id="{{id}}" class="imsc-claim-btn imsc-release-btn" data-tooltip="{{localize 'IMSC.Action.Release'}}"><i class="fa-solid fa-xmark"></i></a>
                         {{/if}}
                     </div>
-                    <div class="imsc-crew-col-role">{{labelLocalized}}</div>
+                    <div class="imsc-crew-col-role">
+                        {{#if @root.isOwner}}
+                        <input class="imsc-role-title-input" type="text"
+                               data-role-title="{{id}}"
+                               value="{{labelLocalized}}"
+                               placeholder="{{defaultLabel}}">
+                        {{else}}{{labelLocalized}}{{/if}}
+                    </div>
                     <div class="imsc-crew-col-action {{#if turnDone}}imsc-yes{{else}}imsc-no{{/if}}">
                         {{#if turnDone}}{{localize "IMSC.Value.Yes"}}{{else}}{{localize "IMSC.Value.No"}}{{/if}}
                     </div>
                     <div class="imsc-crew-col-skill">
+                        {{#if @root.isOwner}}
+                        <select class="imsc-skill-override-select" data-role-skill-override="{{id}}">
+                            {{#each skillOptions}}
+                            <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+                            {{/each}}
+                        </select>
+                        {{else}}
                         {{mainSkill.label}}{{#if mainSkill.hasValue}} {{mainSkill.value}}{{/if}}
+                        {{/if}}
                     </div>
                 </div>
                 {{else if assignedUser}}
@@ -50,7 +65,14 @@
                         <a data-action="unassignRole" data-role-id="{{id}}" class="imsc-claim-btn imsc-release-btn" data-tooltip="{{localize 'IMSC.Action.Release'}}"><i class="fa-solid fa-xmark"></i></a>
                         {{/if}}
                     </div>
-                    <div class="imsc-crew-col-role">{{labelLocalized}}</div>
+                    <div class="imsc-crew-col-role">
+                        {{#if @root.isOwner}}
+                        <input class="imsc-role-title-input" type="text"
+                               data-role-title="{{id}}"
+                               value="{{labelLocalized}}"
+                               placeholder="{{defaultLabel}}">
+                        {{else}}{{labelLocalized}}{{/if}}
+                    </div>
                     <div class="imsc-crew-col-action {{#if turnDone}}imsc-yes{{else}}imsc-no{{/if}}">
                         {{#if turnDone}}{{localize "IMSC.Value.Yes"}}{{else}}{{localize "IMSC.Value.No"}}{{/if}}
                     </div>
@@ -61,7 +83,14 @@
                     <div class="imsc-crew-col-name">
                         <span class="imsc-muted">{{localize "IMSC.Label.Unassigned"}}</span>
                     </div>
-                    <div class="imsc-crew-col-role imsc-muted">{{labelLocalized}}</div>
+                    <div class="imsc-crew-col-role imsc-muted">
+                        {{#if @root.isOwner}}
+                        <input class="imsc-role-title-input imsc-muted" type="text"
+                               data-role-title="{{id}}"
+                               value="{{labelLocalized}}"
+                               placeholder="{{defaultLabel}}">
+                        {{else}}{{labelLocalized}}{{/if}}
+                    </div>
                     <div class="imsc-crew-col-action">
                         {{#unless @root.isGM}}
                         <button data-action="claimRole" data-role-id="{{id}}" class="imsc-claim-btn">

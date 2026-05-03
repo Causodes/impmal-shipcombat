@@ -1,19 +1,33 @@
 <section class="tab {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
 
     {{!-- ═══════ Helm Control ═══════ --}}
-    <div class="sheet-list">
+    <div class="sheet-list imsc-role-section">
+        {{#if helm.ramAllocLocked}}
+        <div class="imsc-section-overlay imsc-section-overlay--taken">
+            <div class="imsc-overlay-lock-indicator">
+                <i class="fa-solid fa-lock fa-lg"></i>
+                <span>{{localize "IMSC.Ram.HelmLocked"}}</span>
+            </div>
+        </div>
+        {{/if}}
         <div class="list-header row-content">
             <div class="list-name">{{localize "IMSC.Helm.Title"}}</div>
             <div class="list-controls">
-                <a data-action="npcResetHelm" class="imsc-helm-reset-link"
-                   data-tooltip="{{localize "IMSC.Helm.ResetHelm"}}">
-                    <i class="fa-solid fa-rotate-left"></i>
+                {{#if helm.isRealistic}}
+                <a class="imsc-full-reset-link imsc-vel-bearing-toggle" data-vel-bearing-toggle
+                   data-tooltip="{{#if helm.velocityBearingRelative}}{{localize 'IMSC.Helm.BearingRelTooltip'}}{{else}}{{localize 'IMSC.Helm.BearingTrueTooltip'}}{{/if}}">
+                    {{#if helm.velocityBearingRelative}}
+                        <i class="fa-solid fa-location-arrow"></i>
+                    {{else}}
+                        <i class="fa-solid fa-compass"></i>
+                    {{/if}}
                 </a>
+                {{/if}}
             </div>
         </div>
         <div class="list-content imsc-helm-panel">
 
-            {{!-- Piloting SL Allocation Row --}}
+            {{!-- Stats Row --}}
             <div class="imsc-helm-stats">
                 <div class="imsc-helm-stat" data-tooltip="{{localize "IMSC.Helm.PilotingSLTooltip"}}">
                     <span class="imsc-helm-stat-label">{{localize "IMSC.Helm.PilotingSL"}}</span>
@@ -29,28 +43,34 @@
                 <div class="imsc-helm-stat" data-tooltip="{{helm.speedTooltip}}">
                     <span class="imsc-helm-stat-label">{{localize "IMSC.Helm.Speed"}}</span>
                     <div class="imsc-alloc-row">
-                        <button class="imsc-alloc-btn" data-action="npcAllocBonus" data-stat="speed" data-delta="-1">
-                            &minus;
-                        </button>
+                        <button class="imsc-alloc-btn" data-action="npcAllocBonus" data-stat="speed" data-delta="-1"
+                                {{#if helm.allocLocked}}disabled{{/if}}{{#unless helm.hasRolledPiloting}}disabled{{/unless}}>&minus;</button>
                         <span class="imsc-helm-stat-value">{{helm.effectiveSpeed}}</span>
-                        <button class="imsc-alloc-btn" data-action="npcAllocBonus" data-stat="speed" data-delta="1">
-                            +
-                        </button>
+                        <button class="imsc-alloc-btn" data-action="npcAllocBonus" data-stat="speed" data-delta="1"
+                                {{#if helm.allocLocked}}disabled{{/if}}{{#unless helm.hasRolledPiloting}}disabled{{/unless}}{{#if helm.slCapped}} disabled{{/if}}>+</button>
                     </div>
                 </div>
                 <div class="imsc-helm-stat" data-tooltip="{{helm.manoTooltip}}">
                     <span class="imsc-helm-stat-label">{{localize "IMSC.Helm.Maneuverability"}}</span>
                     <div class="imsc-alloc-row">
-                        <button class="imsc-alloc-btn" data-action="npcAllocBonus" data-stat="mano" data-delta="-1">
-                            &minus;
-                        </button>
+                        <button class="imsc-alloc-btn" data-action="npcAllocBonus" data-stat="mano" data-delta="-1"
+                                {{#if helm.allocLocked}}disabled{{/if}}{{#unless helm.hasRolledPiloting}}disabled{{/unless}}>&minus;</button>
                         <span class="imsc-helm-stat-value">{{helm.effectiveMano}}</span>
-                        <button class="imsc-alloc-btn" data-action="npcAllocBonus" data-stat="mano" data-delta="1">
-                            +
-                        </button>
+                        <button class="imsc-alloc-btn" data-action="npcAllocBonus" data-stat="mano" data-delta="1"
+                                {{#if helm.allocLocked}}disabled{{/if}}{{#unless helm.hasRolledPiloting}}disabled{{/unless}}{{#if helm.slCapped}} disabled{{/if}}>+</button>
                     </div>
                 </div>
-                <div class="imsc-helm-stat" data-tooltip="{{helm.minMoveTooltip}}">
+                <div class="imsc-helm-stat" data-tooltip="{{localize "IMSC.Helm.EvasionTooltip"}}">
+                    <span class="imsc-helm-stat-label">{{localize "IMSC.Helm.Evasion"}}</span>
+                    <div class="imsc-alloc-row">
+                        <button class="imsc-alloc-btn" data-action="npcAllocBonus" data-stat="evasion" data-delta="-1"
+                                {{#if helm.allocLocked}}disabled{{/if}}{{#unless helm.hasRolledPiloting}}disabled{{/unless}}>&minus;</button>
+                        <span class="imsc-helm-stat-value">{{helm.allocEvasion}}</span>
+                        <button class="imsc-alloc-btn" data-action="npcAllocBonus" data-stat="evasion" data-delta="1"
+                                {{#if helm.allocLocked}}disabled{{/if}}{{#unless helm.hasRolledPiloting}}disabled{{/unless}}{{#if helm.slCapped}} disabled{{/if}}>+</button>
+                    </div>
+                </div>
+                <div class="imsc-helm-stat" data-tooltip="{{#if helm.isRealistic}}{{helm.velocityTooltip}}{{else}}{{helm.minMoveTooltip}}{{/if}}">
                     <span class="imsc-helm-stat-label">{{localize "IMSC.Helm.MinMove"}}</span>
                     <span class="imsc-helm-stat-value">{{helm.minMove}}</span>
                 </div>
@@ -60,19 +80,39 @@
             <div class="imsc-helm-control-block">
                 <label class="imsc-helm-section-label">{{localize "IMSC.Helm.Bearing"}}</label>
                 <div class="imsc-helm-bearing">
-                    <span class="imsc-bearing-label">{{localize "IMSC.Helm.Port"}} {{helm.maxBearing}}°</span>
+                    {{#if helm.isRealistic}}
+                    <span class="imsc-bearing-label">{{localize "IMSC.Helm.Port"}}<br><span data-bearing-min-label>&#x2212;180°</span></span>
+                    <input type="range" class="imsc-bearing-slider" data-helm-bearing
+                           min="-180" max="180" step="1" value="{{helm.bearing}}">
+                    <span class="imsc-bearing-label">{{localize "IMSC.Helm.Starboard"}}<br><span data-bearing-max-label>180°</span></span>
+                    {{else}}
+                    <span class="imsc-bearing-label">{{localize "IMSC.Helm.Port"}}<br>{{helm.maxBearing}}°</span>
                     <input type="range" class="imsc-bearing-slider" data-helm-bearing
                            min="-{{helm.maxBearing}}" max="{{helm.maxBearing}}" step="1" value="{{helm.bearing}}">
-                    <span class="imsc-bearing-label">{{localize "IMSC.Helm.Starboard"}} {{helm.maxBearing}}°</span>
+                    <span class="imsc-bearing-label">{{localize "IMSC.Helm.Starboard"}}<br>{{helm.maxBearing}}°</span>
+                    {{/if}}
                 </div>
                 <div class="imsc-bearing-readout">
                     <span data-bearing-display>{{helm.bearing}}°</span>
                 </div>
+                {{#if helm.isRealistic}}
+                <label class="imsc-helm-section-label">{{localize "IMSC.Helm.BearingAdjustments"}}</label>
+                <div class="imsc-power-bar imsc-bearing-budget-bar" data-bearing-budget-bar
+                     data-bearing-max="{{helm.bearingMax}}" data-bearing-used="{{helm.bearingUsed}}"
+                     data-tooltip="{{helm.bearingBudgetTooltip}}"></div>
+                <div class="imsc-power-labels">
+                    <span>0°</span>
+                    <span class="imsc-power-readout" data-bearing-budget-display>{{helm.bearingUsed}}°</span>
+                    <span>{{helm.bearingMax}}°</span>
+                </div>
+                {{/if}}
             </div>
 
-            {{!-- Power Bar --}}
+            {{!-- Thrust / Power --}}
             <div class="imsc-helm-control-block">
-                <label class="imsc-helm-section-label">{{localize "IMSC.Helm.Power"}}</label>
+                <label class="imsc-helm-section-label">
+                    {{#if helm.isRealistic}}{{localize "IMSC.Helm.Thrust"}}{{else}}{{localize "IMSC.Helm.Power"}}{{/if}}
+                </label>
                 <div class="imsc-power-bar" data-helm-power-bar data-minmove-pct="{{helm.minMovePct}}">
                     <div class="imsc-power-minmove-line"></div>
                     <input type="range" class="imsc-power-range" data-helm-fuel
@@ -84,6 +124,22 @@
                     <span>{{helm.powerMax}}%</span>
                 </div>
             </div>
+
+            {{!-- Carry Slider (Realistic Mode) --}}
+            {{#if helm.isRealistic}}
+            <div class="imsc-helm-control-block">
+                <label class="imsc-helm-section-label">{{localize "IMSC.Helm.Carry"}}</label>
+                <div class="imsc-power-bar imsc-momentum-bar" data-helm-carry-bar>
+                    <input type="range" class="imsc-power-range" data-helm-carry
+                           min="0" max="100" step="1">
+                </div>
+                <div class="imsc-power-labels">
+                    <span>0%</span>
+                    <span class="imsc-power-readout" data-carry-display></span>
+                    <span>100%</span>
+                </div>
+            </div>
+            {{/if}}
 
             {{!-- Confirm --}}
             <div class="imsc-helm-confirm-row">
